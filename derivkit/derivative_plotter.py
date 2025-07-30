@@ -24,7 +24,6 @@ class DerivativePlotter:
         plt.tight_layout()
         plt.savefig(f"{self.plot_dir}/{filename}", dpi=300)
 
-
     def plot_histograms(self, stencil_vals, adaptive_vals, bins=20):
         plt.figure(figsize=(20, 10))
         lw, alpha = 2.5, 1
@@ -232,7 +231,6 @@ class DerivativePlotter:
         plt.legend()
         self._save_fig("error_vs_noise.png")
         plt.show()
-
 
     def plot_relative_and_absolute_errors(self, x_min=None, x_max=None, num=100, **kwargs):
         if x_min is None: x_min = self.x_center - 0.5
