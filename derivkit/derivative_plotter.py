@@ -145,118 +145,12 @@ class DerivativePlotter:
         else:
             print(f"[WARNING] Only {len(x_used)} point(s) used — skipping fit.")
 
-        print("im so done with this shit aaa")
-
         plt.axvline(self.x_center, color='darkgray', linestyle='--', lw=2, label='Central Value')
         plt.title('Adaptive Fit on Noisy Function', fontsize=15)
         plt.xlabel('$x$')
         plt.ylabel('$f(x) + \\epsilon$')
         plt.legend(frameon=False)
         self._save_fig("adaptive_fit_with_noise.png")
-        plt.show()
-
-    def demonstrate_adaptive_fitttt(self, num_points=20, noise_std=0.01):
-        """
-        Visualizes adaptive fitting:
-        - Simulates noisy y = f(x) + ε
-        - Uses adaptive method to select trusted x-values (on clean f)
-        - Fits a line to noisy y-values at those trusted x-points
-        """
-
-        # 1. Simulate noisy data
-        x_vals = np.linspace(self.x_center - 0.1, self.x_center + 0.1, num_points)
-        y_vals_noisy = np.array([self.function(x) + np.random.randn() * noise_std for x in x_vals])
-
-        # 2. Run adaptive method on clean function (no noise) to get used points
-        x_all, y_all, x_used, y_used, used_mask = self.derivs.get_used_points()
-
-        # 3. Map used_mask from adaptive fit onto *noisy* y-values
-        noisy_used_x = x_all[used_mask]
-        noisy_used_y = np.array([
-            y_vals_noisy[np.argmin(np.abs(x_vals - xu))] for xu in noisy_used_x
-        ]) if len(noisy_used_x) > 0 else np.array([])
-
-        # 4. Plot
-        plt.figure(figsize=(7, 5))
-
-        # Plot all noisy data
-        plt.scatter(x_vals, y_vals_noisy, color='lightgray', s=40, label='Noisy Sample', zorder=1)
-
-        # Plot excluded points
-        if used_mask is not None:
-            excluded_x = x_all[~used_mask]
-            excluded_y = np.array([
-                y_vals_noisy[np.argmin(np.abs(x_vals - x))] for x in excluded_x
-            ])
-            plt.scatter(excluded_x, excluded_y, color='black', label='Excluded from fit', s=50, zorder=2)
-
-        # Plot used points (from noisy data)
-        if len(noisy_used_x) >= 2:
-            plt.scatter(noisy_used_x, noisy_used_y, color='hotpink', edgecolor='black', s=60, label='Used in fit',
-                        zorder=3)
-
-            # Fit line to the noisy used points
-            slope, intercept, _ = self._adaptive_fit_with_outlier_removal(
-                noisy_used_x, noisy_used_y, return_inliers=True
-            )
-            x_fit = np.linspace(min(x_vals), max(x_vals), 100)
-            y_fit = slope * x_fit + intercept
-            plt.plot(x_fit, y_fit, label='Fit (noisy data)', color='hotpink', lw=3, zorder=4)
-        else:
-            print(f"[WARNING] Only {len(noisy_used_x)} point(s) used — skipping fit.")
-
-        plt.axvline(self.x_center, color='darkgray', linestyle='--', lw=2, label='Central Value')
-        plt.title('Adaptive Fit on Noisy Data (using trusted x points)', fontsize=15)
-        plt.xlabel('$x$')
-        plt.ylabel('$y$')
-        plt.legend(frameon=False)
-        self._save_fig("adaptive_fit_demo.png")
-        plt.show()
-
-    def demonstrate_adaptive_fitold(self, num_points=20, noise_std=0.01):
-        x_vals = np.linspace(self.x_center - 0.1, self.x_center + 0.1, num_points)
-        y_vals = np.array([self.function(x) + np.random.randn() * noise_std for x in x_vals])
-
-        # Run adaptive fit and get diagnostics
-        x_all, y_all, x_used, y_used, used_mask = self.derivs.get_used_points()
-
-        # Handle edge cases
-        if x_used is None or y_used is None or len(x_used) == 0:
-            print("[WARNING] No points used in adaptive fit.")
-            x_used = np.array([])
-            y_used = np.array([])
-            used_mask = np.zeros_like(x_all, dtype=bool)
-
-        # Excluded points
-        excluded_mask = ~used_mask
-        excluded_x = x_all[excluded_mask]
-        excluded_y = y_all[excluded_mask]
-
-        plt.figure(figsize=(7, 5))
-
-        # Plot excluded points
-        plt.scatter(excluded_x, excluded_y, color='black', label='Excluded from fit', s=50)
-
-        # Plot used points
-        plt.scatter(x_used, y_used, color='hotpink', edgecolor='black', label='Used in fit', s=50)
-
-        # Fit line to used points (optional outlier filtering)
-        if len(x_used) >= 2:
-            slope, intercept, inlier_mask = self._adaptive_fit_with_outlier_removal(
-                x_used, y_used, return_inliers=True
-            )
-            x_fit = np.linspace(min(x_vals), max(x_vals), 100)
-            y_fit = slope * x_fit + intercept
-            plt.plot(x_fit, y_fit, label='Fitted Line', color='hotpink', lw=3)
-        else:
-            print(f"[WARNING] Only {len(x_used)} point(s) used — skipping fit.")
-
-        plt.axvline(self.x_center, color='darkgray', linestyle='--', lw=2, label='Central Value')
-        plt.title('Adaptive Fit with Noisy Data', fontsize=15)
-        plt.xlabel('$x$ (central + neighbors)')
-        plt.ylabel('$y$')
-        plt.legend(frameon=False)
-        self._save_fig("adaptive_fit_demo.png")
         plt.show()
 
     def _adaptive_fit_with_outlier_removal(self, x_vals, y_vals, return_inliers=False):
