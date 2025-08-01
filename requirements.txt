@@ -1,0 +1,5 @@
+numpy>=1.21,<1.25
+matplotlib
+pytest>=7.0
+numdifftools>=0.9.40
+ipykernel

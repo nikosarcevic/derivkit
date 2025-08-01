@@ -3,3 +3,10 @@
 logs/
 plots_tests/
 notebooks/logs/
+
+# Ignore Sphinx build outputs
+docs/build/
+/notebooks/plots/blowup_fn/
+/notebooks/plots/standard_fn/
+/notebooks/plots/adaptive_fit_with_noise_order1_demo_func.pdf
+/derivkit_env/
