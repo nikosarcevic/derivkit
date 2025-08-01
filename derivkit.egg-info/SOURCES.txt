@@ -1,0 +1,17 @@
+LICENSE
+README.md
+pyproject.toml
+setup.py
+derivkit/__init__.py
+derivkit/adaptive_fit.py
+derivkit/derivative_plotter.py
+derivkit/finite_difference.py
+derivkit/kit.py
+derivkit/utils.py
+derivkit.egg-info/PKG-INFO
+derivkit.egg-info/SOURCES.txt
+derivkit.egg-info/dependency_links.txt
+derivkit.egg-info/requires.txt
+derivkit.egg-info/top_level.txt
+derivkit/tests/test_derivkit.py
+docs/source/conf.py

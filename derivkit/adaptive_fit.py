@@ -1,5 +1,6 @@
 from typing import Optional
 import warnings
+warnings.simplefilter("once", category=RuntimeWarning)
 
 import numpy as np
 
@@ -41,10 +42,11 @@ class AdaptiveFitDerivative:
         Provides inverse-distance weights for polynomial fitting.
     """
 
-    def __init__(self, function, central_value, derivative_order=1):
+    def __init__(self, function, central_value, derivative_order=1, fit_tolerance=0.05):
         self.function = function
         self.central_value = central_value
         self.derivative_order = derivative_order
+        self.fit_tolerance = fit_tolerance
         self.diagnostics_data = None
         self.min_used_points = 5  # Minimum number of samples required for fitting
 
@@ -52,7 +54,6 @@ class AdaptiveFitDerivative:
             self,
             include_zero=True,
             min_samples=7,
-            fit_tolerance=0.05,
             diagnostics=False,
             fallback_mode: str = "finite_difference",  # "finite_difference" | "poly_at_floor" | "auto"
             floor_accept_multiplier: float = 2.0,  # used when fallback_mode == "auto"
@@ -122,7 +123,7 @@ class AdaptiveFitDerivative:
                 last_yfit, last_resid = fit["y_fit"].copy(), fit["residuals"].copy()
 
                 # Accept if within tolerance
-                if fit["rel_error"] < fit_tolerance:
+                if fit["rel_error"] < self.fit_tolerance:
                     m = self.derivative_order
                     derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (last_fit["h"] ** m)
                     if diagnostics:
@@ -138,7 +139,7 @@ class AdaptiveFitDerivative:
 
                 # Prune worst residuals and refit
                 x_vals, y_vals, removed = self._prune_by_residuals(
-                    x_vals, y_vals, fit["residuals"], fit_tolerance, required_points,
+                    x_vals, y_vals, fit["residuals"], self.fit_tolerance, required_points,
                     max_remove=2, keep_center=True, keep_symmetric=True,
                 )
                 if removed:
@@ -147,7 +148,7 @@ class AdaptiveFitDerivative:
                 # At floor and still failing tolerance -> decide fallback
                 at_floor = (last_x is not None) and (len(last_x) == required_points)
                 accept, tag = self._maybe_accept_at_floor(
-                    last_resid, at_floor, fit_tolerance, fallback_mode, floor_accept_multiplier
+                    last_resid, at_floor, self.fit_tolerance, fallback_mode, floor_accept_multiplier
                 )
                 if accept:
                     m = self.derivative_order
@@ -159,7 +160,7 @@ class AdaptiveFitDerivative:
                             "mode": tag,
                             "max_resid": float(np.max(last_resid)),
                             "median_resid": float(np.median(last_resid)),
-                            "fit_tolerance": float(fit_tolerance),
+                            "fit_tolerance": float(self.fit_tolerance),
                             "floor_accept_multiplier": float(floor_accept_multiplier),
                             "accepted": True,
                         }
@@ -167,7 +168,7 @@ class AdaptiveFitDerivative:
                     warnings.warn(
                         f"[AdaptiveFitDerivative] Accepted polynomial at minimum points ({required_points}) "
                         f"with residuals above tolerance (max={np.max(last_resid):.3g}, "
-                        f"tol={fit_tolerance:.3g}) using mode='{tag}'.",
+                        f"tol={self.fit_tolerance:.3g}) using mode='{tag}'.",
                         RuntimeWarning
                     )
                     success = True
@@ -193,7 +194,7 @@ class AdaptiveFitDerivative:
                     })
                 detail = ""
                 if last_resid is not None:
-                    detail = f" (last max residual {np.max(last_resid):.3g} vs tol {fit_tolerance:.3g})"
+                    detail = f" (last max residual {np.max(last_resid):.3g} vs tol {self.fit_tolerance:.3g})"
                 warnings.warn(
                     f"[AdaptiveFitDerivative] Falling back to finite differences because polynomial fit "
                     f"did not meet tolerance{detail}.",

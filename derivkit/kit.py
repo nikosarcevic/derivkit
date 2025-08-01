@@ -33,8 +33,9 @@ class DerivativeKit:
         function: Callable[[float], float],
         central_value: float,
         derivative_order: int = 1,
+        fit_tolerance=0.05
     ):
-        self.adaptive = AdaptiveFitDerivative(function, central_value, derivative_order)
+        self.adaptive = AdaptiveFitDerivative(function, central_value, derivative_order, fit_tolerance=fit_tolerance)
         self.finite = FiniteDifferenceDerivative(function, central_value, derivative_order)
 
     def get_used_points(self):

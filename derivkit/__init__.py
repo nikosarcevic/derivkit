@@ -1,6 +1,10 @@
 from .adaptive_fit import AdaptiveFitDerivative
 from .finite_difference import FiniteDifferenceDerivative
 from .kit import DerivativeKit
+from .plotutils.plot_helpers import PlotHelpers
+from .plotutils.plot_style import *
+from .plotutils.plot_kit import PlotKit
+
 from .utils import (
     log_debug_message,
     is_finite_and_differentiable,
@@ -9,7 +13,7 @@ from .utils import (
     is_symmetric_grid,
     generate_test_function
 )
-from .derivative_plotter import DerivativePlotter
+
 # from .derivative_tools import DerivativeTools
 # from .expansions import ExpansionTools
 
