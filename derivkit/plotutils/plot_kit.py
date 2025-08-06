@@ -1,4 +1,6 @@
 import os
+from time import perf_counter
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -661,4 +663,374 @@ def plot_multi_order_error_vs_noise(
     os.makedirs(plot_dir, exist_ok=True)  # ensure directory exists
     plt.savefig(os.path.join(plot_dir, f"multi_order_error_vs_snr_order{order}{extra}.pdf"), dpi=300)
     plt.savefig(os.path.join(plot_dir, f"multi_order_error_vs_snr_order{order}{extra}.png"), dpi=300)
+    plt.show()
+
+
+def slow_function(x, sleep_time):
+    """
+    Simulates a slow, compute-intensive mathematical function.
+
+    This function applies a non-linear transformation to the input `x` involving
+    sine, exponential decay, and logarithmic growth, repeated 100 times to mimic
+    computational load. Additionally, it pauses execution for a specified duration
+    using `time.sleep`.
+
+    Parameters
+    ----------
+    x : float or np.ndarray
+        Input value(s) to be processed.
+    sleep_time : float
+        Time in seconds to pause execution before starting computation.
+
+    Returns
+    -------
+    float or np.ndarray
+        Transformed value(s) after applying the repeated operation.
+    """
+
+    time.sleep(sleep_time)
+    for _ in range(100):
+        x = np.sin(x**2) * np.exp(-x**2) + np.log(1 + x**2)
+    return x
+
+
+def make_slow_func(sleep_time):
+    """
+    Creates a lambda function that wraps `slow_function` with a fixed sleep time.
+
+    Parameters
+    ----------
+    sleep_time : float
+        Time in seconds that the wrapped function will sleep before computation.
+
+    Returns
+    -------
+    function
+        A lambda function that takes `x` as input and calls `slow_function(x, sleep_time)`.
+    """
+
+    return lambda x: slow_function(x, sleep_time)
+
+
+def plot_timing_for_order(order, sleep_times, timings_adaptive, timings_finite):
+    """
+    Plot timing benchmarks comparing adaptive and finite difference methods
+    for a given derivative order as a function of simulated function evaluation time.
+
+    This function assumes access to global dictionaries `timings_adaptive` and
+    `timings_finite`, which store timing results for various derivative orders,
+    as well as `sleep_times`, a list of simulated function evaluation times.
+    It fits a linear model to each method's timing data, computes the slowdown
+    factor of the adaptive method relative to finite differences, and visualizes
+    the timing comparison.
+
+    Parameters
+    ----------
+    order : int
+        The derivative order for which to generate the timing comparison plot.
+    sleep_times : list of float
+        List of simulated function evaluation times (in seconds) used for the x-axis.
+    timings_adaptive : dict
+        Dictionary containing timing results for the adaptive method, keyed by derivative order.
+    timings_finite : dict
+        Dictionary containing timing results for the finite difference method, keyed by derivative order.
+
+    Returns
+    -------
+    None
+        Displays a matplotlib plot and prints the slowdown factor in the legend.
+    """
+    x = np.array(sleep_times)
+    y_adaptive = np.array(timings_adaptive[order])
+    y_finite   = np.array(timings_finite[order])
+
+    # Fit slopes and compute slowdown ratio
+    a_ad, _ = np.polyfit(x, y_adaptive, 1)
+    a_fin, _ = np.polyfit(x, y_finite, 1)
+    slowdown = a_ad / a_fin
+    note = f"adaptive ≈ {slowdown:.1f}× slower"
+
+    # Plot
+    plt.figure(figsize=(7, 5))
+    plt.plot(x, y_adaptive, 'o-', label="Adaptive Method",
+             color=GRADIENT_COLORS[f"adaptive_{order}"],
+             markersize=10, lw=DEFAULT_LINEWIDTH)
+
+    plt.plot(x, y_finite, 'o-', label="Finite Difference",
+             color=GRADIENT_COLORS[f"finite_{order}"],
+             markersize=10, lw=DEFAULT_LINEWIDTH)
+
+    plt.plot([], [], ' ', label=note)
+
+    plt.xlabel("Simulated Function Evaluation Time [s]", fontsize=14)
+    plt.ylabel("Total Derivative Evaluation Time [s]", fontsize=14)
+    plt.title(f"Timing Benchmark (Derivative Order {order})", fontsize=16)
+    plt.legend(fontsize=13, frameon=True)
+    plt.xscale("log")
+    plt.tight_layout()
+    plt.show()
+
+
+def benchmark_derivative_timing_vs_order(function,
+                                         central_value,
+                                         orders,
+                                         stencil_points=5,
+                                         stencil_stepsize=0.01):
+    """
+    Benchmark and plot the evaluation time of adaptive vs. finite difference
+    derivative estimation methods across multiple derivative orders.
+
+    This function measures and compares the runtime of the `DerivativeKit`'s
+    adaptive and finite difference methods for computing derivatives of the
+    provided function at a given point, over a range of derivative orders.
+    It generates a plot showing how the evaluation time scales with derivative order.
+
+    Parameters
+    ----------
+    function : callable
+        The function to differentiate.
+    central_value : float
+        The point at which the derivative is evaluated.
+    orders : list of int
+        The derivative orders to benchmark.
+    stencil_points: int, optional
+        Number of stencil points to use for the finite difference method (default is 5).
+    stencil_stepsize: float, optional
+        Step size for the finite difference stencil (default is 0.01).
+
+    Returns
+    -------
+    None
+        Displays a matplotlib plot comparing timing for each method.
+    """
+    adaptive_times = []
+    finite_times = []
+
+    for order in orders:
+        kit = DerivativeKit(function, central_value=central_value, derivative_order=order)
+
+        # Time adaptive method
+        start = perf_counter()
+        _ = kit.adaptive.compute()
+        adaptive_times.append(perf_counter() - start)
+
+        # Time finite difference method
+        start = perf_counter()
+        _ = kit.finite.compute(stencil_points=stencil_points, stencil_stepsize=stencil_stepsize)
+        finite_times.append(perf_counter() - start)
+
+    # Plotting
+    plt.figure(figsize=(7, 5))
+    plt.plot(orders, adaptive_times, 'o-', label="adaptive",
+             color=DEFAULT_COLORS["adaptive"], lw=DEFAULT_LINEWIDTH, markersize=10)
+    plt.plot(orders, finite_times, 'o-', label="finite",
+             color=DEFAULT_COLORS["finite"], lw=DEFAULT_LINEWIDTH, markersize=10)
+
+    plt.xlabel("Derivative Order", fontsize=14)
+    plt.ylabel("Total Evaluation Time [s]", fontsize=14)
+    plt.title("Timing vs Derivative Order", fontsize=16)
+    plt.xticks(orders, fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend(fontsize=13)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_adaptive_timing_sweeps(
+    sleep_time=0.01,
+    x0=0.0005,
+    deriv_orders=(1, 2, 3),
+    fit_tolerance_fixed=0.01,
+    min_used_points_fixed=11,
+    min_pts_list=None,
+    fit_tolerances=None,
+    save_fig=True,
+    output_filename=None
+):
+    """
+    Benchmark and plot timing results for adaptive derivative estimation as a function of:
+    (1) `min_used_points` with fixed `fit_tolerance`
+    (2) `fit_tolerance` with fixed `min_used_points`
+
+    Parameters
+    ----------
+    sleep_time : float
+        Artificial delay in function evaluation.
+    x0 : float
+        Point at which to evaluate the derivative.
+    deriv_orders : tuple of int
+        Derivative orders to benchmark and plot.
+    fit_tolerance_fixed : float
+        The fixed fit tolerance used when sweeping `min_used_points`.
+    min_used_points_fixed : int
+        The fixed number of points used when sweeping `fit_tolerance`.
+    min_pts_list : array-like, optional
+        Values of `min_used_points` to sweep. Default: np.arange(5, 30, 2).
+    fit_tolerances : array-like, optional
+        Values of `fit_tolerance` to sweep. Default: np.logspace(-4, log10(0.2), 14).
+    save_fig : bool
+        If True, saves the figure to 'plots/adaptive_timing_sweeps.{png,pdf}'.
+    output_filename : str or None
+        If provided, also saves the benchmark results to a `.npz` file.
+
+    Returns
+    -------
+    None
+        Displays the plot. Optionally saves results and/or figure.
+    """
+    # === Run benchmark
+    if min_pts_list is None:
+        min_pts_list = np.arange(5, 30, 2)
+    if fit_tolerances is None:
+        fit_tolerances = np.logspace(-4, np.log10(0.2), 14)
+
+    timings_minpts = {order: [] for order in deriv_orders}
+    timings_tol = {order: [] for order in deriv_orders}
+
+    for order in deriv_orders:
+        for min_pts in min_pts_list:
+            f = make_slow_func(sleep_time)
+            kit = DerivativeKit(f, central_value=x0, derivative_order=order)
+            kit.adaptive.fit_tolerance = fit_tolerance_fixed
+            kit.adaptive.min_used_points = min_pts
+            start = perf_counter()
+            _ = kit.adaptive.compute()
+            timings_minpts[order].append(perf_counter() - start)
+
+    for order in deriv_orders:
+        for tol in fit_tolerances:
+            f = make_slow_func(sleep_time)
+            kit = DerivativeKit(f, central_value=x0, derivative_order=order)
+            kit.adaptive.fit_tolerance = tol
+            kit.adaptive.min_used_points = min_used_points_fixed
+            start = perf_counter()
+            _ = kit.adaptive.compute()
+            timings_tol[order].append(perf_counter() - start)
+
+    if output_filename:
+        np.savez(
+            output_filename,
+            timings_minpts=timings_minpts,
+            timings_tol=timings_tol,
+            min_pts_list=min_pts_list,
+            fit_tolerances=fit_tolerances
+        )
+
+    # === Plotting
+    gradient_colors = GRADIENT_COLORS
+    markers = {order: "o" for order in deriv_orders}
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
+    marker_size=10
+    font_size=20
+
+    for order in deriv_orders:
+        axes[0].plot(
+            min_pts_list,
+            timings_minpts[order],
+            markers[order] + "-",
+            label=f"order={order}",
+            color=gradient_colors[f"adaptive_{order}"],
+            markersize=marker_size
+        )
+    axes[0].set_xlabel("min_used_points", fontsize=font_size)
+    axes[0].set_ylabel("timing [s]", fontsize=font_size)
+    axes[0].legend(title=f"tol={fit_tolerance_fixed}", fontsize=font_size)
+
+    for order in deriv_orders:
+        axes[1].plot(
+            fit_tolerances,
+            timings_tol[order],
+            markers[order] + "-",
+            label=f"order={order}",
+            color=gradient_colors[f"adaptive_{order}"],
+            markersize=marker_size
+        )
+    axes[1].set_xscale("log")
+    axes[1].set_xlabel("fit_tolerance", fontsize=font_size)
+    axes[1].legend(title=f"min_pts={min_used_points_fixed}", fontsize=font_size)
+
+    plt.tight_layout()
+    if save_fig:
+        fig.savefig("plots/adaptive_timing_sweeps.pdf", dpi=300)
+        fig.savefig("plots/adaptive_timing_sweeps.png", dpi=300)
+    plt.show()
+
+
+def plot_function_with_residuals(f, x0, order=1, dx=0.5,
+                                 title="Function and Tangents + Residuals + Fractional Diff",
+                                 show_ratio_panel=True, save_fig=True,
+                                 function_name=None):
+    x = np.linspace(x0 - dx, x0 + dx, 400)
+    y = f(x)
+    f0 = f(x0)
+
+    kit = DerivativeKit(f, central_value=x0, derivative_order=order)
+    slope_adaptive = kit.adaptive.compute()
+    slope_finite = kit.finite.compute()
+
+    tangent_adapt = slope_adaptive * (x - x0) + f0
+    tangent_finite = slope_finite * (x - x0) + f0
+
+    resid_adapt = y - tangent_adapt
+    resid_finite = y - tangent_finite
+
+    frac_adapt = resid_adapt / y
+    frac_finite = resid_finite / y
+
+    # Avoid divide-by-zero
+    ratio = np.divide(frac_adapt, frac_finite, out=np.full_like(frac_adapt, np.nan), where=frac_finite != 0)
+
+    colors = DEFAULT_COLORS
+    lw = 3
+    fs = 15
+
+    if show_ratio_panel:
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(7, 9), sharex=True,
+                                                 gridspec_kw={'height_ratios': [2, 1, 1, 1]})
+    else:
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(7, 7), sharex=True,
+                                            gridspec_kw={'height_ratios': [2, 1, 1]})
+
+    # 1. Function and tangents
+    ax1.plot(x, y, label='function', color=colors["excluded"], lw=lw)
+    ax1.plot(x, tangent_adapt, lw=lw, label='adaptive tangent', color=colors["adaptive"])
+    ax1.plot(x, tangent_finite, ':', lw=lw, label='finite tangent', color=colors["finite"])
+    ax1.set_ylabel("$f(x)$", fontsize=fs)
+    ax1.set_title(title, fontsize=fs)
+    ax1.legend(fontsize=fs)
+
+    # 2. Residuals
+    ax2.axhline(0, ls='--', color=colors["central"], lw=lw)
+    ax2.plot(x, resid_adapt, label='adaptive', color=colors["adaptive"], lw=lw)
+    ax2.plot(x, resid_finite, label='finite', color=colors["finite"], lw=lw, ls=":")
+    ax2.set_ylabel(r"$f(x) - T(x)$", fontsize=fs)
+    ax2.legend(fontsize=fs-2)
+
+    # 3. Fractional residuals
+    ax3.axhline(0, ls='--', color=colors["central"], lw=lw)
+    ax3.plot(x, frac_adapt, label='adaptive', color=colors["adaptive"], lw=lw)
+    ax3.plot(x, frac_finite, label='finite', color=colors["finite"], lw=lw, ls=":")
+    ax3.set_ylabel(r"$\frac{f(x) - T(x)}{f(x)}$", fontsize=fs)
+    if not show_ratio_panel:
+        ax3.set_xlabel("evaluation point $x$", fontsize=fs)
+    ax3.legend(fontsize=fs-2)
+
+    # 4. Ratio panel
+    if show_ratio_panel:
+        ax4.axhline(0, ls='--', color=colors["central"], lw=lw)
+        ax4.plot(x, ratio-1, color="lightgray", lw=lw, label=r"adaptive / finite")
+        ax4.set_ylabel(r"frac. ratio", fontsize=fs)
+        ax4.set_xlabel("evaluation point $x$", fontsize=fs)
+        ax4.legend(fontsize=fs-2)
+
+    plt.tight_layout()
+    plt.subplots_adjust(hspace=0.03)
+    if function_name is not None:
+       fname = f"function_with_residuals_{function_name}_order{order}"
+    if save_fig:
+        fig.savefig(f"plots/{fname}.pdf", dpi=300)
+        fig.savefig(f"plots/{fname}.png", dpi=300)
+    else:
+        plt.tight_layout()
     plt.show()
