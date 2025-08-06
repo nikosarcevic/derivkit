@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "derivkit"
+version = "0.0.1"
+dependencies = [
+  "matplotlib",
+  "numdifftools",
+  "numpy",
+]
+authors = [
+  { name="Nikolina Šarčević", email="nikolina.sarcevic@gmail.com" },
+  { name="Matthijs van der Wild", email="matthijs@vanderwild.com" },
+  { name="Cynthia Trendafilova", email="cyntrendafilova@gmail.com" },
+  { name="Bastien Carreres", email="bastien.carreres@duke.edu" },
+]
+description = "A robust toolkit for stable numerical derivatives"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+license = "MIT"
+license-files = ["LICENSE*"]
