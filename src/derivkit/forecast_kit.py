@@ -59,7 +59,8 @@ class ForecastKit:
             first_order_derivatives = np.zeros((self.M,self.N))
             for m in range(self.M):
                 # 1 parameter to differentiate, and M-1 parameters to hold fixed
-                functionToDiff = self._reduceFunctionTo1Var(self.function, m, self.central_value)
+                central_values_x = deepcopy(self.central_value)
+                functionToDiff = self._reduceFunctionTo1Var(self.function, m, central_values_x)
                 # Currently done with adaptive
                 kit = DerivativeKit(functionToDiff, \
                                     self.central_value[m], \
@@ -74,7 +75,8 @@ class ForecastKit:
                 for m2 in range(self.M):
                     if m1==m2:
                         # 1 parameter to differentiate twice, and M-1 parameters to hold fixed
-                        functionToDiff1 = self._reduceFunctionTo1Var(self.function, m1, self.central_value)
+                        central_values_x = deepcopy(self.central_value)
+                        functionToDiff1 = self._reduceFunctionTo1Var(self.function, m1, central_values_x)
                         kit1 = DerivativeKit(functionToDiff1, \
                                              self.central_value[m1], \
                                              derivative_order = 2)
