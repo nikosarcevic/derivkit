@@ -3,3 +3,7 @@
 logs/
 plots_tests/
 notebooks/logs/
+*.egg-info
+venv
+build
+dist
