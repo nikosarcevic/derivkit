@@ -7,3 +7,5 @@ notebooks/logs/
 venv
 build
 dist
+.tox
+.cache
