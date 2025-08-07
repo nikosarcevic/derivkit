@@ -186,8 +186,8 @@ def test_diagnostics_structure_is_present():
 def test_vector_fallback_used():
     """Test fallback on vector-valued function returns valid, finite results."""
     f = lambda x: np.array([1e-10 * x**3, 1e-10 * x**2])
-    calc = DerivativeKit(f, central_value=1.0, derivative_order=2).adaptive
-    result = calc.compute(fit_tolerance=1e-5)
+    calc = DerivativeKit(f, central_value=1.0, derivative_order=2, fit_tolerance=1e-5).adaptive
+    result = calc.compute()
     assert result.shape == (2,)
     assert np.all(np.isfinite(result))
 
