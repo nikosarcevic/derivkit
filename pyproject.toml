@@ -28,3 +28,8 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICENSE*"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src",
+]
