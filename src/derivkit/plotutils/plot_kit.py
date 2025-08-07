@@ -1,6 +1,7 @@
 import os
 from time import perf_counter
 import time
+from typing import Optional
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -60,9 +61,9 @@ class PlotKit:
         derivative_order: int = 1,
         fit_tolerance=0.05,
         plot_dir: str = "plots",
-        linewidth: float | None = None,
-        colors: dict | None = None,
-        gradient_colors: dict | None = None,
+        linewidth: Optional[float] = None,
+        colors: Optional[dict] = None,
+        gradient_colors: Optional[dict] = None,
         true_derivative_fn=None
     ):
         self.function = function
