@@ -72,7 +72,7 @@ class ForecastKit:
             for m1 in range(self.n_parameters):
                 for m2 in range(self.n_parameters):
                     if m1==m2:
-                        # 1 parameter to differentiate twice, and M-1 parameters to hold fixed
+                        # 1 parameter to differentiate twice, and n_parameters-1 parameters to hold fixed
                         central_values_x = deepcopy(self.central_values)
                         function_to_diff1 = self._get_partial_function(self.function, m1, central_values_x)
                         kit1 = DerivativeKit(function_to_diff1,
