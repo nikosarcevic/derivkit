@@ -9,3 +9,5 @@ build
 dist
 .tox
 .cache
+notebooks/plots/*.png
+notebooks/plots/*.pdf
