@@ -12,26 +12,23 @@ class ForecastKit:
     ----------
     function : callable
         The scalar or vector-valued function to differentiate.
-        For N observables with M model parameters, this should be a list of
-        N functions, with each one a function of 1 list of M parameters.
-    central_value : array-like
-        The point at which the derivative is evaluated.
-        This should be a list or array of M values, corresponding to M model parameters.
-        For M model parameters, this should be 1 list of M values,
-        provided in the same order as the requested input of the functions
-        to be differentiated.
-    covariance_matrix : float
+        It should accept a list or array of parameter values as input and return
+        either a scalar or a NumPy array of observable values.
+    central_values : array-like
+        The point(s) at which the derivative is evaluated.
+        A 1D array or list of parameter values matching the expected input of the function.
+    covariance_matrix : array-like
         The covariance matrix of the observables.
-        For N observables, this should be an NxN matrix, with the order of the 
-        matrix entries matching the order of the functions to be differentiated.
+        Should be a square matrix with shape (N, N), where N is the number of observables
+        returned by the function.
     """
 
-    def __init__(self, function, central_value, covariance_matrix):
+    def __init__(self, function, central_values, covariance_matrix):
         self.function = function
-        self.central_value = np.atleast_1d(central_value)
+        self.central_values = np.atleast_1d(central_values)
         self.covariance_matrix = covariance_matrix
-        self.M = len(self.central_value)
-        self.N = len(covariance_matrix)
+        self.n_parameters = len(self.central_values)
+        self.n_observables = len(covariance_matrix)
 
     def get_derivatives(self, derivative_order):
         """
@@ -58,52 +55,47 @@ class ForecastKit:
 
         if derivative_order == 1:
             # Get the first-order derivatives
-            first_order_derivatives = np.zeros((self.M, self.N))
-            for m in range(self.M):
+            first_order_derivatives = np.zeros((self.n_parameters
+, self.n_observables
+))
+            for m in range(self.n_parameters):
                 # 1 parameter to differentiate, and M-1 parameters to hold fixed
-                central_values_x = deepcopy(self.central_value)
+                central_values_x = deepcopy(self.central_values)
                 function_to_diff = self._get_partial_function(self.function, m, central_values_x)
-                # Currently done with adaptive
                 kit = DerivativeKit(function_to_diff,
-                                    self.central_value[m],
+                                    self.central_values[m],
                                     derivative_order=1)
-                #first_order_derivatives[m] = kit.adaptive.compute()
-                first_order_derivatives[m] = np.atleast_1d(kit.adaptive.compute())
+                first_order_derivatives[m] = kit.adaptive.compute()
             return first_order_derivatives
 
         elif derivative_order == 2:
             # Get the second-order derivatives
-            second_order_derivatives = np.zeros((self.M,self.M,self.N))
-            for m1 in range(self.M):
-                for m2 in range(self.M):
+            second_order_derivatives = np.zeros((self.n_parameters, self.n_parameters, self.n_observables))
+            for m1 in range(self.n_parameters):
+                for m2 in range(self.n_parameters):
                     if m1==m2:
                         # 1 parameter to differentiate twice, and M-1 parameters to hold fixed
-                        central_values_x = deepcopy(self.central_value)
+                        central_values_x = deepcopy(self.central_values)
                         function_to_diff1 = self._get_partial_function(self.function, m1, central_values_x)
                         kit1 = DerivativeKit(function_to_diff1,
-                                             self.central_value[m1],
+                                             self.central_values[m1],
                                              derivative_order=2)
-                        # Currently done with adaptive
-                        #second_order_derivatives[m1][m2] = kit1.adaptive.compute()
-                        second_order_derivatives[m1][m2] = np.atleast_1d(kit1.adaptive.compute())
+                        second_order_derivatives[m1][m2] = kit1.adaptive.compute()
 
                     else:
                         # 2 parameters to differentiate once, with other parameters held fixed
                         def function_to_diff2(y):
-                            central_values_y = deepcopy(self.central_value)
+                            central_values_y = deepcopy(self.central_values)
                             central_values_y[m2] = y
                             function_to_diff1 = self._get_partial_function(self.function, m1, central_values_y)
                             kit1 = DerivativeKit(function_to_diff1,
-                                                 self.central_value[m1],
+                                                 self.central_values[m1],
                                                  derivative_order=1)
-                            # Currently done with adaptive
                             return kit1.adaptive.compute()
                         kit2 = DerivativeKit(function_to_diff2,
-                                             self.central_value[m2],
+                                             self.central_values[m2],
                                              derivative_order=1)
-                        # Currently done with adaptive
-                        #second_order_derivatives[m1][m2] = kit2.adaptive.compute()
-                        second_order_derivatives[m1][m2] = np.atleast_1d(kit2.adaptive.compute())
+                        second_order_derivatives[m1][m2] = kit2.adaptive.compute()
 
             return second_order_derivatives
 
@@ -144,7 +136,8 @@ class ForecastKit:
                 inverse_covariance_matrix = np.linalg.pinv(self.covariance_matrix)
             except Exception as e:
                 print(f"Pseudoinverse also failed: {e}")
-                inverse_covariance_matrix = np.full((self.N, self.N), np.nan)
+                inverse_covariance_matrix = np.full((self.n_observables, self.n_observables),
+                                                    np.nan)
 
         if forecast_order == 1:
             # Compute Fisher matrix
