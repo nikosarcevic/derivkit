@@ -202,8 +202,8 @@ class AdaptiveFitDerivative:
                 )
 
         if diagnostics:
-            return derivatives if n_components > 1 else derivatives[0], self.diagnostics_data
-        return derivatives if n_components > 1 else derivatives[0]
+            return np.atleast_1d(derivatives), self.diagnostics_data
+        return np.atleast_1d(derivatives)
 
     def get_adaptive_offsets(
             self,

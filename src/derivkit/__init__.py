@@ -17,6 +17,8 @@ from .utils import (
 # from .derivative_tools import DerivativeTools
 # from .expansions import ExpansionTools
 
+from .forecast_kit import ForecastKit
+
 __all__ = [
     "AdaptiveFitDerivative",
     "FiniteDifferenceDerivative",
@@ -30,4 +32,5 @@ __all__ = [
     "generate_test_function",
     # "DerivativeTools",
     # "ExpansionTools"
+    "ForecastKit"
 ]
