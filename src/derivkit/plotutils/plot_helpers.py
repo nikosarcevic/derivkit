@@ -23,10 +23,8 @@ class PlotHelpers:
     ----------
     function : callable
         Original function to be differentiated.
-    x_center : float
+    central_value : float
         Central evaluation point.
-    derivative_order : int, optional
-        Derivative order to compute (default is 1).
     fit_tolerance : float, optional
         Tolerance used for adaptive fitting (default is 0.05).
     true_derivative_fn : callable, optional
@@ -37,32 +35,30 @@ class PlotHelpers:
     def __init__(
         self,
         function,
-        x_center,
-        derivative_order: int = 1,
+        central_value,
         fit_tolerance: float = 0.05,
         true_derivative_fn=None,
         plot_dir: str = "plots",
     ):
         self.function = function
-        self.x_center = x_center
+        self.central_value = central_value
         self.plot_dir = plot_dir
-        self.derivative_order = derivative_order
         self.fit_tolerance = fit_tolerance
         self.true_derivative_fn = true_derivative_fn
         self.derivs = DerivativeKit(function,
-                                    x_center,
-                                    derivative_order=self.derivative_order,
-                                    fit_tolerance=self.fit_tolerance)
+                                    central_value)
         self.seed = 42
 
         os.makedirs(self.plot_dir, exist_ok=True)
 
-    def get_noisy_derivatives(self, noise_std=0.01, trials=100):
+    def get_noisy_derivatives(self, derivative_order, noise_std=0.01, trials=100):
         """
-        Compute derivative estimates across multiple noisy trials using stencil, adaptive, and Numdifftools methods.
+        Compute derivative estimates across multiple noisy trials using finite, adaptive, and Numdifftools methods.
 
         Parameters
         ----------
+        derivative_order : int
+            The order of the derivative to compute.
         noise_std : float
             Standard deviation of the noise to add to the function.
         trials : int
@@ -74,7 +70,7 @@ class PlotHelpers:
             (finite_differences, adaptive_fits, numdifftools_estimates)
         """
         rng = np.random.default_rng(self.seed)
-        stencil_vals, adaptive_vals, nd_vals = [], [], []
+        finite_vals, adaptive_vals, nd_vals = [], [], []
 
         for _ in range(trials):
             # one shared noisy field for this trial
@@ -83,16 +79,14 @@ class PlotHelpers:
 
             # evaluate both methods on the SAME noisy function
             kit = DerivativeKit(noisy_f,
-                                self.x_center,
-                                derivative_order=self.derivative_order,
-                                fit_tolerance=self.fit_tolerance)
-            stencil_vals.append(kit.finite.compute(stencil_stepsize=0.01 * (abs(self.x_center) or 1.0)))
-            adaptive_vals.append(kit.adaptive.compute())
+                                self.central_value)
+            finite_vals.append(kit.finite.compute(stepsize=0.01 * (abs(self.central_value) or 1.0)))
+            adaptive_vals.append(kit.adaptive.compute(derivative_order=derivative_order))
 
-            nd_est = nd.Derivative(noisy_f, n=self.derivative_order)(self.x_center)
+            nd_est = nd.Derivative(noisy_f, n=derivative_order)(self.central_value)
             nd_vals.append(nd_est)
 
-        return stencil_vals, adaptive_vals, nd_vals
+        return finite_vals, adaptive_vals, nd_vals
 
     def run_derivative_trials_with_noise(self, method="finite", order=1, noise_std=0.01, trials=100):
         """
@@ -120,19 +114,16 @@ class PlotHelpers:
 
             if method == "finite":
                 # set h comparable to adaptive's default first offset: 1% of |x0|
-                fd_h = 0.01 * abs(self.x_center) if self.x_center != 0 else 0.01
+                fd_h = 0.01 * abs(self.central_value) if self.central_value != 0 else 0.01
                 result = DerivativeKit(noisy_f,
-                                       self.x_center,
-                                       derivative_order=order,
-                                       fit_tolerance=self.fit_tolerance).finite.compute(stencil_stepsize=fd_h)
+                                       self.central_value).finite.compute(stencil_stepsize=fd_h)
             elif method == "adaptive":
                 result = DerivativeKit(noisy_f,
-                                       self.x_center,
-                                       derivative_order=order,
-                                       fit_tolerance=0.10).adaptive.compute(fallback_mode="poly_at_floor")
+                                       self.central_value).adaptive.compute(fallback_mode="poly_at_floor",
+                                                                       fit_tolerance=self.fit_tolerance)
             elif method == "numdifftools":
                 # Use a real central difference with fixed step, and disable Richardson smoothing.
-                fd_h = 0.01 * abs(self.x_center) if self.x_center != 0 else 0.01  # match your FD scale
+                fd_h = 0.01 * abs(self.central_value) if self.central_value != 0 else 0.01  # match your FD scale
                 result = nd.Derivative(
                     noisy_f,
                     n=order,
@@ -140,7 +131,7 @@ class PlotHelpers:
                     order=2,  # base 2nd-order central difference
                     step=fd_h,  # fixed step comparable to FD
                     richardson_terms=0  # <- important: avoid extrapolation smoothing
-                )(self.x_center)
+                )(self.central_value)
 
             else:
                 raise ValueError(f"Unknown method: {method}")
@@ -148,15 +139,21 @@ class PlotHelpers:
             results.append(result)
         return results
 
-    def make_noisy_interpolated_function(self, func, x_center, width=0.2, resolution=100, noise_std=0.01, seed=None):
+    def make_noisy_interpolated_function(self,
+                                         function,
+                                         central_value,
+                                         width=0.2,
+                                         resolution=100,
+                                         noise_std=0.01,
+                                         seed=None):
         """
-        Create a noisy interpolated version of a function on a local interval around x_center.
+        Create a noisy interpolated version of a function on a local interval around central_value.
 
         Parameters
         ----------
-        func : callable
+        function : callable
             Function to be sampled.
-        x_center : float
+        central_value : float
             Central point of the interval.
         width : float
             Half-width of the interval.
@@ -173,8 +170,8 @@ class PlotHelpers:
             Interpolated noisy function.
         """
         rng = np.random.default_rng(self.seed if seed is None else seed)
-        x_grid = np.linspace(x_center - width, x_center + width, resolution)
-        y_grid = np.array([func(x) + rng.normal(0, noise_std) for x in x_grid])
+        x_grid = np.linspace(central_value - width, central_value + width, resolution)
+        y_grid = np.array([function(x) + rng.normal(0, noise_std) for x in x_grid])
 
         def noisy_interp(x):
             return np.interp(x, x_grid, y_grid)
@@ -205,9 +202,11 @@ class PlotHelpers:
 
         return noisy_f
 
-    def adaptive_fit_with_outlier_removal(self, x_vals, y_vals, return_inliers=False):
+
+    def adaptive_fit_with_outlier_removal(self, x_vals, y_vals, central_value=None, y_center=None, return_inliers=False):
         """
         Fit a line to (x, y) after removing outliers using a 2.5σ residual filter.
+        Ensures the central point (central_value, y_center) is always included in the fit.
 
         Parameters
         ----------
@@ -215,6 +214,10 @@ class PlotHelpers:
             X coordinates.
         y_vals : array-like
             Y coordinates.
+        central_value : float, optional
+            The central x value to enforce inclusion.
+        y_center : float, optional
+            The corresponding f(central_value) value.
         return_inliers : bool
             Whether to return a mask of inlier points.
 
@@ -230,7 +233,13 @@ class PlotHelpers:
         x_vals = np.asarray(x_vals)
         y_vals = np.asarray(y_vals)
 
-        # Simple outlier removal: remove points beyond 2.5 std
+        # Ensure central point is included
+        if central_value is not None and y_center is not None:
+            if not np.any(np.isclose(x_vals, central_value, rtol=1e-12, atol=1e-12)):
+                x_vals = np.append(x_vals, central_value)
+                y_vals = np.append(y_vals, y_center)
+
+        # Outlier removal
         residual = y_vals - np.poly1d(np.polyfit(x_vals, y_vals, deg=1))(x_vals)
         std = np.std(residual)
         inlier_mask = np.abs(residual) < 2.5 * std
@@ -241,12 +250,14 @@ class PlotHelpers:
             return slope, intercept, inlier_mask
         return slope, intercept, None
 
-    def nd_derivative(self, x):
+    def nd_derivative(self, x, derivative_order):
         """
         Compute derivative using numdifftools.
 
         Parameters
         ----------
+        derivative_order : int
+            Order of the derivative to compute.
         x : float
             Point at which to evaluate the derivative.
 
@@ -255,18 +266,20 @@ class PlotHelpers:
         float
             Derivative estimate from numdifftools.
         """
-        return nd.Derivative(self.function, n=self.derivative_order)(x)
+        return nd.Derivative(self.function, n=derivative_order)(x)
 
-    def reference_derivative(self, x=None, *, degree=None, half_width=None, num=21):
+    def reference_derivative(self, x=None, *, degree=None, derivative_order=1, half_width=None, num=21):
         """
         Estimate the true derivative via polynomial fitting if no analytical derivative is given.
 
         Parameters
         ----------
         x : float, optional
-            Point at which to evaluate (defaults to x_center).
+            Point at which to evaluate (defaults to central_value).
         degree : int, optional
             Degree of the fitting polynomial.
+        derivative_order : int, optional
+            Order of the derivative to compute (default is 1).
         half_width : float, optional
             Half-width of the fitting interval.
         num : int, optional
@@ -277,11 +290,11 @@ class PlotHelpers:
         float
             Estimated reference derivative.
         """
-        if x is None: x = self.x_center
+        if x is None: x = self.central_value
         if self.true_derivative_fn is not None:
             return self.true_derivative_fn(x)
 
-        n = self.derivative_order
+        n = derivative_order
         degree = degree or max(n + 2, 5)
         base = abs(x) if abs(x) > 0 else 1.0
         half_width = half_width or (0.05 * base)
@@ -320,11 +333,11 @@ class PlotHelpers:
         callable
             Noisy interpolated function.
         """
-        base = abs(self.x_center) or 1.0
+        base = abs(self.central_value) or 1.0
         width = cover_width or (0.5 * base)
         return self.make_noisy_interpolated_function(
-            func=self.function,
-            x_center=self.x_center,
+            function=self.function,
+            central_value=self.central_value,
             width=width,
             resolution=resolution,
             noise_std=sigma,
