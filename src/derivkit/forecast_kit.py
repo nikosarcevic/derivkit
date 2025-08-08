@@ -57,7 +57,7 @@ class ForecastKit:
             # Get the first-order derivatives
             first_order_derivatives = np.zeros((self.n_parameters, self.n_observables))
             for m in range(self.n_parameters):
-                # 1 parameter to differentiate, and M-1 parameters to hold fixed
+                # 1 parameter to differentiate, and n-parameters-1 parameters to hold fixed
                 central_values_x = deepcopy(self.central_values)
                 function_to_diff = self._get_partial_function(self.function, m, central_values_x)
                 kit = DerivativeKit(function_to_diff,
