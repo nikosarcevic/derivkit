@@ -94,7 +94,6 @@ def test_fallback_used(monkeypatch):
     # Patch the class behind your `adaptive` instance — no extra import needed
     monkeypatch.setattr(type(calc), "_fit_once", fail_fit, raising=True)
 
-    #with pytest.warns(RuntimeWarning, match="Falling back to finite differences"):
     with pytest.warns(RuntimeWarning, match="Falling back to finite difference derivative"):
         val = calc.compute()
 
@@ -147,7 +146,6 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
     monkeypatch.setattr(type(calc), "_fit_once", fail_fit, raising=True)
 
     # Expect a runtime warning about FD fallback and a correct derivative near e^0 = 1
-    #with pytest.warns(RuntimeWarning, match="Falling back to finite differences"):
     with pytest.warns(RuntimeWarning, match="Falling back to finite difference derivative"):
         val = calc.compute()
     assert np.isfinite(val)
@@ -168,7 +166,6 @@ def test_fallback_returns_finite_value_when_fit_fails(monkeypatch):
 
     monkeypatch.setattr(type(calc), "_fit_once", fail_fit, raising=True)
 
-    #with pytest.warns(RuntimeWarning, match="Falling back to finite differences"):
     with pytest.warns(RuntimeWarning, match="Falling back to finite difference derivative"):
         result = calc.compute()
     # Analytic d2/dx2 of 1e-10 * x^3 at x=1 is 6e-10
