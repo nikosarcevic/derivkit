@@ -25,6 +25,11 @@ class AdaptiveFitDerivative:
         The function to be differentiated. Must return scalar or vector output.
     central_value : float
         The point at which the derivative is evaluated.
+    diagnostics_data : dict or None
+        The diagnostic data collected during the fitting process, if requested.
+    min_used_points : int
+        Default minimum number of samples required for fitting. This is used to ensure
+        that the polynomial fit has enough data points to be meaningful.
 
     Methods
     -------
@@ -101,7 +106,11 @@ class AdaptiveFitDerivative:
             derivative array and a dictionary of diagnostic data.
         """
         if derivative_order not in [1, 2, 3, 4]:
-            raise ValueError("Only derivative orders 1 to 4 are supported.")
+            raise ValueError(
+                f"Invalid derivative_order={derivative_order}. "
+                "Only derivative orders 1 to 4 are supported; "
+                "higher orders are not currently implemented."
+            )
 
         # Sampling grid
         x_offsets, required_points = self._build_x_offsets(derivative_order, include_zero, min_samples)
@@ -303,13 +312,14 @@ class AdaptiveFitDerivative:
             Whether to include the central point (zero offset) in the sampling grid.
         min_samples : int
             The minimum number of total sampling points to start with before pruning.
-            This interacts with `min_used_points` and the derivative order to determine
-            the final required number of usable samples.
+            This interacts with `self.min_used_points` (default = 5), which is the
+            minimum number of points required to perform a polynomial fit, and with
+            the derivative order to determine the final required number of usable samples
 
         Returns
         -------
         x_offsets : np.ndarray
-            Array of symmetric offsets relative to `central_value`, optionally including zero.
+            Array of symmetric offsets relative to `self.central_value`, optionally including zero.
             These define where the function will be evaluated.
         required_points : int
             The minimum number of samples that must be retained during adaptive fitting
@@ -351,7 +361,7 @@ class AdaptiveFitDerivative:
         Returns
         -------
         dict
-        Dictionary containing fit result, polynomial object, residuals, and metadata.
+            Dictionary containing fit result, polynomial object, residuals, and metadata.
         """
         # Normalize coordinates around the center for conditioning
         t_vals = x_vals - self.central_value
@@ -405,7 +415,7 @@ class AdaptiveFitDerivative:
         Parameters
         ----------
         last_residuals : np.ndarray or None
-            Residuals from the last attempted polynomial fit. If None, decision is based only
+            Residuals from the last attempted polynomial fit. If None, acceptance is based only
             on fallback_mode and at_floor status.
         at_floor : bool
             Whether the algorithm has reached the minimum allowed number of sample points.
