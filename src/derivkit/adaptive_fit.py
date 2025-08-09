@@ -113,7 +113,10 @@ class AdaptiveFitDerivative:
             )
 
         # Sampling grid
-        x_offsets, required_points = self._build_x_offsets(derivative_order, include_zero, min_samples)
+        x_offsets, required_points = self._build_x_offsets(central_value=self.central_value,
+                                                           derivative_order=derivative_order,
+                                                           include_zero=include_zero,
+                                                           min_samples=min_samples)
         x_values = self.central_value + x_offsets
 
         # Evaluate the function at those points
@@ -132,7 +135,7 @@ class AdaptiveFitDerivative:
                 "residuals": [],
                 "used_mask": [],
                 "status": [],
-                "fit_poly": None,  # ← add this
+                "fit_poly": None,
                 "fit_tolerance": None
             }
         else:
@@ -246,6 +249,7 @@ class AdaptiveFitDerivative:
 
     def get_adaptive_offsets(
             self,
+            central_value=None,
             base_rel=0.01,  # 1% of |x0| as first relative step
             base_abs=1e-6,  # absolute step if |x0| is small
             factor=1.5,
@@ -260,6 +264,8 @@ class AdaptiveFitDerivative:
 
          Parameters
          ----------
+         central_value : float or None
+            The central value around which to generate offsets. If None, uses `self.central_value`.
          base_rel : float
             Base relative step size as a fraction of the central value. Default is 1% of |x0|.
          base_abs : float
@@ -280,7 +286,10 @@ class AdaptiveFitDerivative:
         Returns:
             Absolute step sizes (positive only), not including the central 0 step.
         """
-        x0 = float(self.central_value)
+        if not central_value:
+            x0 = self.central_value
+        else:
+            x0 = central_value
         use_abs = (step_mode == "absolute") or (step_mode == "auto" and abs(x0) < x_small_threshold)
 
         if use_abs:
@@ -294,7 +303,7 @@ class AdaptiveFitDerivative:
             raise ValueError("No valid offsets generated.")
         return offsets
 
-    def _build_x_offsets(self, derivative_order, include_zero: bool, min_samples: int):
+    def _build_x_offsets(self, central_value, derivative_order, include_zero: bool, min_samples: int):
         """
         Construct a symmetric array of sampling offsets around `central_value` for polynomial fitting.
 
@@ -305,6 +314,9 @@ class AdaptiveFitDerivative:
 
         Parameters
         ----------
+        central_value : float
+            The central point around which the offsets are generated. This is the point at which
+            the derivative will be evaluated.
         derivative_order : int
             The order of the derivative to be computed. Determines the minimum polynomial degree,
             which affects the number of required sample points.
@@ -330,7 +342,7 @@ class AdaptiveFitDerivative:
         order_based_floor = derivative_order + 2
         required_points = max(min_samples, max(self.min_used_points, order_based_floor))
 
-        offsets = self.get_adaptive_offsets()
+        offsets = self.get_adaptive_offsets(central_value, derivative_order, include_zero, min_samples)
         growth_limit = offsets[-1] * (1.5 ** 3)
 
         while True:
