@@ -19,8 +19,8 @@ class ForecastKit:
         A 1D array or list of parameter values matching the expected input of the function.
     covariance_matrix : array-like
         The covariance matrix of the observables.
-        Should be a square matrix with shape (N, N), where N is the number of observables
-        returned by the function.
+        Should be a square matrix with shape (n_observables, n_observables), where 
+        n_observables is the number of observables returned by the function.
     """
 
     def __init__(self, function, central_values, covariance_matrix):
@@ -47,8 +47,8 @@ class ForecastKit:
         -------
         np.ndarray
             An array of derivative values.
-                d = 1 returns a MxN array of first-order derivatives.
-                d = 2 returns a MxMxN array of second-order derivatives.
+                d = 1 returns an array with shape (n_parameters, n_observables)  containing first-order derivatives.
+                d = 2 returns an array with shape (n_parameters, n_parameters, n_observables) containing second-order derivatives.
         """
         if derivative_order not in [1, 2]:
             raise ValueError("Only first- and second-order derivatives are currently supported.")
@@ -57,7 +57,7 @@ class ForecastKit:
             # Get the first-order derivatives
             first_order_derivatives = np.zeros((self.n_parameters, self.n_observables))
             for m in range(self.n_parameters):
-                # 1 parameter to differentiate, and n-parameters-1 parameters to hold fixed
+                # 1 parameter to differentiate, and n_parameters-1 parameters to hold fixed
                 central_values_x = deepcopy(self.central_values)
                 function_to_diff = self._get_partial_function(self.function, m, central_values_x)
                 kit = DerivativeKit(function_to_diff,
@@ -117,9 +117,10 @@ class ForecastKit:
         -------
         np.ndarray
             A list of numpy arrays.
-                D = 1 returns an MxM matrix, where M is the number of
+                D = 1 returns a square matrix of size n_parameters, where n_parameters is the number of
                     parameters included in the forecast.
-                D = 2 returns MxMxM and MxMxMxM arrays, where M is the
+                D = 2 returns one array of shapes (n_parameters, n_parameters, n_parameters) and one array of 
+                shape (n_parameters, n_parameters, n_parameters, n_parameters), where n_parameters is the
                     number of parameters included in the forecast.
         """
         if forecast_order not in [1, 2]:
@@ -164,7 +165,8 @@ class ForecastKit:
         Parameters
         ----------
         full_function : callable
-            A function that takes a list of M parameters and returns a vector of N observables.
+            A function that takes a list of n_parameters parameters and returns 
+            a vector of n_observables observables.
         variable_index : int
             Index of the parameter to treat as the variable.
         fixed_values : list or np.ndarray
