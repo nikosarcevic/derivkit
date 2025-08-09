@@ -67,8 +67,10 @@ class AdaptiveFitDerivative:
 
         Parameters
         ----------
-        derivative_order : int, optional
+        derivative_order: int, optional
             The order of the derivative to compute (default is 1). Must be 1, 2, 3, or 4.
+            Higher orders are not currently supported and will raise a ValueError;
+            the computation will not proceed.
         min_samples : int, optional
             Minimum number of total samples to start with. Must be large enough to support the fit
             and any fallback strategies. Default is 7.
@@ -82,6 +84,7 @@ class AdaptiveFitDerivative:
                 - "finite_difference": use finite difference as fallback
                 - "poly_at_floor": accept the polynomial even if it exceeds the tolerance
                 - "auto": accept fit if it's close enough, else fall back
+            Default is "finite_difference".
         floor_accept_multiplier : float, optional
             Tolerance multiplier used in "auto" fallback mode. Default is 2.0.
         diagnostics : bool, optional
@@ -446,25 +449,30 @@ class AdaptiveFitDerivative:
 
     def _fallback_derivative(self, derivative_order):
         """
-        Estimate the derivative using finite differences as a fallback method.
+        Compute the derivative using a finite difference method when adaptive fitting fails.
 
-        This method is invoked when adaptive polynomial fitting fails to meet
-        the specified residual tolerance or encounters numerical issues.
-        It delegates to a high-order finite difference calculator using the same
-        function and central value.
+        This method is only called as a last resort if the adaptive polynomial fitting
+        procedure:
+          - Cannot achieve the specified residual tolerance, or
+          - Encounters numerical issues such as singular matrix errors.
+
+        In such cases, it delegates the computation to `FiniteDifferenceDerivative`,
+        which uses a high-order finite difference scheme to estimate the derivative
+        at the same central point.
 
         Parameters
         ----------
         derivative_order : int
-            The order of the derivative to compute. Must be compatible with the
-            finite difference implementation.
+            The order of the derivative to compute. Must be one of the orders supported
+            by `FiniteDifferenceDerivative` (currently 1–4).
 
         Returns
         -------
         np.ndarray
-            Estimated derivative values as a 1D array, matching the number of output
-            components from the target function.
+            The fallback derivative estimate(s) as a 1D array, with one value per
+            output component of the target function.
         """
+
         warnings.warn("Falling back to finite difference derivative.", RuntimeWarning)
         fd = FiniteDifferenceDerivative(
             function=self.function,
