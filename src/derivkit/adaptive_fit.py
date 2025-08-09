@@ -25,8 +25,11 @@ class AdaptiveFitDerivative:
         The function to be differentiated. Must return scalar or vector output.
     central_value : float
         The point at which the derivative is evaluated.
-    derivative_order : int
-        The derivative order (1–4 supported).
+    diagnostics_data : dict or None
+        The diagnostic data collected during the fitting process, if requested.
+    min_used_points : int
+        Default minimum number of samples required for fitting. This is used to ensure
+        that the polynomial fit has enough data points to be meaningful.
 
     Methods
     -------
@@ -42,44 +45,78 @@ class AdaptiveFitDerivative:
         Provides inverse-distance weights for polynomial fitting.
     """
 
-    def __init__(self, function, central_value, derivative_order=1, fit_tolerance=0.05):
+    def __init__(self, function, central_value):
         self.function = function
         self.central_value = central_value
-        self.derivative_order = derivative_order
-        self.fit_tolerance = fit_tolerance
         self.diagnostics_data = None
         self.min_used_points = 5  # Minimum number of samples required for fitting
 
     def compute(
             self,
-            include_zero=True,
+            derivative_order=1,
             min_samples=7,
-            diagnostics=False,
-            fallback_mode: str = "finite_difference",  # "finite_difference" | "poly_at_floor" | "auto"
-            floor_accept_multiplier: float = 2.0,  # used when fallback_mode == "auto"
+            fit_tolerance=0.05,
+            include_zero=True,
+            fallback_mode: str = "finite_difference",
+            floor_accept_multiplier: float = 2.0,
+            diagnostics=False
     ):
         """
-        Compute the derivative using adaptive polynomial fitting.
+        Estimate the derivative of a function using adaptive polynomial fitting.
 
-        High-level flow
-        ---------------
-        1) Build a symmetric sampling grid around x0 (>= required_points).
-        2) For each output component:
-           a) Fit a degree-`derivative_order` polynomial in normalized coords.
-           b) If residuals < tolerance -> accept.
-           c) Else, prune worst residuals (respecting the minimum count) and repeat.
-           d) If pruning hits the minimum and still not within tolerance:
-              - Decide according to `fallback_mode`:
-                * "poly_at_floor": accept polynomial anyway (warn).
-                * "auto": accept if "close enough" (warn), otherwise fall back.
-                * "finite_difference": fall back to FD (warn).
-        3) Record diagnostics at every exit path so plots are informative.
+        This method evaluates the target function at symmetric points around a central value,
+        fits a polynomial of the specified order, and computes the derivative from that fit.
+        If the fit quality does not meet the specified tolerance, it adaptively prunes the
+        worst residual points and refits. If all attempts fail, it falls back to a finite
+        difference estimate or accepts a fit based on a looser criterion.
+
+        Parameters
+        ----------
+        derivative_order: int, optional
+            The order of the derivative to compute (default is 1). Must be 1, 2, 3, or 4.
+            Higher orders are not currently supported and will raise a ValueError;
+            the computation will not proceed.
+        min_samples : int, optional
+            Minimum number of total samples to start with. Must be large enough to support the fit
+            and any fallback strategies. Default is 7.
+        fit_tolerance : float, optional
+            Maximum acceptable relative residual for the polynomial fit (default is 0.05, i.e 5%).
+        include_zero : bool, optional
+            Whether to include the central point in the sampling grid (default is True).
+        fallback_mode : str, optional
+            Strategy if the fit fails to meet the tolerance at the minimum sample count.
+            Options are:
+                - "finite_difference": always reject and use finite difference fallback.
+                - "poly_at_floor": always accept the polynomial fit at floor regardless of residuals.
+                - "auto": accept the polynomial at floor if:
+                    (max_residual < floor_accept_multiplier × fit_tolerance) AND
+                    (median_residual < fit_tolerance);
+                  otherwise fall back to finite differences.
+            Default is "finite_difference".
+        floor_accept_multiplier : float, optional
+            Tolerance multiplier used in "auto" fallback mode. Default is 2.0.
+        diagnostics : bool, optional
+            Whether to return diagnostic information such as residuals, fit values,
+            and pruning status. Default is False.
+
+        Returns
+        -------
+        np.ndarray or (np.ndarray, dict)
+            The estimated derivative(s). If `diagnostics` is True, returns a tuple with the
+            derivative array and a dictionary of diagnostic data.
         """
-        if self.derivative_order not in [1, 2, 3, 4]:
-            raise ValueError("Only derivative orders 1 to 4 are supported.")
+        if derivative_order not in [1, 2, 3, 4]:
+            raise ValueError(
+                f"Invalid derivative_order={derivative_order}. "
+                "Only derivative orders 1 to 4 are supported; "
+                "higher orders are not currently implemented."
+            )
 
         # Sampling grid
-        x_offsets, required_points = self._build_x_offsets(include_zero, min_samples)
+        x_offsets, required_points = self._build_x_offsets(central_value=self.central_value,
+                                                           derivative_order=derivative_order,
+                                                           include_zero=include_zero,
+                                                           min_samples=min_samples)
         x_values = self.central_value + x_offsets
 
         # Evaluate the function at those points
@@ -98,6 +135,8 @@ class AdaptiveFitDerivative:
                 "residuals": [],
                 "used_mask": [],
                 "status": [],
+                "fit_poly": None,
+                "fit_tolerance": None
             }
         else:
             self.diagnostics_data = None
@@ -113,7 +152,7 @@ class AdaptiveFitDerivative:
 
             while len(x_vals) >= required_points:
                 # Fit once on current set
-                fit = self._fit_once(x_vals, y_vals)
+                fit = self._fit_once(x_vals, y_vals, derivative_order)
                 last_fit = fit
                 if not fit["ok"]:
                     # singular normal equations; break to FD / floor handling
@@ -123,8 +162,8 @@ class AdaptiveFitDerivative:
                 last_yfit, last_resid = fit["y_fit"].copy(), fit["residuals"].copy()
 
                 # Accept if within tolerance
-                if fit["rel_error"] < self.fit_tolerance:
-                    m = self.derivative_order
+                if fit["rel_error"] < fit_tolerance:
+                    m = derivative_order
                     derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (last_fit["h"] ** m)
                     if diagnostics:
                         self._store_diagnostics_entry(x_values, x_vals, y_vals, last_yfit, last_resid)
@@ -139,7 +178,7 @@ class AdaptiveFitDerivative:
 
                 # Prune worst residuals and refit
                 x_vals, y_vals, removed = self._prune_by_residuals(
-                    x_vals, y_vals, fit["residuals"], self.fit_tolerance, required_points,
+                    x_vals, y_vals, fit["residuals"], fit_tolerance, required_points,
                     max_remove=2, keep_center=True, keep_symmetric=True,
                 )
                 if removed:
@@ -148,10 +187,10 @@ class AdaptiveFitDerivative:
                 # At floor and still failing tolerance -> decide fallback
                 at_floor = (last_x is not None) and (len(last_x) == required_points)
                 accept, tag = self._maybe_accept_at_floor(
-                    last_resid, at_floor, self.fit_tolerance, fallback_mode, floor_accept_multiplier
+                    last_resid, at_floor, fit_tolerance, fallback_mode, floor_accept_multiplier
                 )
                 if accept:
-                    m = self.derivative_order
+                    m = derivative_order
                     derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (last_fit["h"] ** m)
                     if diagnostics:
                         self._store_diagnostics_entry(x_values, last_x, last_y, last_yfit, last_resid)
@@ -160,7 +199,7 @@ class AdaptiveFitDerivative:
                             "mode": tag,
                             "max_resid": float(np.max(last_resid)),
                             "median_resid": float(np.median(last_resid)),
-                            "fit_tolerance": float(self.fit_tolerance),
+                            "fit_tolerance": float(fit_tolerance),
                             "floor_accept_multiplier": float(floor_accept_multiplier),
                             "accepted": True,
                         }
@@ -168,7 +207,7 @@ class AdaptiveFitDerivative:
                     warnings.warn(
                         f"[AdaptiveFitDerivative] Accepted polynomial at minimum points ({required_points}) "
                         f"with residuals above tolerance (max={np.max(last_resid):.3g}, "
-                        f"tol={self.fit_tolerance:.3g}) using mode='{tag}'.",
+                        f"tol={fit_tolerance:.3g}) using mode='{tag}'.",
                         RuntimeWarning
                     )
                     success = True
@@ -179,7 +218,7 @@ class AdaptiveFitDerivative:
 
             # FD fallback if still not successful
             if not success:
-                fd_val = self._fallback_derivative()[idx]
+                fd_val = self._fallback_derivative(derivative_order)[idx]
                 derivatives[idx] = fd_val
                 if diagnostics:
                     if last_x is not None:
@@ -194,7 +233,7 @@ class AdaptiveFitDerivative:
                     })
                 detail = ""
                 if last_resid is not None:
-                    detail = f" (last max residual {np.max(last_resid):.3g} vs tol {self.fit_tolerance:.3g})"
+                    detail = f" (last max residual {np.max(last_resid):.3g} vs tol {fit_tolerance:.3g})"
                 warnings.warn(
                     f"[AdaptiveFitDerivative] Falling back to finite differences because polynomial fit "
                     f"did not meet tolerance{detail}.",
@@ -202,11 +241,15 @@ class AdaptiveFitDerivative:
                 )
 
         if diagnostics:
-            return np.atleast_1d(derivatives), self.diagnostics_data
-        return np.atleast_1d(derivatives)
+            self.diagnostics_data["fit_poly"] = last_fit["poly_u"] if last_fit is not None else None
+            self.diagnostics_data["fit_tolerance"] = fit_tolerance
+
+        val = derivatives.item() if derivatives.size == 1 else np.atleast_1d(derivatives)
+        return (val, self.diagnostics_data) if diagnostics else val
 
     def get_adaptive_offsets(
             self,
+            central_value=None,
             base_rel=0.01,  # 1% of |x0| as first relative step
             base_abs=1e-6,  # absolute step if |x0| is small
             factor=1.5,
@@ -221,6 +264,8 @@ class AdaptiveFitDerivative:
 
          Parameters
          ----------
+         central_value : float or None
+            The central value around which to generate offsets. If None, uses `self.central_value`.
          base_rel : float
             Base relative step size as a fraction of the central value. Default is 1% of |x0|.
          base_abs : float
@@ -241,7 +286,7 @@ class AdaptiveFitDerivative:
         Returns:
             Absolute step sizes (positive only), not including the central 0 step.
         """
-        x0 = float(self.central_value)
+        x0 = self.central_value if central_value is None else float(central_value)
         use_abs = (step_mode == "absolute") or (step_mode == "auto" and abs(x0) < x_small_threshold)
 
         if use_abs:
@@ -255,22 +300,52 @@ class AdaptiveFitDerivative:
             raise ValueError("No valid offsets generated.")
         return offsets
 
-    def _build_x_offsets(self, include_zero: bool, min_samples: int):
+    def _build_x_offsets(self, central_value, derivative_order, include_zero: bool, min_samples: int):
         """
-        Build a symmetric sampling grid around `central_value`, expanding offsets
-        until we have at least `required_points` abscissae.
+        Construct a symmetric array of sampling offsets around `central_value` for polynomial fitting.
+
+        The method adaptively builds a grid of offsets by mirroring around the center,
+        ensuring that the number of total points (including optional center) is sufficient
+        for fitting the requested derivative order. It expands the offset range as needed
+        until the required minimum number of points is met, up to a maximum span.
+
+        Parameters
+        ----------
+        central_value : float
+            The central point around which the offsets are generated. This is the point at which
+            the derivative will be evaluated.
+        derivative_order : int
+            The order of the derivative to be computed. Determines the minimum polynomial degree,
+            which affects the number of required sample points.
+        include_zero : bool
+            Whether to include the central point (zero offset) in the sampling grid.
+        min_samples : int
+            The minimum number of total sampling points to start with before pruning.
+            This interacts with `self.min_used_points` (default = 5), which is the
+            minimum number of points required to perform a polynomial fit, and with
+            the derivative order to determine the final required number of usable samples
 
         Returns
         -------
         x_offsets : np.ndarray
-            Symmetric offsets (includes +/- and possibly 0).
+            Array of symmetric offsets relative to `self.central_value`, optionally including zero.
+            These define where the function will be evaluated.
         required_points : int
-            Minimum number of points we must keep in the fit loop.
+            The minimum number of samples that must be retained during adaptive fitting
+            for the derivative estimate to proceed (i.e. the floor used in pruning logic).
         """
-        # Enforce a hard floor of >=5 used points
-        required_points = max(min_samples, max(self.min_used_points, self.derivative_order + 2))
 
-        offsets = self.get_adaptive_offsets()
+        # Enforce a hard floor of >=5 used points
+        if self.min_used_points < 5:
+            warnings.warn(
+                f"[AdaptiveFitDerivative] self.min_used_points={self.min_used_points} is below "
+                "the recommended minimum of 5. This may reduce polynomial fit stability.",
+                RuntimeWarning
+            )
+        order_based_floor = derivative_order + 2
+        required_points = max(min_samples, max(self.min_used_points, order_based_floor))
+
+        offsets = self.get_adaptive_offsets(central_value=central_value)
         growth_limit = offsets[-1] * (1.5 ** 3)
 
         while True:
@@ -285,12 +360,23 @@ class AdaptiveFitDerivative:
 
         return x_offsets, required_points
 
-    def _fit_once(self, x_vals: np.ndarray, y_vals: np.ndarray):
+    def _fit_once(self, x_vals: np.ndarray, y_vals: np.ndarray, derivative_order: int):
         """
         Perform one normalized weighted polynomial fit on (x_vals, y_vals).
 
-        Normalization: u = (x - x0)/h with h = max|x - x0| so u ~ [-1, 1].
-        Returns a dict with objects needed by the main loop.
+        Parameters
+        ----------
+        x_vals : np.ndarray
+            Sample x values used in the fit.
+        y_vals : np.ndarray
+            Corresponding function values.
+        derivative_order : int
+            Order of the derivative to fit.
+
+        Returns
+        -------
+        dict
+            Dictionary containing fit result, polynomial object, residuals, and metadata.
         """
         # Normalize coordinates around the center for conditioning
         t_vals = x_vals - self.central_value
@@ -303,7 +389,7 @@ class AdaptiveFitDerivative:
 
         # Weighted polynomial fit in u-space
         try:
-            coeffs = np.polyfit(u_vals, y_vals, deg=self.derivative_order, w=weights)
+            coeffs = np.polyfit(u_vals, y_vals, deg=derivative_order, w=weights)
             poly_u = np.poly1d(coeffs)
         except np.linalg.LinAlgError:
             return {
@@ -333,12 +419,44 @@ class AdaptiveFitDerivative:
             floor_accept_multiplier: float,
     ):
         """
-        Decide whether to accept the polynomial fit at the minimum sample count.
+        Determine whether to accept a polynomial fit computed at the minimum stencil size ("floor").
+
+        This function is called when the adaptive fitting loop has reached its smallest
+        allowable number of sample points (`at_floor=True`) but has not yet met the target
+        residual tolerance. Depending on the fallback strategy and the quality of the residuals,
+        the method decides whether the fit should be accepted anyway or whether to trigger
+        a fallback (e.g., finite difference).
+
+        Parameters
+        ----------
+        last_residuals : np.ndarray or None
+            Residuals from the last attempted polynomial fit. If None, acceptance is based only
+            on fallback_mode and at_floor status.
+        at_floor : bool
+            Whether the algorithm has reached the minimum allowed number of sample points.
+        fit_tolerance : float
+            The user-specified threshold for acceptable residuals. Typically a small value like 1e-4.
+        fallback_mode : str
+            Strategy to follow when the fit fails at the floor. Options include:
+            - "poly_at_floor": always accept the fit at floor regardless of residuals
+            - "auto": accept if residuals are close enough to tolerance
+            - "finite_difference": always reject and fall back to finite differences
+        floor_accept_multiplier : float
+            Tolerance multiplier for fallback_mode="auto". Allows leniency for accepting slightly
+            worse-than-tolerance fits if residuals are close. Typically 1.5–2.0.
 
         Returns
         -------
         accept : bool
-        tag : str   # human-friendly reason tag for diagnostics/warnings
+            Whether to accept the polynomial fit despite failing to meet tolerance.
+        tag : str
+            Human-readable diagnostic tag describing the decision outcome. One of:
+            - "not_at_floor"
+            - "poly_at_floor"
+            - "auto_accept_at_floor"
+            - "auto_reject"
+            - "auto_no_residuals"
+            - "finite_difference"
         """
         if not at_floor:
             return False, "not_at_floor"
@@ -357,21 +475,38 @@ class AdaptiveFitDerivative:
         # default: finite_difference
         return False, "finite_difference"
 
-    def _fallback_derivative(self):
+    def _fallback_derivative(self, derivative_order):
         """
-        Fallback method using high-order finite differences.
+        Compute the derivative using a finite difference method when adaptive fitting fails.
+
+        This method is only called as a last resort if the adaptive polynomial fitting
+        procedure:
+          - Cannot achieve the specified residual tolerance, or
+          - Encounters numerical issues such as singular matrix errors.
+
+        In such cases, it delegates the computation to `FiniteDifferenceDerivative`,
+        which uses a high-order finite difference scheme to estimate the derivative
+        at the same central point.
+
+        Parameters
+        ----------
+        derivative_order : int
+            The order of the derivative to compute. Must be one of the orders supported
+            by `FiniteDifferenceDerivative` (currently 1–4).
 
         Returns
         -------
         np.ndarray
-            Estimated derivative values (always 1D array).
+            The fallback derivative estimate(s) as a 1D array, with one value per
+            output component of the target function.
         """
+
+        warnings.warn("Falling back to finite difference derivative.", RuntimeWarning)
         fd = FiniteDifferenceDerivative(
             function=self.function,
             central_value=self.central_value,
-            derivative_order=self.derivative_order,
         )
-        result = fd.compute()
+        result = fd.compute(derivative_order=derivative_order)
         return np.atleast_1d(result)
 
     def recommend_fit_tolerance(self, dx=1e-3, verbose=True):

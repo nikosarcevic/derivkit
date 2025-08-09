@@ -5,7 +5,7 @@ from typing import Optional
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import ScalarFormatter
 
 from derivkit.kit import DerivativeKit
 from derivkit.plotutils.plot_helpers import PlotHelpers
@@ -27,7 +27,7 @@ class PlotKit:
     ----------
     function : callable
         The target function for which derivatives will be evaluated.
-    x_center : float
+    central_value : float
         The point at which the derivative is computed.
     derivative_order : int, optional
         The order of the derivative to compute (default is 1).
@@ -57,7 +57,7 @@ class PlotKit:
     def __init__(
         self,
         function,
-        x_center,
+        central_value: float,
         derivative_order: int = 1,
         fit_tolerance=0.05,
         plot_dir: str = "plots",
@@ -67,15 +67,13 @@ class PlotKit:
         true_derivative_fn=None
     ):
         self.function = function
-        self.x_center = x_center
+        self.central_value = central_value
         self.plot_dir = plot_dir
         self.derivative_order = derivative_order
         self.true_derivative_fn = true_derivative_fn
         self.fit_tolerance = fit_tolerance
         self.derivs = DerivativeKit(self.function,
-                                    self.x_center,
-                                    derivative_order=self.derivative_order,
-                                    fit_tolerance=self.fit_tolerance)
+                                    self.central_value)
         self.seed = 42
 
         os.makedirs(self.plot_dir, exist_ok=True)
@@ -86,8 +84,7 @@ class PlotKit:
         self.gradient_colors = {**GRADIENT_COLORS, **(gradient_colors or {})}
 
         self.h = PlotHelpers(function=self.function,
-                             x_center=self.x_center,
-                             derivative_order= self.derivative_order,
+                             central_value=self.central_value,
                              true_derivative_fn=self.true_derivative_fn,
                              plot_dir=self.plot_dir)
 
@@ -112,7 +109,7 @@ class PlotKit:
         """
         return self.colors[key]
 
-    def plot_overlaid_histograms(self, noise_std=0.01, trials=100, bins=20, title=None, extra_info=None):
+    def plot_overlaid_histograms(self, derivative_order, noise_std=0.01, trials=100, bins=20, title=None, extra_info=None):
         """
         Plot overlaid histograms of derivative estimates from stencil and adaptive methods
         under repeated noisy evaluations.
@@ -123,6 +120,8 @@ class PlotKit:
 
         Parameters
         ----------
+        derivative_order: int
+            Order of the derivative to compute (e.g., 1 for first derivative).
         noise_std : float, optional
             Standard deviation of the Gaussian noise added to the function (default is 0.01).
         trials : int, optional
@@ -148,7 +147,7 @@ class PlotKit:
         })
 
         # Run trials for each method
-        stencil_vals, adaptive_vals, _ = self.h.get_noisy_derivatives(noise_std, trials)
+        stencil_vals, adaptive_vals, _ = self.h.get_noisy_derivatives(derivative_order, noise_std, trials)
 
         stencil_vals = np.array(stencil_vals)
         adaptive_vals = np.array(adaptive_vals)
@@ -189,21 +188,24 @@ class PlotKit:
         self.h.save_fig(f"overlaid_histograms_with_trials_order{self.derivative_order}{extra}.png")
         plt.show()
 
-    def adaptive_fit_demo(self, noise_std=0.01, width=0.2, title=None, extra_info=None):
+    def adaptive_fit_demo(self, derivative_order=1, noise_std=0.01, width=0.2, title=None, extra_info=None):
         """
         Visualize the adaptive polynomial fit on a noisy function segment.
 
         This method creates a reproducible noisy realization of the input function
-        over a local region around `x_center` and shows which points are used or excluded
+        over a local region around `central_value` and shows which points are used or excluded
         by the adaptive fitting method. It also overlays the fitted polynomial and its
         tolerance band.
 
         Parameters
         ----------
+        derivative_order : int
+            The order of the derivative to compute (e.g., 1 for first derivative).
+            Defaults to 1.
         noise_std : float, optional
             Standard deviation of the Gaussian noise added to the function (default is 0.01).
         width : float, optional
-            Width of the interval around `x_center` for generating the noisy segment (default is 0.2).
+            Width of the interval around `central_value` for generating the noisy segment (default is 0.2).
         title : str, optional
             Optional title for the plot.
         extra_info : str, optional
@@ -216,20 +218,21 @@ class PlotKit:
         """
 
         noisy_func = self.h.make_noisy_interpolated_function(
-            func=self.function,
-            x_center=self.x_center,
+            function=self.function,
+            central_value=self.central_value,
             width=width,
             resolution=401,
             noise_std=noise_std,
             seed=self.seed
         )
 
-        # Temporarily override the function in the adaptive fitter
-        original_func = self.derivs.adaptive.function
-        self.derivs.adaptive.function = noisy_func
-        _, diagnostics = self.derivs.adaptive.compute(diagnostics=True)
-        fit_tol = diagnostics.get("fit_tolerance", self.fit_tolerance)  # fallback if not found
-        self.derivs.adaptive.function = original_func
+        # Run the adaptive method using the updated API
+        fitter = DerivativeKit(noisy_func, self.central_value)
+        val, diagnostics = fitter.adaptive.compute(
+            derivative_order=derivative_order,
+            fit_tolerance=self.fit_tolerance,
+            diagnostics=True
+        )
 
         x_all = diagnostics["x_all"]
         y_all = diagnostics["y_all"].flatten()
@@ -237,59 +240,48 @@ class PlotKit:
         x_used = x_all[used_mask]
         y_used = y_all[used_mask]
 
-        # Evaluate the noisy function at x_center
-        y_center = noisy_func(self.x_center)
+        y_center = noisy_func(self.central_value)
 
         plt.figure(figsize=(7, 5))
         markersize = 100
 
-        # Plot central point separately
-        plt.scatter([self.x_center], [y_center], color=self.colors["excluded"],
+        plt.scatter([self.central_value], [y_center], color=self.colors["excluded"],
                     s=markersize, label='central value', zorder=4)
 
-        # Plot excluded points (excluding the center)
-        excluded_mask = (~used_mask) & (x_all != self.x_center)
+        excluded_mask = (~used_mask) & (x_all != self.central_value)
         plt.scatter(x_all[excluded_mask], y_all[excluded_mask],
-                    label='excluded from fit', color=self.colors["central"],
+                    label='excluded from fit', color=self.colors["finite"],
                     s=markersize, zorder=3)
 
-        # Plot included points (excluding the center)
-        included_mask = used_mask & (x_all != self.x_center)
+        included_mask = used_mask & (x_all != self.central_value)
         plt.scatter(x_all[included_mask], y_all[included_mask],
                     color=self.colors["adaptive"], label='used in fit',
                     s=markersize, zorder=3)
 
-        # Fit line if enough points
         if len(x_used) >= 2:
             slope, intercept, _ = self.h.adaptive_fit_with_outlier_removal(x_used, y_used, return_inliers=True)
             x_fit = np.linspace(min(x_all), max(x_all), 100)
             y_fit = slope * x_fit + intercept
-
-            # Compute tolerance band (± fit_tolerance around fit)
-            y_upper = y_fit + fit_tol
-            y_lower = y_fit - fit_tol
+            y_upper = y_fit + self.fit_tolerance
+            y_lower = y_fit - self.fit_tolerance
 
             plt.fill_between(x_fit, y_lower, y_upper, color=self.colors["adaptive_lite"],
-                             alpha=0.3, label=rf"tolerance band ($\pm${fit_tol*100} %)", zorder=1)
+                             alpha=0.3, label=rf"tolerance band ($\pm${self.fit_tolerance * 100:.0f}%)", zorder=1)
 
-            # Plot the fit line
             plt.plot(x_fit, y_fit, label='fit (noisy data)',
                      color=self.color("adaptive"), lw=3, zorder=2)
 
         plt.xlabel('evaluation point $x$', fontsize=17)
         plt.ylabel('$f(x) + \\epsilon$', fontsize=17)
-        ax = plt.gca()
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-        ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-        if title is not None:
+        if title:
             plt.title(title, fontsize=17)
         plt.legend(frameon=True, fontsize=14, loc="best", framealpha=0.5)
         extra = f"_{extra_info}" if extra_info else ""
-        self.h.save_fig(f"adaptive_fit_with_noise_order{self.derivative_order}{extra}.pdf")
-        self.h.save_fig(f"adaptive_fit_with_noise_order{self.derivative_order}{extra}.png")
+        self.h.save_fig(f"adaptive_fit_with_noise_order{derivative_order}{extra}.pdf")
+        self.h.save_fig(f"adaptive_fit_with_noise_order{derivative_order}{extra}.png")
         plt.show()
 
-    def plot_error_vs_noise(self, noise_levels, trials=50, title=None, extra_info=None):
+    def plot_error_vs_noise(self, derivative_order, noise_levels, trials=50, title=None, extra_info=None):
         """
         Plot mean squared error (MSE) of derivative estimates vs. noise level.
 
@@ -300,6 +292,8 @@ class PlotKit:
 
         Parameters
         ----------
+        derivative_order : int
+            The order of the derivative to compute (e.g., 1 for first derivative).
         noise_levels : array-like
             List or array of noise standard deviation values to test.
         trials : int, optional
@@ -311,12 +305,12 @@ class PlotKit:
 
         Notes
         -----
-        - Finite difference uses a fixed step size relative to `x_center`.
+        - Finite difference uses a fixed step size relative to `central_value`.
         - Adaptive fit uses polynomial regression with tolerance-controlled filtering.
         - Useful for comparing robustness of methods under varying noise.
         """
 
-        true_val = self.h.reference_derivative(self.x_center)
+        true_val = self.h.reference_derivative(self.central_value)
         rng = np.random.default_rng(42)  # master seed for this figure
 
         stencil_mse, adaptive_mse = [], []
@@ -327,11 +321,10 @@ class PlotKit:
                 noisy_f = self.h.make_shared_noisy_func(sigma, seed=seed)  # shared across methods
 
                 kit = DerivativeKit(noisy_f,
-                                    self.x_center,
-                                    derivative_order=self.derivative_order,
-                                    fit_tolerance=self.fit_tolerance)
-                st_est = kit.finite.compute(stencil_stepsize=0.01 * (abs(self.x_center) or 1.0))
-                ad_est = kit.adaptive.compute()
+                                    self.central_value)
+                st_est = kit.finite.compute(derivative_order=derivative_order,
+                                            stepsize=0.01 * (abs(self.central_value) or 1.0))
+                ad_est = kit.adaptive.compute(derivative_order=derivative_order)
 
                 st_errs.append((st_est - true_val) ** 2)
                 ad_errs.append((ad_est - true_val) ** 2)
@@ -400,19 +393,17 @@ class PlotKit:
         - Useful for visualizing which method tends to produce smaller errors more often.
         """
 
-        true_val = self.h.reference_derivative(self.x_center)
+        true_val = self.h.reference_derivative(self.central_value)
         rng = np.random.default_rng(123)
 
         fin_err, ad_err = [], []
         for _ in range(trials):
             seed = int(rng.integers(0, 2 ** 31 - 1))
-            f = self.h.make_shared_noisy_func(noise_std, seed=seed)
-            kit = DerivativeKit(f,
-                                self.x_center,
-                                derivative_order=self.derivative_order,
-                                fit_tolerance=self.fit_tolerance)
-            f_fin = kit.finite.compute(stencil_stepsize=0.01 * (abs(self.x_center) or 1.0))
-            f_ad = kit.adaptive.compute()
+            func = self.h.make_shared_noisy_func(noise_std, seed=seed)
+            kit = DerivativeKit(func, self.central_value)
+            f_fin = kit.finite.compute(derivative_order=self.derivative_order,
+                                       stepsize=0.01 * (abs(self.central_value) or 1.0))
+            f_ad = kit.adaptive.compute(derivative_order=self.derivative_order)
             fin_err.append((f_fin - true_val) ** 2)
             ad_err.append((f_ad - true_val) ** 2)
 
@@ -469,19 +460,17 @@ class PlotKit:
         - This visualization provides intuitive insight into method-wise reliability.
         """
 
-        true_val = self.h.reference_derivative(self.x_center)
+        true_val = self.h.reference_derivative(self.central_value)
         rng = np.random.default_rng(123)
 
         diffs = []
         for _ in range(trials):
             seed = int(rng.integers(0, 2 ** 31 - 1))
-            f = self.h.make_shared_noisy_func(noise_std, seed=seed)
-            kit = DerivativeKit(f,
-                                self.x_center,
-                                derivative_order=self.derivative_order,
-                                fit_tolerance=self.fit_tolerance)
-            e_f = kit.finite.compute(stencil_stepsize=0.01 * (abs(self.x_center) or 1.0)) - true_val
-            e_a = kit.adaptive.compute() - true_val
+            func = self.h.make_shared_noisy_func(noise_std, seed=seed)
+            kit = DerivativeKit(func, self.central_value)
+            e_f = kit.finite.compute(derivative_order=self.derivative_order,
+                                     stepsize=0.01 * (abs(self.central_value) or 1.0)) - true_val
+            e_a = kit.adaptive.compute(derivative_order=self.derivative_order) - true_val
             diffs.append(e_a ** 2 - e_f ** 2)  # Δ (adaptive − finite)
 
         diffs = np.asarray(diffs, dtype=float)
@@ -528,10 +517,11 @@ class PlotKit:
         self.h.save_fig(f"paired_differences_order{self.derivative_order}{extra}.png")
         plt.show()
 
+
 # we also need to add an extra function to check different derivative orders
 def plot_multi_order_error_vs_noise(
     function,
-    x_center,
+    central_value,
     snr_values=np.logspace(1, 5, 20),
     orders=(1, 2, 3),
     trials=50,
@@ -553,7 +543,7 @@ def plot_multi_order_error_vs_noise(
     ----------
     function : callable
         Target function to differentiate.
-    x_center : float
+    central_value : float
         Point at which the derivative is computed.
     snr_values : array-like, optional
         List or array of SNR values (default is log-spaced from 10 to 1e5).
@@ -588,7 +578,6 @@ def plot_multi_order_error_vs_noise(
             return fx + rng.normal(loc=0.0, scale=sigma)
         return noisy
 
-    ms = 10
     finite_results = {}
     adaptive_results = {}
 
@@ -597,12 +586,12 @@ def plot_multi_order_error_vs_noise(
 
         plotter = PlotKit(
             function=function,
-            x_center=x_center,
+            central_value=central_value,
             derivative_order=order,
             fit_tolerance=tol,
             plot_dir=plot_dir,
         )
-        true_val = plotter.h.reference_derivative(x_center)
+        true_val = plotter.h.reference_derivative(central_value)
         rng = np.random.default_rng(42)
 
         stencil_mse, adaptive_mse = [], []
@@ -612,10 +601,11 @@ def plot_multi_order_error_vs_noise(
             for _ in range(trials):
                 seed = int(rng.integers(0, 2**31 - 1))
                 noisy_f = make_snr_scaled_noisy_func(function, snr, seed)
-                kit = DerivativeKit(noisy_f, x_center, derivative_order=order, fit_tolerance=tol)
+                kit = DerivativeKit(noisy_f, central_value)
 
-                st_est = kit.finite.compute(stencil_stepsize=0.01 * (abs(x_center) or 1.0))
-                ad_est = kit.adaptive.compute()
+                st_est = kit.finite.compute(derivative_order=order,
+                                            stepsize=0.01 * (abs(central_value) or 1.0))
+                ad_est = kit.adaptive.compute(derivative_order=order)
 
                 if np.isfinite(st_est):
                     err = (st_est - true_val) ** 2
@@ -633,23 +623,23 @@ def plot_multi_order_error_vs_noise(
         finite_results[order] = stencil_mse
         adaptive_results[order] = adaptive_mse
 
-    # --- Plot ---
+    # --- Plot all orders in one figure ---
     plt.figure(figsize=(8, 6))
     inv_snr = 1 / np.array(snr_values)
     colors = GRADIENT_COLORS
+    ms = 10
 
-    # Plot finite first
+    # Plot finite and adaptive for each order
     for order in orders:
         label_deriv = f"$\\mathrm{{d}}^{{{order}}}f/\\mathrm{{d}}x^{{{order}}}$"
+
         plt.plot(inv_snr, finite_results[order],
                  linestyle="-", marker="o", ms=ms,
                  label=f"finite {label_deriv}", color=colors[f"finite_{order}"])
 
-    # Plot adaptive next
-    for order in orders:
         plt.plot(inv_snr, adaptive_results[order],
                  linestyle="-", marker="o", ms=ms,
-                 label=f"adaptive {label_deriv}", color=GRADIENT_COLORS[f"adaptive_{order}"])
+                 label=f"adaptive {label_deriv}", color=colors[f"adaptive_{order}"])
 
     plt.xlabel("1 / SNR", fontsize=15)
     plt.ylabel("mean squared error (MSE)", fontsize=15)
@@ -660,10 +650,11 @@ def plot_multi_order_error_vs_noise(
         plt.title(title, fontsize=17)
     plt.grid(False)
     plt.tight_layout()
+
     extra = f"_{extra_info}" if extra_info else ""
-    os.makedirs(plot_dir, exist_ok=True)  # ensure directory exists
-    plt.savefig(os.path.join(plot_dir, f"multi_order_error_vs_snr_order{order}{extra}.pdf"), dpi=300)
-    plt.savefig(os.path.join(plot_dir, f"multi_order_error_vs_snr_order{order}{extra}.png"), dpi=300)
+    os.makedirs(plot_dir, exist_ok=True)
+    plt.savefig(os.path.join(plot_dir, f"multi_order_error_vs_snr{extra}.pdf"), dpi=300)
+    plt.savefig(os.path.join(plot_dir, f"multi_order_error_vs_snr{extra}.png"), dpi=300)
     plt.show()
 
 
@@ -784,7 +775,8 @@ def benchmark_derivative_timing_vs_order(function,
     This function measures and compares the runtime of the `DerivativeKit`'s
     adaptive and finite difference methods for computing derivatives of the
     provided function at a given point, over a range of derivative orders.
-    It generates a plot showing how the evaluation time scales with derivative order.
+    It generates a plot showing how the evaluation time scales with derivative order
+    and the relative slowdown of adaptive vs. finite difference.
 
     Parameters
     ----------
@@ -802,44 +794,64 @@ def benchmark_derivative_timing_vs_order(function,
     Returns
     -------
     None
-        Displays a matplotlib plot comparing timing for each method.
+        Displays a matplotlib plot comparing timing for each method and their ratio.
     """
     adaptive_times = []
     finite_times = []
 
     for order in orders:
-        kit = DerivativeKit(function, central_value=central_value, derivative_order=order)
+        kit = DerivativeKit(function, central_value)
 
         # Time adaptive method
         start = perf_counter()
-        _ = kit.adaptive.compute()
+        _ = kit.adaptive.compute(derivative_order=order)
         adaptive_times.append(perf_counter() - start)
 
         # Time finite difference method
         start = perf_counter()
-        _ = kit.finite.compute(stencil_points=stencil_points, stencil_stepsize=stencil_stepsize)
+        _ = kit.finite.compute(derivative_order=order, stepsize=stencil_stepsize, num_points=stencil_points)
         finite_times.append(perf_counter() - start)
 
-    # Plotting
-    plt.figure(figsize=(7, 5))
-    plt.plot(orders, adaptive_times, 'o-', label="adaptive",
-             color=DEFAULT_COLORS["adaptive"], lw=DEFAULT_LINEWIDTH, markersize=10)
-    plt.plot(orders, finite_times, 'o-', label="finite",
-             color=DEFAULT_COLORS["finite"], lw=DEFAULT_LINEWIDTH, markersize=10)
+    # Compute ratio
+    adaptive_times = np.array(adaptive_times)
+    finite_times = np.array(finite_times)
+    ratio = adaptive_times / finite_times - 1.0
 
-    plt.xlabel("Derivative Order", fontsize=14)
-    plt.ylabel("Total Evaluation Time [s]", fontsize=14)
-    plt.title("Timing vs Derivative Order", fontsize=16)
-    plt.xticks(orders, fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.legend(fontsize=13)
+    # Plotting
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(7, 7), sharex=True,
+                                   gridspec_kw={'height_ratios': [2, 1], 'hspace': 0.1})
+
+    # Top panel: absolute times
+    ax1.plot(orders, adaptive_times, 'o-', label="adaptive",
+             color=DEFAULT_COLORS["adaptive"], lw=DEFAULT_LINEWIDTH, markersize=10)
+    ax1.plot(orders, finite_times, 'o-', label="finite",
+             color=DEFAULT_COLORS["finite"], lw=DEFAULT_LINEWIDTH, markersize=10)
+    ax1.set_ylabel("time [s]", fontsize=14)
+
+    sci_formatter = ScalarFormatter(useMathText=True)
+    sci_formatter.set_powerlimits((0, 0))
+    ax1.yaxis.set_major_formatter(sci_formatter)
+
+    ax1.legend(fontsize=12)
+    ax1.tick_params(labelsize=12)
+
+    # Bottom panel: slowdown ratio
+    ax2.plot(orders, ratio, 'o-', color=DEFAULT_COLORS["central"], lw=DEFAULT_LINEWIDTH, markersize=10)
+    ax2.axhline(0.0, color=DEFAULT_COLORS["excluded"], linestyle="--", lw=1)
+    ax2.set_ylabel("relative slowdown", fontsize=14)
+    ax2.set_xlabel("derivative order", fontsize=14)
+    ax2.tick_params(labelsize=12)
+
+    ax1.minorticks_off()
+    ax2.minorticks_off()
+
     plt.tight_layout()
     plt.show()
 
 
 def plot_adaptive_timing_sweeps(
     sleep_time=0.01,
-    x0=0.0005,
+    central_value=0.0005,
     deriv_orders=(1, 2, 3),
     fit_tolerance_fixed=0.01,
     min_used_points_fixed=11,
@@ -857,7 +869,7 @@ def plot_adaptive_timing_sweeps(
     ----------
     sleep_time : float
         Artificial delay in function evaluation.
-    x0 : float
+    central_value : float
         Point at which to evaluate the derivative.
     deriv_orders : tuple of int
         Derivative orders to benchmark and plot.
@@ -891,21 +903,21 @@ def plot_adaptive_timing_sweeps(
     for order in deriv_orders:
         for min_pts in min_pts_list:
             f = make_slow_func(sleep_time)
-            kit = DerivativeKit(f, central_value=x0, derivative_order=order)
+            kit = DerivativeKit(f, central_value)
             kit.adaptive.fit_tolerance = fit_tolerance_fixed
             kit.adaptive.min_used_points = min_pts
             start = perf_counter()
-            _ = kit.adaptive.compute()
+            _ = kit.adaptive.compute(derivative_order=order)
             timings_minpts[order].append(perf_counter() - start)
 
     for order in deriv_orders:
         for tol in fit_tolerances:
             f = make_slow_func(sleep_time)
-            kit = DerivativeKit(f, central_value=x0, derivative_order=order)
+            kit = DerivativeKit(f, central_value)
             kit.adaptive.fit_tolerance = tol
             kit.adaptive.min_used_points = min_used_points_fixed
             start = perf_counter()
-            _ = kit.adaptive.compute()
+            _ = kit.adaptive.compute(derivative_order=order)
             timings_tol[order].append(perf_counter() - start)
 
     if output_filename:
@@ -930,26 +942,32 @@ def plot_adaptive_timing_sweeps(
             min_pts_list,
             timings_minpts[order],
             markers[order] + "-",
-            label=f"order={order}",
+            label=f"order = {order}",
             color=gradient_colors[f"adaptive_{order}"],
             markersize=marker_size
         )
     axes[0].set_xlabel("min_used_points", fontsize=font_size)
     axes[0].set_ylabel("timing [s]", fontsize=font_size)
-    axes[0].legend(title=f"tol={fit_tolerance_fixed}", fontsize=font_size)
+    axes[0].legend(title=f"tol = {fit_tolerance_fixed}", title_fontsize=font_size, fontsize=font_size)
 
     for order in deriv_orders:
         axes[1].plot(
             fit_tolerances,
             timings_tol[order],
             markers[order] + "-",
-            label=f"order={order}",
+            label=f"order = {order}",
             color=gradient_colors[f"adaptive_{order}"],
             markersize=marker_size
         )
     axes[1].set_xscale("log")
     axes[1].set_xlabel("fit_tolerance", fontsize=font_size)
-    axes[1].legend(title=f"min_pts={min_used_points_fixed}", fontsize=font_size)
+    axes[1].legend(title=f"min pts = {min_used_points_fixed}", title_fontsize=font_size, fontsize=font_size)
+
+    axes[0].minorticks_off()
+    axes[1].minorticks_off()
+
+    axes[0].tick_params(labelsize=16)
+    axes[1].tick_params(labelsize=16)
 
     plt.tight_layout()
     if save_fig:
@@ -958,17 +976,52 @@ def plot_adaptive_timing_sweeps(
     plt.show()
 
 
-def plot_function_with_residuals(f, x0, order=1, dx=0.5,
+def plot_function_with_residuals(function, central_value, derivative_order=1, dx=0.5,
                                  title="Function and Tangents + Residuals + Fractional Diff",
                                  show_ratio_panel=True, save_fig=True,
                                  function_name=None):
-    x = np.linspace(x0 - dx, x0 + dx, 400)
-    y = f(x)
-    f0 = f(x0)
+    """
+    Visualize a function and its tangent approximations with residual diagnostics.
 
-    kit = DerivativeKit(f, central_value=x0, derivative_order=order)
-    slope_adaptive = kit.adaptive.compute()
-    slope_finite = kit.finite.compute()
+    This function plots the input function alongside its finite difference and adaptive
+    tangent approximations at a given point. It includes diagnostics such as residuals,
+    fractional residuals, and optionally the ratio of fractional residuals (adaptive / finite),
+    helping to assess the accuracy and behavior of each method.
+
+    Parameters
+    ----------
+    function : callable
+        The target function to differentiate.
+    central_value : float
+        The point x₀ at which the derivative is computed and tangents are anchored.
+    derivative_order : int, optional
+        The order of the derivative to estimate (default is 1).
+    dx : float, optional
+        Half-width of the plotting interval around `central_value` (default is 0.5).
+    title : str, optional
+        Title to display at the top of the figure (default is descriptive).
+    show_ratio_panel : bool, optional
+        If True, adds a fourth panel showing the ratio of fractional residuals (default is True).
+    save_fig : bool, optional
+        If True, saves the resulting plot to 'plots/' directory as PDF and PNG (default is True).
+    function_name : str, optional
+        Name of the function used in saved filenames (default is None).
+
+    Notes
+    -----
+    - Uses `DerivativeKit` to estimate derivatives via both adaptive fitting and finite differences.
+    - Residuals are defined as: f(x) − T(x), where T(x) is the tangent.
+    - Fractional residuals are normalized by the function value.
+    - The ratio panel shows (adaptive / finite) − 1 to highlight relative performance.
+    """
+    x0 = central_value
+    x = np.linspace(x0 - dx, x0 + dx, 400)
+    y = function(x)
+    f0 = function(x0)
+
+    kit = DerivativeKit(function, central_value=x0)
+    slope_adaptive = kit.adaptive.compute(derivative_order=derivative_order)
+    slope_finite = kit.finite.compute(derivative_order=derivative_order)
 
     tangent_adapt = slope_adaptive * (x - x0) + f0
     tangent_finite = slope_finite * (x - x0) + f0
@@ -1028,7 +1081,7 @@ def plot_function_with_residuals(f, x0, order=1, dx=0.5,
     plt.tight_layout()
     plt.subplots_adjust(hspace=0.03)
     if function_name is not None:
-       fname = f"function_with_residuals_{function_name}_order{order}"
+       fname = f"function_with_residuals_{function_name}_order{derivative_order}"
     if save_fig:
         fig.savefig(f"plots/{fname}.pdf", dpi=300)
         fig.savefig(f"plots/{fname}.png", dpi=300)

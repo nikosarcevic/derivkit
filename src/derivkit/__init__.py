@@ -23,7 +23,7 @@ __all__ = [
     "AdaptiveFitDerivative",
     "FiniteDifferenceDerivative",
     "DerivativeKit",
-    "DerivativePlotter",
+    "PlotKit",
     "log_debug_message",
     "is_finite_and_differentiable",
     "normalize_derivative",
