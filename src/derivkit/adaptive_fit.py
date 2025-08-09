@@ -81,9 +81,12 @@ class AdaptiveFitDerivative:
         fallback_mode : str, optional
             Strategy if the fit fails to meet the tolerance at the minimum sample count.
             Options are:
-                - "finite_difference": use finite difference as fallback
-                - "poly_at_floor": accept the polynomial even if it exceeds the tolerance
-                - "auto": accept fit if it's close enough, else fall back
+                - "finite_difference": always reject and use finite difference fallback.
+                - "poly_at_floor": always accept the polynomial fit at floor regardless of residuals.
+                - "auto": accept the polynomial at floor if:
+                    (max_residual < floor_accept_multiplier × fit_tolerance) AND
+                    (median_residual < fit_tolerance);
+                  otherwise fall back to finite differences.
             Default is "finite_difference".
         floor_accept_multiplier : float, optional
             Tolerance multiplier used in "auto" fallback mode. Default is 2.0.
