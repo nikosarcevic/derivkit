@@ -61,9 +61,9 @@ class ForecastKit:
                 central_values_x = deepcopy(self.central_values)
                 function_to_diff = self._get_partial_function(self.function, m, central_values_x)
                 kit = DerivativeKit(function_to_diff,
-                                    self.central_values[m],
-                                    derivative_order=1)
-                first_order_derivatives[m] = kit.adaptive.compute()
+                                    self.central_values[m]
+                                    )
+                first_order_derivatives[m] = kit.adaptive.compute(derivative_order=1)
             return first_order_derivatives
 
         elif derivative_order == 2:
@@ -76,9 +76,9 @@ class ForecastKit:
                         central_values_x = deepcopy(self.central_values)
                         function_to_diff1 = self._get_partial_function(self.function, m1, central_values_x)
                         kit1 = DerivativeKit(function_to_diff1,
-                                             self.central_values[m1],
-                                             derivative_order=2)
-                        second_order_derivatives[m1][m2] = kit1.adaptive.compute()
+                                             self.central_values[m1]
+                                             )
+                        second_order_derivatives[m1][m2] = kit1.adaptive.compute(derivative_order=2)
 
                     else:
                         # 2 parameters to differentiate once, with other parameters held fixed
@@ -87,13 +87,13 @@ class ForecastKit:
                             central_values_y[m2] = y
                             function_to_diff1 = self._get_partial_function(self.function, m1, central_values_y)
                             kit1 = DerivativeKit(function_to_diff1,
-                                                 self.central_values[m1],
-                                                 derivative_order=1)
-                            return kit1.adaptive.compute()
+                                                 self.central_values[m1]
+                                                 )
+                            return kit1.adaptive.compute(derivative_order=1)
                         kit2 = DerivativeKit(function_to_diff2,
-                                             self.central_values[m2],
-                                             derivative_order=1)
-                        second_order_derivatives[m1][m2] = kit2.adaptive.compute()
+                                             self.central_values[m2]
+                                             )
+                        second_order_derivatives[m1][m2] = kit2.adaptive.compute(derivative_order=1)
 
             return second_order_derivatives
 
