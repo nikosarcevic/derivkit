@@ -336,6 +336,12 @@ class AdaptiveFitDerivative:
         """
 
         # Enforce a hard floor of >=5 used points
+        if self.min_used_points < 5:
+            warnings.warn(
+                f"[AdaptiveFitDerivative] self.min_used_points={self.min_used_points} is below "
+                "the recommended minimum of 5. This may reduce polynomial fit stability.",
+                RuntimeWarning
+            )
         order_based_floor = derivative_order + 2
         required_points = max(min_samples, max(self.min_used_points, order_based_floor))
 
