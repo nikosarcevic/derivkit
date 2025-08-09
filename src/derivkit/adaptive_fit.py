@@ -286,10 +286,7 @@ class AdaptiveFitDerivative:
         Returns:
             Absolute step sizes (positive only), not including the central 0 step.
         """
-        if not central_value:
-            x0 = self.central_value
-        else:
-            x0 = central_value
+        x0 = self.central_value if central_value is None else float(central_value)
         use_abs = (step_mode == "absolute") or (step_mode == "auto" and abs(x0) < x_small_threshold)
 
         if use_abs:
@@ -342,7 +339,7 @@ class AdaptiveFitDerivative:
         order_based_floor = derivative_order + 2
         required_points = max(min_samples, max(self.min_used_points, order_based_floor))
 
-        offsets = self.get_adaptive_offsets(central_value, derivative_order, include_zero, min_samples)
+        offsets = self.get_adaptive_offsets(central_value=central_value)
         growth_limit = offsets[-1] * (1.5 ** 3)
 
         while True:
