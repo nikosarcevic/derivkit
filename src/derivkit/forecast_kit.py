@@ -47,8 +47,8 @@ class ForecastKit:
         -------
         np.ndarray
             An array of derivative values.
-                d = 1 returns a (n_parameters, n_observables) array of first-order derivatives.
-                d = 2 returns a (n_parameters, n_parameters, n_observables) array of second-order derivatives.
+                d = 1 returns an array with shape (n_parameters, n_observables)  containing first-order derivatives.
+                d = 2 returns an array with shape (n_parameters, n_parameters, n_observables) containing second-order derivatives.
         """
         if derivative_order not in [1, 2]:
             raise ValueError("Only first- and second-order derivatives are currently supported.")
@@ -117,10 +117,10 @@ class ForecastKit:
         -------
         np.ndarray
             A list of numpy arrays.
-                D = 1 returns a (n_parameters, n_parameters) matrix, where n_parameters is the number of
+                D = 1 returns a square matrix of size n_parameters, where n_parameters is the number of
                     parameters included in the forecast.
-                D = 2 returns (n_parameters, n_parameters, n_parameters) and 
-                (n_parameters, n_parameters, n_parameters, n_parameters) arrays, where n_parameters is the
+                D = 2 returns one array of shapes (n_parameters, n_parameters, n_parameters) and one array of 
+                shape (n_parameters, n_parameters, n_parameters, n_parameters), where n_parameters is the
                     number of parameters included in the forecast.
         """
         if forecast_order not in [1, 2]:
