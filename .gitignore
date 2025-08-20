@@ -11,3 +11,4 @@ dist
 .cache
 notebooks/plots/*.png
 notebooks/plots/*.pdf
+docs/_build
