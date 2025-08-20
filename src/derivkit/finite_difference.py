@@ -32,11 +32,6 @@ class FiniteDifferenceDerivative:
     - 7-point: first and second-order
     - 9-point: first and second-order
 
-    Methods
-    -------
-    compute(stencil_points=5, stencil_stepsize=0.01)
-        Calculates the derivative using the chosen stencil size and step size.
-
     Examples
     --------
     >>> f = lambda x: x**3

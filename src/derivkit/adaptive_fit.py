@@ -33,14 +33,8 @@ class AdaptiveFitDerivative:
 
     Methods
     -------
-    compute(...)
-        Runs the adaptive fit procedure to estimate the derivative.
-    get_adaptive_offsets(...)
-        Returns an array of absolute step sizes to use for adaptive sampling.
     _fallback_derivative()
         Uses high-order finite differences as a fallback if fit fails.
-    recommend_fit_tolerance()
-        Suggests a fit tolerance based on local function behavior.
     _compute_weights()
         Provides inverse-distance weights for polynomial fitting.
     """
@@ -53,13 +47,13 @@ class AdaptiveFitDerivative:
 
     def compute(
             self,
+            include_zero=True,
             derivative_order=1,
             min_samples=7,
-            fit_tolerance=0.05,
-            include_zero=True,
+            diagnostics=False,
             fallback_mode: str = "finite_difference",
+            fit_tolerance=0.05,
             floor_accept_multiplier: float = 2.0,
-            diagnostics=False
     ):
         """
         Estimate the derivative of a function using adaptive polynomial fitting.
@@ -86,12 +80,16 @@ class AdaptiveFitDerivative:
         fallback_mode : str, optional
             Strategy if the fit fails to meet the tolerance at the minimum sample count.
             Options are:
+
                 - "finite_difference": always reject and use finite difference fallback.
                 - "poly_at_floor": always accept the polynomial fit at floor regardless of residuals.
                 - "auto": accept the polynomial at floor if:
-                    (max_residual < floor_accept_multiplier × fit_tolerance) AND
-                    (median_residual < fit_tolerance);
+
+                    * (max_residual < floor_accept_multiplier × fit_tolerance) AND
+                    * (median_residual < fit_tolerance);
+
                   otherwise fall back to finite differences.
+
             Default is "finite_difference".
         floor_accept_multiplier : float, optional
             Tolerance multiplier used in "auto" fallback mode. Default is 2.0.
@@ -250,38 +248,37 @@ class AdaptiveFitDerivative:
     def get_adaptive_offsets(
             self,
             central_value=None,
-            base_rel=0.01,  # 1% of |x0| as first relative step
-            base_abs=1e-6,  # absolute step if |x0| is small
+            base_rel=0.01,  # 1% of central value as first relative step
+            base_abs=1e-6,  # absolute step if absolute central value is small
             factor=1.5,
             num_offsets=10,
-            max_rel=0.05,  # cap at 5% of |x0|
+            max_rel=0.05,  # cap at 5% of absolute central value
             max_abs=1e-2,  # cap absolute step
             step_mode="auto",  # "auto" | "relative" | "absolute"
             x_small_threshold=1e-3,
     ):
         """
-         Returns an array of absolute step sizes to use for adaptive sampling.
+        Returns an array of absolute step sizes to use for adaptive sampling.
 
-         Parameters
-         ----------
-         central_value : float or None
-            The central value around which to generate offsets. If None, uses `self.central_value`.
-         base_rel : float
-            Base relative step size as a fraction of the central value. Default is 1% of |x0|.
-         base_abs : float
-            Base absolute step size for small central values. Default is 1e-6.
-         factor : float
-            Factor by which to increase the step size for each offset. Default is 1.5.
-         num_offsets : int
-            Number of offsets to generate. Default is 10.
-         max_rel : float
-            Maximum relative step size as a fraction of the central value. Default is 5% of |x0|.
-         max_abs : float
-            Maximum absolute step size. Default is 1e-2.
-         step_mode : str
-            Mode for determining step sizes: "auto", "relative", or "absolute". Defaults to "auto".
-         x_small_threshold : float
-            Threshold below which the central value is considered small. Default is 1e-3.
+        Parameters:
+            central_value : float or None
+               The central value around which to generate offsets. If None, uses `self.central_value`.
+            base_rel : float
+               Base relative step size as a fraction of the central value. Default is 1%.
+            base_abs : float
+               Base absolute step size for small central values. Default is 1e-6.
+            factor : float
+               Factor by which to increase the step size for each offset. Default is 1.5.
+            num_offsets : int
+               Number of offsets to generate. Default is 10.
+            max_rel : float
+               Maximum relative step size as a fraction of the central value. Default is 5%.
+            max_abs : float
+               Maximum absolute step size. Default is 1e-2.
+            step_mode : str
+               Mode for determining step sizes: "auto", "relative", or "absolute". Defaults to "auto".
+            x_small_threshold : float
+               Threshold below which the central value is considered small. Default is 1e-3.
 
         Returns:
             Absolute step sizes (positive only), not including the central 0 step.
