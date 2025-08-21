@@ -36,6 +36,7 @@ license-files = ["LICENSE*"]
 ]
 "docs" = [
     "sphinx",
+    "furo",
 ]
 
 [tool.pytest.ini_options]
