@@ -111,25 +111,27 @@ class ForecastKit:
 
         Parameters
         ----------
-        forecast_order : int
-            The requested order, D, of the forecast. 
-                D = 1 returns a Fisher matrix.
-                D = 2 returns the 3-d and 4-d tensors required for the 
-                    doublet-DALI approximation.
-                D = 3 would be the triplet-DALI approximation.
+            forecast_order : int
+                The requested order, D, of the forecast.
+
+                    * D = 1 returns a Fisher matrix.
+                    * D = 2 returns the 3-d and 4-d tensors required for the
+                        doublet-DALI approximation.
+                    * D = 3 would be the triplet-DALI approximation.
+
                 Currently only D = 1, 2 are supported.
         n_workers: int, optional
             Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
         Returns
         -------
-        np.ndarray
-            A list of numpy arrays.
-                D = 1 returns a square matrix of size n_parameters, where n_parameters is the number of
-                    parameters included in the forecast.
-                D = 2 returns one array of shapes (n_parameters, n_parameters, n_parameters) and one array of 
-                shape (n_parameters, n_parameters, n_parameters, n_parameters), where n_parameters is the
-                    number of parameters included in the forecast.
+            np.ndarray
+                A list of numpy arrays.
+                    * D = 1 returns a square matrix of size n_parameters, where n_parameters is the number of
+                        parameters included in the forecast.
+                    * D = 2 returns one array of shapes (n_parameters, n_parameters, n_parameters) and one array of
+                        shape (n_parameters, n_parameters, n_parameters, n_parameters), where n_parameters is the
+                        number of parameters included in the forecast.
         """
         if forecast_order not in [1, 2]:
             raise ValueError("Only Fisher (order 1) and doublet-DALI (order 2) forecasts are currently supported.")
