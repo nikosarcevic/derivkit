@@ -31,7 +31,7 @@ class DerivativeKit:
         self.adaptive = AdaptiveFitDerivative(function, central_value)
         self.finite = FiniteDifferenceDerivative(function, central_value)
 
-    def get_used_points(self, derivative_order: int = 1, use_multiprocess=False, n_workers=1):
+    def get_used_points(self, derivative_order: int = 1, n_workers=1):
         """
         Returns x and y points used in the adaptive fit (for component 0).
 
@@ -39,6 +39,8 @@ class DerivativeKit:
         ----------
         derivative_order : int, optional
             Order of the derivative to compute diagnostics for (default is 1).
+        n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
         Returns
         -------
@@ -46,7 +48,7 @@ class DerivativeKit:
             (x_all, y_all, x_used, y_used, used_mask)
         """
         _, diagnostics = self.adaptive.compute(derivative_order=derivative_order, diagnostics=True, 
-                                               use_multiprocess=use_multiprocess, n_workers=n_workers)
+                                               n_workers=n_workers)
 
         x_all = diagnostics["x_all"]
         y_all = diagnostics["y_all"][:, 0]  # assuming scalar output or first component

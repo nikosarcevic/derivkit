@@ -859,7 +859,6 @@ def plot_adaptive_timing_sweeps(
     fit_tolerances=None,
     save_fig=True,
     output_filename=None,
-    use_multiprocess=False,
     n_workers=1,
 ):
     """
@@ -887,6 +886,8 @@ def plot_adaptive_timing_sweeps(
         If True, saves the figure to 'plots/adaptive_timing_sweeps.{png,pdf}'.
     output_filename : str or None
         If provided, also saves the benchmark results to a `.npz` file.
+    n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
     Returns
     -------
@@ -910,7 +911,6 @@ def plot_adaptive_timing_sweeps(
             kit.adaptive.min_used_points = min_pts
             start = perf_counter()
             _ = kit.adaptive.compute(derivative_order=order, 
-                                     use_multiprocess=use_multiprocess, 
                                      n_workers=n_workers)
             timings_minpts[order].append(perf_counter() - start)
 
@@ -922,7 +922,6 @@ def plot_adaptive_timing_sweeps(
             kit.adaptive.min_used_points = min_used_points_fixed
             start = perf_counter()
             _ = kit.adaptive.compute(derivative_order=order, 
-                                     use_multiprocess=use_multiprocess, 
                                      n_workers=n_workers)
             
             timings_tol[order].append(perf_counter() - start)
@@ -943,7 +942,7 @@ def plot_adaptive_timing_sweeps(
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
     title = 'Multiprocessing '
-    if use_multiprocess:
+    if n_workers > 1:
         title += f'on, #workers={n_workers}'
     else:
         title += 'off'

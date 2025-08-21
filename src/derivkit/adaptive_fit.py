@@ -61,8 +61,7 @@ class AdaptiveFitDerivative:
             fallback_mode: str = "finite_difference",
             floor_accept_multiplier: float = 2.0,
             diagnostics=False,
-            use_multiprocess: bool = False,
-            n_workers: int = 4,
+            n_workers: int = 1,
     ):
         """
         Estimate the derivative of a function using adaptive polynomial fitting.
@@ -101,6 +100,8 @@ class AdaptiveFitDerivative:
         diagnostics : bool, optional
             Whether to return diagnostic information such as residuals, fit values,
             and pruning status. Default is False.
+        n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
         Returns
         -------
@@ -123,7 +124,7 @@ class AdaptiveFitDerivative:
         x_values = self.central_value + x_offsets
 
         # Evaluate the function at those points
-        if use_multiprocess:
+        if n_workers > 1:
             n_workers = np.min((n_workers, len(x_values)))
             with Pool(n_workers) as pool:
                 y_values = pool.map(self.function, x_values)
@@ -228,7 +229,7 @@ class AdaptiveFitDerivative:
 
             # FD fallback if still not successful
             if not success:
-                fd_val = self._fallback_derivative(derivative_order, use_multiprocess=use_multiprocess, n_workers=n_workers)[idx]
+                fd_val = self._fallback_derivative(derivative_order, n_workers=n_workers)[idx]
                 derivatives[idx] = fd_val
                 if diagnostics:
                     if last_x is not None:
@@ -485,7 +486,7 @@ class AdaptiveFitDerivative:
         # default: finite_difference
         return False, "finite_difference"
 
-    def _fallback_derivative(self, derivative_order, use_multiprocess=False, n_workers=4):
+    def _fallback_derivative(self, derivative_order, n_workers=1):
         """
         Compute the derivative using a finite difference method when adaptive fitting fails.
 
@@ -503,6 +504,8 @@ class AdaptiveFitDerivative:
         derivative_order : int
             The order of the derivative to compute. Must be one of the orders supported
             by `FiniteDifferenceDerivative` (currently 1–4).
+        n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
         Returns
         -------
@@ -517,7 +520,6 @@ class AdaptiveFitDerivative:
             central_value=self.central_value,
         )
         result = fd.compute(derivative_order=derivative_order, 
-                            use_multiprocess=use_multiprocess, 
                             n_workers=n_workers)
         
         return np.atleast_1d(result)
