@@ -39,11 +39,20 @@ license-files = ["LICENSE*"]
     "sphinx",
     "furo",
 ]
+"lint" = [
+    "ruff",
+]
 
 [tool.pytest.ini_options]
 pythonpath = [
   "src",
 ]
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+extend-select = ["E501"] # enforce `line-too-long` rule
 
 [tool.tox]
 requires = ["tox>=4.22"]
