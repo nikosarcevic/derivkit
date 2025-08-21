@@ -30,7 +30,7 @@ class ForecastKit:
         self.n_parameters = len(self.central_values)
         self.n_observables = len(covariance_matrix)
 
-    def get_derivatives(self, derivative_order):
+    def get_derivatives(self, derivative_order, n_workers=1):
         """
         Returns derivatives of the observables, according to the requested 
             order of the derivatives.
@@ -42,6 +42,8 @@ class ForecastKit:
                 d = 1 returns first-order derivatives.
                 d = 2 returns second-order derivatives.
                 Currently only d = 1, 2 are supported.
+        n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
         Returns
         -------
@@ -63,7 +65,8 @@ class ForecastKit:
                 kit = DerivativeKit(function_to_diff,
                                     self.central_values[m]
                                     )
-                first_order_derivatives[m] = kit.adaptive.compute(derivative_order=1)
+                first_order_derivatives[m] = kit.adaptive.compute(derivative_order=1, 
+                                                                  n_workers=n_workers)
             return first_order_derivatives
 
         elif derivative_order == 2:
@@ -78,7 +81,9 @@ class ForecastKit:
                         kit1 = DerivativeKit(function_to_diff1,
                                              self.central_values[m1]
                                              )
-                        second_order_derivatives[m1][m2] = kit1.adaptive.compute(derivative_order=2)
+                        second_order_derivatives[m1][m2] = kit1.adaptive.compute(derivative_order=2,  
+                                                                                 n_workers=n_workers
+                                                                                )
 
                     else:
                         # 2 parameters to differentiate once, with other parameters held fixed
@@ -93,13 +98,14 @@ class ForecastKit:
                         kit2 = DerivativeKit(function_to_diff2,
                                              self.central_values[m2]
                                              )
-                        second_order_derivatives[m1][m2] = kit2.adaptive.compute(derivative_order=1)
+                        second_order_derivatives[m1][m2] = kit2.adaptive.compute(derivative_order=1, 
+                                                                                 n_workers=n_workers)
 
             return second_order_derivatives
 
         raise RuntimeError("Unreachable code reached in get_forecast_tensors.")
 
-    def get_forecast_tensors(self, forecast_order=1):
+    def get_forecast_tensors(self, forecast_order=1, n_workers=1):
         """
         Returns a set of tensors, according to the requested order of the forecast.
 
@@ -114,6 +120,8 @@ class ForecastKit:
                     * D = 3 would be the triplet-DALI approximation.
 
                 Currently only D = 1, 2 are supported.
+        n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
         Returns
         -------
@@ -142,15 +150,15 @@ class ForecastKit:
 
         if forecast_order == 1:
             # Compute Fisher matrix
-            dfp1 = self.get_derivatives(derivative_order=1)
+            dfp1 = self.get_derivatives(derivative_order=1, n_workers=n_workers)
             # F_ab = sum(i,j) df_i/dp_a * InvCov_ij * df_j/dp_b
             fisher_ab = np.einsum('ai,ij,bj->ab', dfp1, inverse_covariance_matrix, dfp1)
             return fisher_ab
 
         elif forecast_order == 2:
             # Compute doublet-DALI tensors
-            dfp1 = self.get_derivatives(derivative_order=1)
-            dfp2 = self.get_derivatives(derivative_order=2)
+            dfp1 = self.get_derivatives(derivative_order=1, n_workers=n_workers)
+            dfp2 = self.get_derivatives(derivative_order=2, n_workers=n_workers)
             # G_abc = sum(i,j) df_i/(dp_a dp_b )* InvCov_ij * df_j/dp_c
             g_abc = np.einsum('abi,ij,cj->abc', dfp2, inverse_covariance_matrix, dfp1)
             # H_abcd = sum(i,j) df_i/(dp_a dp_b) * InvCov_ij * df_j/(dp_c dp_d)

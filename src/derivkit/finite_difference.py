@@ -1,4 +1,5 @@
 import numpy as np
+from multiprocess import Pool
 
 
 class FiniteDifferenceDerivative:
@@ -45,7 +46,7 @@ class FiniteDifferenceDerivative:
         self.debug = debug
         self.log_file = log_file
 
-    def compute(self, derivative_order=1, stepsize=0.01, num_points=5):
+    def compute(self, derivative_order=1, stepsize=0.01, num_points=5, n_workers=1):
         """
         Computes the derivative using a central finite difference scheme.
 
@@ -64,6 +65,8 @@ class FiniteDifferenceDerivative:
         num_points : int, optional
             Number of points in the finite difference stencil. Must be one of [3, 5, 7, 9].
             Default is 5.
+        n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
         Returns
         -------
@@ -95,7 +98,13 @@ class FiniteDifferenceDerivative:
             raise ValueError(f"Unsupported combination: stencil={num_points}, order={derivative_order}.")
 
         stencil = np.array([self.central_value + i * stepsize for i in offsets[num_points]])
-        values = np.array([self.function(x) for x in stencil])
+        
+        if n_workers > 1:
+            n_workers = np.min((n_workers, len(stencil)))
+            with Pool(n_workers) as pool:
+                values = np.array(pool.map(self.function, stencil))
+        else:    
+            values = np.array([self.function(x) for x in stencil])
         if values.ndim == 1:
             values = values.reshape(-1, 1)
 

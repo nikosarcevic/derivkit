@@ -858,7 +858,8 @@ def plot_adaptive_timing_sweeps(
     min_pts_list=None,
     fit_tolerances=None,
     save_fig=True,
-    output_filename=None
+    output_filename=None,
+    n_workers=1,
 ):
     """
     Benchmark and plot timing results for adaptive derivative estimation as a function of:
@@ -885,6 +886,8 @@ def plot_adaptive_timing_sweeps(
         If True, saves the figure to 'plots/adaptive_timing_sweeps.{png,pdf}'.
     output_filename : str or None
         If provided, also saves the benchmark results to a `.npz` file.
+    n_workers: int, optional
+            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
     Returns
     -------
@@ -907,7 +910,8 @@ def plot_adaptive_timing_sweeps(
             kit.adaptive.fit_tolerance = fit_tolerance_fixed
             kit.adaptive.min_used_points = min_pts
             start = perf_counter()
-            _ = kit.adaptive.compute(derivative_order=order)
+            _ = kit.adaptive.compute(derivative_order=order, 
+                                     n_workers=n_workers)
             timings_minpts[order].append(perf_counter() - start)
 
     for order in deriv_orders:
@@ -917,9 +921,12 @@ def plot_adaptive_timing_sweeps(
             kit.adaptive.fit_tolerance = tol
             kit.adaptive.min_used_points = min_used_points_fixed
             start = perf_counter()
-            _ = kit.adaptive.compute(derivative_order=order)
+            _ = kit.adaptive.compute(derivative_order=order, 
+                                     n_workers=n_workers)
+            
             timings_tol[order].append(perf_counter() - start)
-
+    
+            
     if output_filename:
         np.savez(
             output_filename,
@@ -934,6 +941,12 @@ def plot_adaptive_timing_sweeps(
     markers = {order: "o" for order in deriv_orders}
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
+    title = 'Multiprocessing '
+    if n_workers > 1:
+        title += f'on, #workers={n_workers}'
+    else:
+        title += 'off'
+    fig.suptitle(title, fontsize=20)
     marker_size=10
     font_size=20
 

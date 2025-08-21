@@ -9,6 +9,7 @@ dependencies = [
   "matplotlib",
   "numdifftools",
   "numpy",
+  "multiprocess"
 ]
 authors = [
   { name="Nikolina Šarčević", email="nikolina.sarcevic@gmail.com" },
