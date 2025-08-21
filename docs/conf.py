@@ -16,6 +16,7 @@ author = 'Nikolina Šarčević'
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon", 
+    "sphinx.ext.githubpages",
 ]
 
 autoclass_content = "both"
