@@ -52,7 +52,11 @@ pythonpath = [
 line-length = 79
 
 [tool.ruff.lint]
-extend-select = ["E501"] # enforce `line-too-long` rule
+# Here we list the styling/formatting rules that Ruff should use.
+# A list of available rules and what each rule does is provided at
+# https://docs.astral.sh/ruff/rules
+select = ["E", "F", "W", "Q", "I"]
+ignore = ["E203", "E501"]
 
 [tool.tox]
 requires = ["tox>=4.22"]
