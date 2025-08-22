@@ -1,11 +1,12 @@
-from typing import Optional
 import warnings
-warnings.simplefilter("once", category=RuntimeWarning)
+from typing import Optional
 
 import numpy as np
 from multiprocess import Pool
 
 from derivkit.finite_difference import FiniteDifferenceDerivative
+
+warnings.simplefilter("once", category=RuntimeWarning)
 
 
 class AdaptiveFitDerivative:
@@ -44,18 +45,20 @@ class AdaptiveFitDerivative:
         self.function = function
         self.central_value = central_value
         self.diagnostics_data = None
-        self.min_used_points = 5  # Minimum number of samples required for fitting
+        self.min_used_points = (
+            5  # Minimum number of samples required for fitting
+        )
 
     def compute(
-            self,
-            include_zero=True,
-            derivative_order=1,
-            min_samples=7,
-            diagnostics=False,
-            fallback_mode: str = "finite_difference",
-            fit_tolerance=0.05,
-            floor_accept_multiplier: float = 2.0,
-            n_workers: int = 1,
+        self,
+        include_zero=True,
+        derivative_order=1,
+        min_samples=7,
+        diagnostics=False,
+        fallback_mode: str = "finite_difference",
+        fit_tolerance=0.05,
+        floor_accept_multiplier: float = 2.0,
+        n_workers: int = 1,
     ):
         """
         Estimate the derivative of a function using adaptive polynomial fitting.
@@ -115,10 +118,12 @@ class AdaptiveFitDerivative:
             )
 
         # Sampling grid
-        x_offsets, required_points = self._build_x_offsets(central_value=self.central_value,
-                                                           derivative_order=derivative_order,
-                                                           include_zero=include_zero,
-                                                           min_samples=min_samples)
+        x_offsets, required_points = self._build_x_offsets(
+            central_value=self.central_value,
+            derivative_order=derivative_order,
+            include_zero=include_zero,
+            min_samples=min_samples,
+        )
         x_values = self.central_value + x_offsets
 
         # Evaluate the function at those points
@@ -127,8 +132,10 @@ class AdaptiveFitDerivative:
             with Pool(n_workers) as pool:
                 y_values = pool.map(self.function, x_values)
         else:
-            y_values = np.vstack([np.atleast_1d(self.function(x)) for x in x_values])
-        
+            y_values = np.vstack(
+                [np.atleast_1d(self.function(x)) for x in x_values]
+            )
+
         y_values = np.vstack([np.atleast_1d(y) for y in y_values])
         _, n_components = y_values.shape
         derivatives = np.zeros(n_components)
@@ -145,7 +152,7 @@ class AdaptiveFitDerivative:
                 "used_mask": [],
                 "status": [],
                 "fit_poly": None,
-                "fit_tolerance": None
+                "fit_tolerance": None,
             }
         else:
             self.diagnostics_data = None
@@ -168,48 +175,75 @@ class AdaptiveFitDerivative:
                     break
 
                 last_x, last_y = x_vals.copy(), y_vals.copy()
-                last_yfit, last_resid = fit["y_fit"].copy(), fit["residuals"].copy()
+                last_yfit, last_resid = (
+                    fit["y_fit"].copy(),
+                    fit["residuals"].copy(),
+                )
 
                 # Accept if within tolerance
                 if fit["rel_error"] < fit_tolerance:
                     m = derivative_order
-                    derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (last_fit["h"] ** m)
+                    derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (
+                        last_fit["h"] ** m
+                    )
                     if diagnostics:
-                        self._store_diagnostics_entry(x_values, x_vals, y_vals, last_yfit, last_resid)
-                        self.diagnostics_data["status"].append({
-                            "component": int(idx),
-                            "mode": "poly",
-                            "rel_error": float(fit["rel_error"]),
-                            "accepted": True,
-                        })
+                        self._store_diagnostics_entry(
+                            x_values, x_vals, y_vals, last_yfit, last_resid
+                        )
+                        self.diagnostics_data["status"].append(
+                            {
+                                "component": int(idx),
+                                "mode": "poly",
+                                "rel_error": float(fit["rel_error"]),
+                                "accepted": True,
+                            }
+                        )
                     success = True
                     break
 
                 # Prune worst residuals and refit
                 x_vals, y_vals, removed = self._prune_by_residuals(
-                    x_vals, y_vals, fit["residuals"], fit_tolerance, required_points,
-                    max_remove=2, keep_center=True, keep_symmetric=True,
+                    x_vals,
+                    y_vals,
+                    fit["residuals"],
+                    fit_tolerance,
+                    required_points,
+                    max_remove=2,
+                    keep_center=True,
+                    keep_symmetric=True,
                 )
                 if removed:
                     continue  # loop back with smaller set
 
                 # At floor and still failing tolerance -> decide fallback
-                at_floor = (last_x is not None) and (len(last_x) == required_points)
+                at_floor = (last_x is not None) and (
+                    len(last_x) == required_points
+                )
                 accept, tag = self._maybe_accept_at_floor(
-                    last_resid, at_floor, fit_tolerance, fallback_mode, floor_accept_multiplier
+                    last_resid,
+                    at_floor,
+                    fit_tolerance,
+                    fallback_mode,
+                    floor_accept_multiplier,
                 )
                 if accept:
                     m = derivative_order
-                    derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (last_fit["h"] ** m)
+                    derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (
+                        last_fit["h"] ** m
+                    )
                     if diagnostics:
-                        self._store_diagnostics_entry(x_values, last_x, last_y, last_yfit, last_resid)
+                        self._store_diagnostics_entry(
+                            x_values, last_x, last_y, last_yfit, last_resid
+                        )
                         entry = {
                             "component": int(idx),
                             "mode": tag,
                             "max_resid": float(np.max(last_resid)),
                             "median_resid": float(np.median(last_resid)),
                             "fit_tolerance": float(fit_tolerance),
-                            "floor_accept_multiplier": float(floor_accept_multiplier),
+                            "floor_accept_multiplier": float(
+                                floor_accept_multiplier
+                            ),
                             "accepted": True,
                         }
                         self.diagnostics_data["status"].append(entry)
@@ -217,7 +251,7 @@ class AdaptiveFitDerivative:
                         f"[AdaptiveFitDerivative] Accepted polynomial at minimum points ({required_points}) "
                         f"with residuals above tolerance (max={np.max(last_resid):.3g}, "
                         f"tol={fit_tolerance:.3g}) using mode='{tag}'.",
-                        RuntimeWarning
+                        RuntimeWarning,
                     )
                     success = True
                     break
@@ -227,46 +261,60 @@ class AdaptiveFitDerivative:
 
             # FD fallback if still not successful
             if not success:
-                fd_val = self._fallback_derivative(derivative_order, n_workers=n_workers)[idx]
+                fd_val = self._fallback_derivative(
+                    derivative_order, n_workers=n_workers
+                )[idx]
                 derivatives[idx] = fd_val
                 if diagnostics:
                     if last_x is not None:
-                        self._store_diagnostics_entry(x_values, last_x, last_y, last_yfit, last_resid)
+                        self._store_diagnostics_entry(
+                            x_values, last_x, last_y, last_yfit, last_resid
+                        )
                     else:
-                        self._store_diagnostics_entry(x_values, None, None, None, None)
-                    self.diagnostics_data["status"].append({
-                        "component": int(idx),
-                        "mode": "finite_difference",
-                        "accepted": True,
-                        "reason": "fit_not_within_tolerance_or_insufficient_points",
-                    })
+                        self._store_diagnostics_entry(
+                            x_values, None, None, None, None
+                        )
+                    self.diagnostics_data["status"].append(
+                        {
+                            "component": int(idx),
+                            "mode": "finite_difference",
+                            "accepted": True,
+                            "reason": "fit_not_within_tolerance_or_insufficient_points",
+                        }
+                    )
                 detail = ""
                 if last_resid is not None:
                     detail = f" (last max residual {np.max(last_resid):.3g} vs tol {fit_tolerance:.3g})"
                 warnings.warn(
                     f"[AdaptiveFitDerivative] Falling back to finite differences because polynomial fit "
                     f"did not meet tolerance{detail}.",
-                    RuntimeWarning
+                    RuntimeWarning,
                 )
 
         if diagnostics:
-            self.diagnostics_data["fit_poly"] = last_fit["poly_u"] if last_fit is not None else None
+            self.diagnostics_data["fit_poly"] = (
+                last_fit["poly_u"] if last_fit is not None else None
+            )
             self.diagnostics_data["fit_tolerance"] = fit_tolerance
 
-        val = derivatives.item() if derivatives.size == 1 else np.atleast_1d(derivatives)
+        val = (
+            derivatives.item()
+            if derivatives.size == 1
+            else np.atleast_1d(derivatives)
+        )
         return (val, self.diagnostics_data) if diagnostics else val
 
     def get_adaptive_offsets(
-            self,
-            central_value=None,
-            base_rel=0.01,  # 1% of central value as first relative step
-            base_abs=1e-6,  # absolute step if absolute central value is small
-            factor=1.5,
-            num_offsets=10,
-            max_rel=0.05,  # cap at 5% of absolute central value
-            max_abs=1e-2,  # cap absolute step
-            step_mode="auto",  # "auto" | "relative" | "absolute"
-            x_small_threshold=1e-3,
+        self,
+        central_value=None,
+        base_rel=0.01,  # 1% of central value as first relative step
+        base_abs=1e-6,  # absolute step if absolute central value is small
+        factor=1.5,
+        num_offsets=10,
+        max_rel=0.05,  # cap at 5% of absolute central value
+        max_abs=1e-2,  # cap absolute step
+        step_mode="auto",  # "auto" | "relative" | "absolute"
+        x_small_threshold=1e-3,
     ):
         """
         Returns an array of absolute step sizes to use for adaptive sampling.
@@ -294,21 +342,39 @@ class AdaptiveFitDerivative:
         Returns:
             Absolute step sizes (positive only), not including the central 0 step.
         """
-        x0 = self.central_value if central_value is None else float(central_value)
-        use_abs = (step_mode == "absolute") or (step_mode == "auto" and abs(x0) < x_small_threshold)
+        x0 = (
+            self.central_value
+            if central_value is None
+            else float(central_value)
+        )
+        use_abs = (step_mode == "absolute") or (
+            step_mode == "auto" and abs(x0) < x_small_threshold
+        )
 
         if use_abs:
-            bases = [min(base_abs * (factor ** i), max_abs) for i in range(num_offsets)]
+            bases = [
+                min(base_abs * (factor**i), max_abs)
+                for i in range(num_offsets)
+            ]
         else:
             scale = max(abs(x0), x_small_threshold)  # guard near zero
-            bases = [min(base_rel * (factor ** i), max_rel) * scale for i in range(num_offsets)]
+            bases = [
+                min(base_rel * (factor**i), max_rel) * scale
+                for i in range(num_offsets)
+            ]
 
         offsets = np.unique([b for b in bases if b > 0.0])
         if len(offsets) == 0:
             raise ValueError("No valid offsets generated.")
         return offsets
 
-    def _build_x_offsets(self, central_value, derivative_order, include_zero: bool, min_samples: int):
+    def _build_x_offsets(
+        self,
+        central_value,
+        derivative_order,
+        include_zero: bool,
+        min_samples: int,
+    ):
         """
         Construct a symmetric array of sampling offsets around `central_value` for polynomial fitting.
 
@@ -348,13 +414,15 @@ class AdaptiveFitDerivative:
             warnings.warn(
                 f"[AdaptiveFitDerivative] self.min_used_points={self.min_used_points} is below "
                 "the recommended minimum of 5. This may reduce polynomial fit stability.",
-                RuntimeWarning
+                RuntimeWarning,
             )
         order_based_floor = derivative_order + 2
-        required_points = max(min_samples, max(self.min_used_points, order_based_floor))
+        required_points = max(
+            min_samples, max(self.min_used_points, order_based_floor)
+        )
 
         offsets = self.get_adaptive_offsets(central_value=central_value)
-        growth_limit = offsets[-1] * (1.5 ** 3)
+        growth_limit = offsets[-1] * (1.5**3)
 
         while True:
             steps = np.insert(offsets, 0, 0.0) if include_zero else offsets
@@ -368,7 +436,9 @@ class AdaptiveFitDerivative:
 
         return x_offsets, required_points
 
-    def _fit_once(self, x_vals: np.ndarray, y_vals: np.ndarray, derivative_order: int):
+    def _fit_once(
+        self, x_vals: np.ndarray, y_vals: np.ndarray, derivative_order: int
+    ):
         """
         Perform one normalized weighted polynomial fit on (x_vals, y_vals).
 
@@ -397,13 +467,20 @@ class AdaptiveFitDerivative:
 
         # Weighted polynomial fit in u-space
         try:
-            coeffs = np.polyfit(u_vals, y_vals, deg=derivative_order, w=weights)
+            coeffs = np.polyfit(
+                u_vals, y_vals, deg=derivative_order, w=weights
+            )
             poly_u = np.poly1d(coeffs)
         except np.linalg.LinAlgError:
             return {
-                "ok": False, "reason": "singular_normal_equations",
-                "h": h, "u_vals": u_vals, "poly_u": None,
-                "y_fit": None, "residuals": None, "rel_error": np.inf,
+                "ok": False,
+                "reason": "singular_normal_equations",
+                "h": h,
+                "u_vals": u_vals,
+                "poly_u": None,
+                "y_fit": None,
+                "residuals": None,
+                "rel_error": np.inf,
             }
 
         # Residuals (relative, guarded near zero)
@@ -413,18 +490,23 @@ class AdaptiveFitDerivative:
         rel_error = float(np.max(residuals))
 
         return {
-            "ok": True, "reason": None,
-            "h": h, "u_vals": u_vals, "poly_u": poly_u,
-            "y_fit": y_fit, "residuals": residuals, "rel_error": rel_error,
+            "ok": True,
+            "reason": None,
+            "h": h,
+            "u_vals": u_vals,
+            "poly_u": poly_u,
+            "y_fit": y_fit,
+            "residuals": residuals,
+            "rel_error": rel_error,
         }
 
     def _maybe_accept_at_floor(
-            self,
-            last_residuals: Optional[np.ndarray],
-            at_floor: bool,
-            fit_tolerance: float,
-            fallback_mode: str,
-            floor_accept_multiplier: float,
+        self,
+        last_residuals: Optional[np.ndarray],
+        at_floor: bool,
+        fit_tolerance: float,
+        fallback_mode: str,
+        floor_accept_multiplier: float,
     ):
         """
         Determine whether to accept a polynomial fit computed at the minimum stencil size ("floor").
@@ -477,8 +559,14 @@ class AdaptiveFitDerivative:
                 return False, "auto_no_residuals"
             max_r = float(np.max(last_residuals))
             med_r = float(np.median(last_residuals))
-            close_enough = (max_r < floor_accept_multiplier * fit_tolerance) and (med_r < fit_tolerance)
-            return (True, "auto_accept_at_floor") if close_enough else (False, "auto_reject")
+            close_enough = (
+                max_r < floor_accept_multiplier * fit_tolerance
+            ) and (med_r < fit_tolerance)
+            return (
+                (True, "auto_accept_at_floor")
+                if close_enough
+                else (False, "auto_reject")
+            )
 
         # default: finite_difference
         return False, "finite_difference"
@@ -511,14 +599,17 @@ class AdaptiveFitDerivative:
             output component of the target function.
         """
 
-        warnings.warn("Falling back to finite difference derivative.", RuntimeWarning)
+        warnings.warn(
+            "Falling back to finite difference derivative.", RuntimeWarning
+        )
         fd = FiniteDifferenceDerivative(
             function=self.function,
             central_value=self.central_value,
         )
-        result = fd.compute(derivative_order=derivative_order, 
-                            n_workers=n_workers)
-        
+        result = fd.compute(
+            derivative_order=derivative_order, n_workers=n_workers
+        )
+
         return np.atleast_1d(result)
 
     def recommend_fit_tolerance(self, dx=1e-3, verbose=True):
@@ -551,12 +642,16 @@ class AdaptiveFitDerivative:
                 tol = 0.01
 
             if verbose:
-                print(f"[recommend_fit_tolerance] Δf = {variation:.3g}, x₀ = {scale:.3g} → Suggested tol = {tol}")
+                print(
+                    f"[recommend_fit_tolerance] Δf = {variation:.3g}, x₀ = {scale:.3g} → Suggested tol = {tol}"
+                )
             return tol
 
         except Exception as e:
             if verbose:
-                print(f"[recommend_fit_tolerance] Could not evaluate near x₀: {e}")
+                print(
+                    f"[recommend_fit_tolerance] Could not evaluate near x₀: {e}"
+                )
             return 0.05
 
     def _compute_weights(self, x_vals):
@@ -619,16 +714,16 @@ class AdaptiveFitDerivative:
         return 1.0 / (d + eps)
 
     def _prune_by_residuals(
-            self,
-            x_vals: np.ndarray,
-            y_vals: np.ndarray,
-            residuals: np.ndarray,
-            fit_tolerance: float,
-            required_points: int,
-            *,
-            max_remove: int = 2,
-            keep_center: bool = True,
-            keep_symmetric: bool = True,
+        self,
+        x_vals: np.ndarray,
+        y_vals: np.ndarray,
+        residuals: np.ndarray,
+        fit_tolerance: float,
+        required_points: int,
+        *,
+        max_remove: int = 2,
+        keep_center: bool = True,
+        keep_symmetric: bool = True,
     ):
         """
         Remove points whose relative residual exceeds ``fit_tolerance``, then refit.
@@ -671,7 +766,11 @@ class AdaptiveFitDerivative:
         order = np.argsort(residuals)[::-1]
 
         # Identify the sample closest to the expansion point
-        center_idx = int(np.argmin(np.abs(x_vals - self.central_value))) if len(x_vals) else -1
+        center_idx = (
+            int(np.argmin(np.abs(x_vals - self.central_value)))
+            if len(x_vals)
+            else -1
+        )
 
         keep = np.ones(len(x_vals), dtype=bool)
         removed = 0
@@ -694,8 +793,14 @@ class AdaptiveFitDerivative:
             removed += 1
 
             # Try to drop a symmetric mate about x0 to keep balance
-            if keep_symmetric and removed < max_remove and keep.sum() - 1 >= required_points:
-                target = 2.0 * self.central_value - x_vals[j]  # mirror of x_j about x0
+            if (
+                keep_symmetric
+                and removed < max_remove
+                and keep.sum() - 1 >= required_points
+            ):
+                target = (
+                    2.0 * self.central_value - x_vals[j]
+                )  # mirror of x_j about x0
                 k = int(np.argmin(np.abs(x_vals - target)))
                 if k != j and (not keep_center or k != center_idx) and keep[k]:
                     keep[k] = False
@@ -706,7 +811,9 @@ class AdaptiveFitDerivative:
 
         return x_vals[keep], y_vals[keep], True
 
-    def _store_diagnostics_entry(self, x_all, x_used, y_used, y_fit, residuals):
+    def _store_diagnostics_entry(
+        self, x_all, x_used, y_used, y_fit, residuals
+    ):
         """
         Store diagnostic info for a single component.
 
@@ -735,9 +842,13 @@ class AdaptiveFitDerivative:
             self.diagnostics_data["y_used"].append(None)
             self.diagnostics_data["y_fit"].append(None)
             self.diagnostics_data["residuals"].append(None)
-            self.diagnostics_data["used_mask"].append(np.zeros_like(x_all, dtype=bool))
+            self.diagnostics_data["used_mask"].append(
+                np.zeros_like(x_all, dtype=bool)
+            )
         else:
-            mask = np.isclose(x_all[:, None], x_used, rtol=1e-12, atol=1e-15).any(axis=1)
+            mask = np.isclose(
+                x_all[:, None], x_used, rtol=1e-12, atol=1e-15
+            ).any(axis=1)
             self.diagnostics_data["x_used"].append(x_used.copy())
             self.diagnostics_data["y_used"].append(y_used.copy())
             self.diagnostics_data["y_fit"].append(y_fit.copy())
