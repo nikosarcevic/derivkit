@@ -47,11 +47,16 @@ class DerivativeKit:
         tuple of np.ndarray
             (x_all, y_all, x_used, y_used, used_mask)
         """
-        _, diagnostics = self.adaptive.compute(derivative_order=derivative_order, diagnostics=True, 
-                                               n_workers=n_workers)
+        _, diagnostics = self.adaptive.compute(
+            derivative_order=derivative_order,
+            diagnostics=True,
+            n_workers=n_workers,
+        )
 
         x_all = diagnostics["x_all"]
-        y_all = diagnostics["y_all"][:, 0]  # assuming scalar output or first component
+        y_all = diagnostics["y_all"][
+            :, 0
+        ]  # assuming scalar output or first component
         x_used = diagnostics["x_used"][0]
         y_used = diagnostics["y_used"][0]
         used_mask = diagnostics["used_mask"][0]

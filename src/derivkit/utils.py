@@ -43,7 +43,11 @@ def is_finite_and_differentiable(function, x, delta=1e-5, tol=1e-2):
         f_plus = np.asarray(function(x + delta))
 
         # Check for finiteness
-        if not np.isfinite(f0).all() or not np.isfinite(f_minus).all() or not np.isfinite(f_plus).all():
+        if (
+            not np.isfinite(f0).all()
+            or not np.isfinite(f_minus).all()
+            or not np.isfinite(f_plus).all()
+        ):
             return False
 
         # Numerical derivative comparison (left and right)
@@ -122,28 +126,22 @@ def generate_test_function(name="sin"):
         tuple: (f(x), df/dx, d2f/dx2)
     """
     if name == "sin":
-        return (
-            lambda x: np.sin(x),
-            lambda x: np.cos(x),
-            lambda x: -np.sin(x)
-        )
+        return (lambda x: np.sin(x), lambda x: np.cos(x), lambda x: -np.sin(x))
     elif name == "exp":
-        return (
-            lambda x: np.exp(x),
-            lambda x: np.exp(x),
-            lambda x: np.exp(x)
-        )
+        return (lambda x: np.exp(x), lambda x: np.exp(x), lambda x: np.exp(x))
     elif name == "polynomial":
         return (
-            lambda x: x**3 + 2*x**2 - x + 5,
-            lambda x: 3*x**2 + 4*x - 1,
-            lambda x: 6*x + 4
+            lambda x: x**3 + 2 * x**2 - x + 5,
+            lambda x: 3 * x**2 + 4 * x - 1,
+            lambda x: 6 * x + 4,
         )
     elif name == "gaussian":
         return (
-            lambda x: np.exp(-x**2),
-            lambda x: -2*x*np.exp(-x**2),
-            lambda x: (4*x**2 - 2)*np.exp(-x**2)
+            lambda x: np.exp(-(x**2)),
+            lambda x: -2 * x * np.exp(-(x**2)),
+            lambda x: (4 * x**2 - 2) * np.exp(-(x**2)),
         )
     else:
-        raise ValueError("Supported names: 'sin', 'exp', 'polynomial', 'gaussian'")
+        raise ValueError(
+            "Supported names: 'sin', 'exp', 'polynomial', 'gaussian'"
+        )
