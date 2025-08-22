@@ -181,8 +181,8 @@ class PlotKit:
         adaptive_vals = clip_outliers(adaptive_vals)
 
         # Plot all three histograms
-        mu_s, var_s = np.mean(stencil_vals), np.var(stencil_vals, ddof=1)
-        mu_a, var_a = np.mean(adaptive_vals), np.var(adaptive_vals, ddof=1)
+        _, var_s = np.mean(stencil_vals), np.var(stencil_vals, ddof=1)
+        _, var_a = np.mean(adaptive_vals), np.var(adaptive_vals, ddof=1)
 
         label_stencil = f"finite: $s^2$={var_s:.2f}"
         label_adaptive = f"adaptive: $s^2$={var_a:.2f}"
