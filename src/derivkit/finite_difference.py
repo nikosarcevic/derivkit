@@ -1,10 +1,25 @@
+"""Provides the FiniteDifferenceDerivative class.
+
+The user must specify the function to differentiate and the central value
+at which the derivative should be evaluated. More details about available
+options can be found in the documentation of the methods.
+
+Typical usage example:
+
+  derivative = FiniteDifferenceDerivative(
+    function_to_differentiate,
+    1
+  ).compute()
+
+derivative is the derivative of function_to_differerentiate at value 1.
+"""
+
 import numpy as np
 from multiprocess import Pool
 
 
 class FiniteDifferenceDerivative:
-    """
-    Computes numerical derivatives using central finite difference stencils.
+    """Computes numerical derivatives using central finite difference stencils.
 
     This class supports the calculation of first to fourth-order derivatives
     for scalar or vector-valued functions. It uses high-accuracy central
@@ -14,17 +29,16 @@ class FiniteDifferenceDerivative:
     functions, the derivative is computed component-wise and returned as a
     NumPy array.
 
-    Parameters
-    ----------
-    function : callable
-        The function to differentiate. Must accept a single float and return either
-        a float or a 1D array-like object.
-    central_value : float
-        The point at which the derivative is evaluated.
-    log_file : str, optional
-        Path to a file where debug information may be logged.
-    debug : bool, optional
-        If True, debug information will be printed or logged.
+    Attributes:
+        function: callable
+            The function to differentiate. Must accept a single float and return either
+            a float or a 1D array-like object.
+        central_value : float
+            The point at which the derivative is evaluated.
+        log_file : str, optional
+            Path to a file where debug information may be logged.
+        debug : bool, optional
+            If True, debug information will be printed or logged.
 
     Supported Stencil and Derivative Combinations
     ---------------------------------------------
@@ -33,7 +47,7 @@ class FiniteDifferenceDerivative:
     - 7-point: first and second-order
     - 9-point: first and second-order
 
-    Examples
+    Examples:
     --------
     >>> f = lambda x: x**3
     >>> d = FiniteDifferenceDerivative(function=f, central_value=2.0)
@@ -42,6 +56,17 @@ class FiniteDifferenceDerivative:
     """
 
     def __init__(self, function, central_value, log_file=None, debug=False):
+        """Initialises the class based on function and central value.
+
+        Attributes:
+            function (callable): The function to differentiate. Must accept a
+                single float and return either a float or a 1D array-like object.
+            central_value (float): The point at which the derivative is evaluated.
+            log_file (str, optional): Path to a file where debug information may
+                be logged.
+            debug (bool, optional): If True, debug information will be printed or
+                logged.
+        """
         self.function = function
         self.central_value = central_value
         self.debug = debug
@@ -50,47 +75,39 @@ class FiniteDifferenceDerivative:
     def compute(
         self, derivative_order=1, stepsize=0.01, num_points=5, n_workers=1
     ):
+        """Computes the derivative using a central finite difference scheme.
+
+        Supports 3-, 5-, 7-, or 9-point central difference stencils for
+        derivative orders 1 through 4 (depending on the stencil size).
+        Derivatives are computed for scalar or vector-valued functions.
+
+        Args:
+            derivative_order (int, optional): The order of the derivative to
+                compute. Must be supported by the chosen stencil size.
+                Default is 1.
+            stepsize (float, optional): Step size (h) used to evaluate the
+                function around the central value. Default is 0.01.
+            num_points (int, optional): Number of points in the finite
+                difference stencil. Must be one of [3, 5, 7, 9]. Default is 5.
+            n_workers (int, optional): Number of worker to use in
+                multiprocessing. Default is 1 (no multiprocessing).
+
+        Returns:
+            float or np.ndarray: The estimated derivative. Returns a float for
+                scalar-valued functions, or a NumPy array for vector-valued
+                functions.
+
+        Raises:
+            ValueError: If the combination of num_points and derivative_order
+                is not supported.
+
+        Notes:
+            The available (num_points, derivative_order) combinations are:
+                - 3: order 1
+                - 5: orders 1, 2, 3, 4
+                - 7: orders 1, 2
+                - 9: orders 1, 2
         """
-        Computes the derivative using a central finite difference scheme.
-
-        Supports 3-, 5-, 7-, or 9-point central difference stencils for derivative
-        orders 1 through 4 (depending on the stencil size). Derivatives are computed
-        for scalar or vector-valued functions.
-
-        Parameters
-        ----------
-        derivative_order : int, optional
-            The order of the derivative to compute. Must be supported by the chosen
-            stencil size. Default is 1.
-        stepsize : float, optional
-            Step size (h) used to evaluate the function around the central value.
-            Default is 0.01.
-        num_points : int, optional
-            Number of points in the finite difference stencil. Must be one of [3, 5, 7, 9].
-            Default is 5.
-        n_workers: int, optional
-            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
-
-        Returns
-        -------
-        float or np.ndarray
-            The estimated derivative. Returns a float for scalar-valued functions,
-            or a NumPy array for vector-valued functions.
-
-        Raises
-        ------
-        ValueError
-            If the combination of num_points and derivative_order is not supported.
-
-        Notes
-        -----
-        The available (num_points, derivative_order) combinations are:
-            - 3: order 1
-            - 5: orders 1, 2, 3, 4
-            - 7: orders 1, 2
-            - 9: orders 1, 2
-        """
-
         offsets, coeffs_table = self.get_finite_difference_tables(stepsize)
 
         if num_points not in offsets:
@@ -122,21 +139,15 @@ class FiniteDifferenceDerivative:
         return derivs.ravel() if derivs.size > 1 else float(derivs)
 
     def get_finite_difference_tables(self, stepsize):
-        """
-        Returns offset patterns and coefficient tables for supported
-        central finite difference stencils.
+        """Returns offset patterns and coefficient tables.
 
-        Parameters
-        ----------
-        stepsize : float
-            Stepsize for finite difference calculation.
+        Args:
+            stepsize (float): Stepsize for finite difference calculation.
 
-        Returns
-        -------
-        offsets : dict
-            Mapping from stencil size to symmetric offsets.
-        coeffs_table : dict
-            Mapping from (stencil_size, derivative_order) to coefficient arrays.
+        Returns:
+            (dict, dict): A tuple of two dictionaries. The first maps from
+                stencil size to symmetric offsets. The second mapps from
+                (stencil_size, derivative_order) to coefficient arrays.
         """
         offsets = {
             3: [-1, 0, 1],

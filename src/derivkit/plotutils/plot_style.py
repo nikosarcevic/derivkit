@@ -1,3 +1,5 @@
+"""Defines variables useful for visually nice plots."""
+
 import matplotlib as mpl
 
 DEFAULT_LINEWIDTH = 2.0
@@ -26,6 +28,7 @@ LIGHT_GRAY = "#E0E0E0"
 
 
 def apply_plot_style():
+    """Applies style."""
     mpl.rcParams.update(
         {
             "text.usetex": False,

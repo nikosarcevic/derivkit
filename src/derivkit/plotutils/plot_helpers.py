@@ -1,3 +1,5 @@
+"""Provides a class of assorted plotting helper functions."""
+
 import math
 import os
 
@@ -9,8 +11,7 @@ from derivkit.kit import DerivativeKit
 
 
 class PlotHelpers:
-    """
-    Utility class to support plotting and evaluation of numerical derivatives under noise.
+    """Utility class to support plotting and evaluation of numerical derivatives under noise.
 
     Provides helper functions for:
     - Creating noisy function versions
@@ -18,19 +19,6 @@ class PlotHelpers:
     - Comparing different derivative methods
     - Computing or approximating reference derivatives
     - Saving consistent figures to disk
-
-    Parameters
-    ----------
-    function : callable
-        Original function to be differentiated.
-    central_value : float
-        Central evaluation point.
-    fit_tolerance : float, optional
-        Tolerance used for adaptive fitting (default is 0.05).
-    true_derivative_fn : callable, optional
-        Ground-truth derivative function, if available.
-    plot_dir : str, optional
-        Directory to save output plots (default is "plots").
     """
 
     def __init__(
@@ -41,6 +29,20 @@ class PlotHelpers:
         true_derivative_fn=None,
         plot_dir: str = "plots",
     ):
+        """Initialises the class.
+
+        Args:
+            function : callable
+                Original function to be differentiated.
+            central_value : float
+                Central evaluation point.
+            fit_tolerance : float, optional
+                Tolerance used for adaptive fitting (default is 0.05).
+            true_derivative_fn : callable, optional
+                Ground-truth derivative function, if available.
+            plot_dir : str, optional
+                Directory to save output plots (default is "plots").
+        """
         self.function = function
         self.central_value = central_value
         self.plot_dir = plot_dir
@@ -54,22 +56,19 @@ class PlotHelpers:
     def get_noisy_derivatives(
         self, derivative_order, noise_std=0.01, trials=100
     ):
-        """
-        Compute derivative estimates across multiple noisy trials using finite, adaptive, and Numdifftools methods.
+        """Compute derivative estimates across multiple noisy trials using finite, adaptive, and Numdifftools methods.
 
-        Parameters
-        ----------
-        derivative_order : int
-            The order of the derivative to compute.
-        noise_std : float
-            Standard deviation of the noise to add to the function.
-        trials : int
-            Number of noisy trials to run.
+        Args:
+            derivative_order : int
+                The order of the derivative to compute.
+            noise_std : float
+                Standard deviation of the noise to add to the function.
+            trials : int
+                Number of noisy trials to run.
 
-        Returns
-        -------
-        tuple of lists
-            (finite_differences, adaptive_fits, numdifftools_estimates)
+        Returns:
+            tuple of lists
+                (finite_differences, adaptive_fits, numdifftools_estimates)
         """
         rng = np.random.default_rng(self.seed)
         finite_vals, adaptive_vals, nd_vals = [], [], []
@@ -100,24 +99,21 @@ class PlotHelpers:
     def run_derivative_trials_with_noise(
         self, method="finite", order=1, noise_std=0.01, trials=100
     ):
-        """
-        Run repeated derivative estimation trials with a specified method and added noise.
+        """Run repeated derivative estimation trials with a specified method and added noise.
 
-        Parameters
-        ----------
-        method : str
-            One of {"finite", "adaptive", "numdifftools"}.
-        order : int
-            Derivative order to compute.
-        noise_std : float
-            Standard deviation of the noise.
-        trials : int
-            Number of trials to run.
+        Args:
+            method : str
+                One of {"finite", "adaptive", "numdifftools"}.
+            order : int
+                Derivative order to compute.
+            noise_std : float
+                Standard deviation of the noise.
+            trials : int
+                Number of trials to run.
 
-        Returns
-        -------
-        list
-            Derivative estimates for each trial.
+        Returns:
+            list
+                Derivative estimates for each trial.
         """
         results = []
         for i in range(trials):
@@ -173,28 +169,25 @@ class PlotHelpers:
         noise_std=0.01,
         seed=None,
     ):
-        """
-        Create a noisy interpolated version of a function on a local interval around central_value.
+        """Create a noisy interpolated version of a function on a local interval around central_value.
 
-        Parameters
-        ----------
-        function : callable
-            Function to be sampled.
-        central_value : float
-            Central point of the interval.
-        width : float
-            Half-width of the interval.
-        resolution : int
-            Number of sample points.
-        noise_std : float
-            Standard deviation of added Gaussian noise.
-        seed : int, optional
-            Random seed for reproducibility.
+        Args:
+            function : callable
+                Function to be sampled.
+            central_value : float
+                Central point of the interval.
+            width : float
+                Half-width of the interval.
+            resolution : int
+                Number of sample points.
+            noise_std : float
+                Standard deviation of added Gaussian noise.
+            seed : int, optional
+                Random seed for reproducibility.
 
-        Returns
-        -------
-        callable
-            Interpolated noisy function.
+        Returns:
+            callable
+                Interpolated noisy function.
         """
         rng = np.random.default_rng(self.seed if seed is None else seed)
         x_grid = np.linspace(
@@ -210,22 +203,18 @@ class PlotHelpers:
         return noisy_interp
 
     def make_additive_noise_function(self, noise_std=0.01, seed=None):
+        """Add Gaussian noise to the function directly, no interpolation.
+
+        Args:
+            noise_std : float
+                Standard deviation of added noise.
+            seed : int, optional
+                Random seed for reproducibility.
+
+        Returns:
+            callable
+                Noisy function.
         """
-        Add Gaussian noise to the function directly, no interpolation.
-
-        Parameters
-        ----------
-        noise_std : float
-            Standard deviation of added noise.
-        seed : int, optional
-            Random seed for reproducibility.
-
-        Returns
-        -------
-        callable
-            Noisy function.
-        """
-
         rng = np.random.default_rng(self.seed if seed is None else seed)
 
         def noisy_f(x):
@@ -241,31 +230,30 @@ class PlotHelpers:
         y_center=None,
         return_inliers=False,
     ):
-        """
-        Fit a line to (x, y) after removing outliers using a 2.5σ residual filter.
+        """Fit a line to data after removing outliers.
+
+        The removal is done using a 2.5σ residual filter.
         Ensures the central point (central_value, y_center) is always included in the fit.
 
-        Parameters
-        ----------
-        x_vals : array-like
-            X coordinates.
-        y_vals : array-like
-            Y coordinates.
-        central_value : float, optional
-            The central x value to enforce inclusion.
-        y_center : float, optional
-            The corresponding f(central_value) value.
-        return_inliers : bool
-            Whether to return a mask of inlier points.
+        Args:
+            x_vals : array-like
+                X coordinates.
+            y_vals : array-like
+                Y coordinates.
+            central_value : float, optional
+                The central x value to enforce inclusion.
+            y_center : float, optional
+                The corresponding f(central_value) value.
+            return_inliers : bool
+                Whether to return a mask of inlier points.
 
-        Returns
-        -------
-        slope : float
-            Slope of the best-fit line.
-        intercept : float
-            Intercept of the best-fit line.
-        inlier_mask : np.ndarray or None
-            Boolean array indicating which points were kept (if return_inliers=True).
+        Returns:
+            slope : float
+                Slope of the best-fit line.
+            intercept : float
+                Intercept of the best-fit line.
+            inlier_mask : np.ndarray or None
+                Boolean array indicating which points were kept (if return_inliers=True).
         """
         x_vals = np.asarray(x_vals)
         y_vals = np.asarray(y_vals)
@@ -294,20 +282,17 @@ class PlotHelpers:
         return slope, intercept, None
 
     def nd_derivative(self, x, derivative_order):
-        """
-        Compute derivative using numdifftools.
+        """Compute derivative using numdifftools.
 
-        Parameters
-        ----------
-        derivative_order : int
-            Order of the derivative to compute.
-        x : float
-            Point at which to evaluate the derivative.
+        Args:
+            derivative_order : int
+                Order of the derivative to compute.
+            x : float
+                Point at which to evaluate the derivative.
 
-        Returns
-        -------
-        float
-            Derivative estimate from numdifftools.
+        Returns:
+            float
+                Derivative estimate from numdifftools.
         """
         return nd.Derivative(self.function, n=derivative_order)(x)
 
@@ -320,26 +305,23 @@ class PlotHelpers:
         half_width=None,
         num=21,
     ):
-        """
-        Estimate the true derivative via polynomial fitting if no analytical derivative is given.
+        """Estimate the true derivative via polynomial fitting if no analytical derivative is given.
 
-        Parameters
-        ----------
-        x : float, optional
-            Point at which to evaluate (defaults to central_value).
-        degree : int, optional
-            Degree of the fitting polynomial.
-        derivative_order : int, optional
-            Order of the derivative to compute (default is 1).
-        half_width : float, optional
-            Half-width of the fitting interval.
-        num : int, optional
-            Number of points to use in the fit.
+        Args:
+            x : float, optional
+                Point at which to evaluate (defaults to central_value).
+            degree : int, optional
+                Degree of the fitting polynomial.
+            derivative_order : int, optional
+                Order of the derivative to compute (default is 1).
+            half_width : float, optional
+                Half-width of the fitting interval.
+            num : int, optional
+                Number of points to use in the fit.
 
-        Returns
-        -------
-        float
-            Estimated reference derivative.
+        Returns:
+            float
+                Estimated reference derivative.
         """
         if x is None:
             x = self.central_value
@@ -368,24 +350,21 @@ class PlotHelpers:
     def make_shared_noisy_func(
         self, sigma, *, cover_width=None, resolution=401, seed=None
     ):
-        """
-        Generate a shared noisy interpolated function with reproducible randomness.
+        """Generate a shared noisy interpolated function with reproducible randomness.
 
-        Parameters
-        ----------
-        sigma : float
-            Standard deviation of the added noise.
-        cover_width : float, optional
-            Width of the interpolation domain.
-        resolution : int, optional
-            Number of points in interpolation grid.
-        seed : int, optional
-            Random seed to use.
+        Args:
+            sigma : float
+                Standard deviation of the added noise.
+            cover_width : float, optional
+                Width of the interpolation domain.
+            resolution : int, optional
+                Number of points in interpolation grid.
+            seed : int, optional
+                Random seed to use.
 
-        Returns
-        -------
-        callable
-            Noisy interpolated function.
+        Returns:
+            callable
+                Noisy interpolated function.
         """
         base = abs(self.central_value) or 1.0
         width = cover_width or (0.5 * base)
@@ -399,22 +378,19 @@ class PlotHelpers:
         )
 
     def make_less_noisy(self, function, sigma=0.01, seed=42):
-        """
-        Add signal-scaled noise to a function (noise ∝ |f(x)|).
+        """Add signal-scaled noise to a function (noise ∝ |f(x)|).
 
-        Parameters
-        ----------
-        function : callable
-            Base function.
-        sigma : float
-            Noise scaling factor. Default is 0.01.
-        seed : int
-            Seed for the noise RNG. Default is 42.
+        Args:
+            function : callable
+                Base function.
+            sigma : float
+                Noise scaling factor. Default is 0.01.
+            seed : int
+                Seed for the noise RNG. Default is 42.
 
-        Returns
-        -------
-        callable
-            Noisy version of the input function.
+        Returns:
+            callable
+                Noisy version of the input function.
         """
         rng = np.random.default_rng(seed)
 
@@ -428,13 +404,11 @@ class PlotHelpers:
         return noisy
 
     def save_fig(self, filename):
-        """
-        Save the current matplotlib figure to the configured directory.
+        """Save the current matplotlib figure to the configured directory.
 
-        Parameters
-        ----------
-        filename : str
-            File name (with extension) for saving the figure.
+        Args:
+            filename : str
+                File name (with extension) for saving the figure.
         """
         plt.tight_layout()
         plt.savefig(f"{self.plot_dir}/{filename}", dpi=300)
