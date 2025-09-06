@@ -1,3 +1,19 @@
+"""Provides the DerivativeKit class.
+
+The class is essentially a wrapper for :class:`AdaptiveFitDerivative` and
+:class:`FiniteDifferenceDerivative`. The user must specify the function to
+differentiate and the central value at which the derivative should be
+evaluated. More details about available options can be found in the
+documentation of the methods.
+
+Typical usage example:
+
+  derivative = DerivativeKit(function_to_differentiate, 1)
+  adaptive = derivative.adaptive.compute()
+
+derivative is the derivative of function_to_differerentiate at value 1.
+"""
+
 from typing import Callable
 
 from derivkit.adaptive_fit import AdaptiveFitDerivative
@@ -5,22 +21,13 @@ from derivkit.finite_difference import FiniteDifferenceDerivative
 
 
 class DerivativeKit:
-    """
-    Provides unified access to both adaptive and finite difference derivative calculators.
+    """Provides access to adaptive and finite difference derivative calculators.
 
-    Attributes
-    ----------
-    adaptive : AdaptiveFitDerivative
-        Adaptive polynomial fit-based derivative method.
-    finite : FiniteDifferenceDerivative
-        High-order finite difference stencil-based method.
-
-    Parameters
-    ----------
-    function : callable
-        The scalar or vector-valued function to differentiate.
-    central_value : float
-        The point at which the derivative is evaluated.
+    Attributes:
+        adaptive (:class:``AdaptiveFitDerivative``): Adaptive polynomial
+            fit-based derivative method.
+        finite (:class:`` FiniteDifferenceDerivative``): High-order finite
+            difference stencil-based method.
     """
 
     def __init__(
@@ -28,24 +35,26 @@ class DerivativeKit:
         function: Callable[[float], float],
         central_value: float,
     ):
+        """Initialises the class based on function and central value.
+
+        Args:
+            function: The scalar or vector-valued function to differentiate.
+            central_value: The point at which the derivative is evaluated.
+        """
         self.adaptive = AdaptiveFitDerivative(function, central_value)
         self.finite = FiniteDifferenceDerivative(function, central_value)
 
     def get_used_points(self, derivative_order: int = 1, n_workers=1):
-        """
-        Returns x and y points used in the adaptive fit (for component 0).
+        """Returns x and y points used in the adaptive fit (for component 0).
 
-        Parameters
-        ----------
-        derivative_order : int, optional
-            Order of the derivative to compute diagnostics for (default is 1).
-        n_workers: int, optional
-            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
+        Args:
+            derivative_order: Order of the derivative to compute diagnostics
+                for (default is 1).
+            n_workers (int, optional): Number of worker to use in
+                multiprocessing. Default is 1 (no multiprocessing).
 
-        Returns
-        -------
-        tuple of np.ndarray
-            (x_all, y_all, x_used, y_used, used_mask)
+        Returns:
+            A tuple of :class:`np.ndarray`.
         """
         _, diagnostics = self.adaptive.compute(
             derivative_order=derivative_order,

@@ -1,3 +1,5 @@
+"""Provides all derivkit methods."""
+
 from .adaptive_fit import AdaptiveFitDerivative
 from .finite_difference import FiniteDifferenceDerivative
 from .forecast_kit import ForecastKit

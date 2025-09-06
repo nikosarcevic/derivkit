@@ -1,3 +1,16 @@
+"""Provides the AdaptiveFitDerivative class.
+
+The user must specify the function to differentiate and the central value
+at which the derivative should be evaluated. More details about available
+options can be found in the documentation of the methods.
+
+Typical usage example:
+
+  derivative = AdaptiveFitDerivative(function_to_differentiate, 1).compute()
+
+derivative is the derivative of function_to_differerentiate at value 1.
+"""
+
 import warnings
 from typing import Optional
 
@@ -8,40 +21,39 @@ from derivkit.finite_difference import FiniteDifferenceDerivative
 
 warnings.simplefilter("once", category=RuntimeWarning)
 
-
 class AdaptiveFitDerivative:
-    """
-    Computes derivatives using an adaptive polynomial fitting approach.
+    """Computes derivatives using an adaptive polynomial fitting approach.
 
-    This method evaluates a function at symmetrically spaced points around a central value,
-    fits a polynomial of specified degree (equal to the derivative order), and computes the
-    derivative by evaluating the derivative of the polynomial at the central point.
+    This method evaluates a function at symmetrically spaced points around
+    a central value, fits a polynomial of specified degree (equal to the
+    derivative order), and computes the derivative by evaluating the derivative
+    of the polynomial at the central point.
 
-    If the polynomial fit fails to meet a specified residual tolerance, the method adaptively
-    removes points with the largest relative residuals (optionally in symmetric pairs) and refits
-    until the tolerance is met or the minimum sample count is reached.
+    If the polynomial fit fails to meet a specified residual tolerance, the
+    method adaptively removes points with the largest relative residuals
+    (optionally in symmetric pairs) and refits until the tolerance is met or the
+    minimum sample count is reached.
 
-    Attributes
-    ----------
-    function : callable
-        The function to be differentiated. Must return scalar or vector output.
-    central_value : float
-        The point at which the derivative is evaluated.
-    diagnostics_data : dict or None
-        The diagnostic data collected during the fitting process, if requested.
-    min_used_points : int
-        Default minimum number of samples required for fitting. This is used to ensure
-        that the polynomial fit has enough data points to be meaningful.
-
-    Methods
-    -------
-    _fallback_derivative()
-        Uses high-order finite differences as a fallback if fit fails.
-    _compute_weights()
-        Provides inverse-distance weights for polynomial fitting.
+    Attributes:
+        function (callable): The function to be differentiated. Must return
+            scalar or vector output.
+        central_value (float): The point at which the derivative is evaluated.
+        diagnostics_data (dict, optional): The diagnostic data collected during
+            the fitting process, if requested. Defaults to `None`.
+        min_used_points (int): The default minimum number of samples required
+            for fitting. This is used to ensure that the polynomial fit has
+            enough data points to be meaningful.
     """
 
     def __init__(self, function, central_value):
+        """Initialises the class based on the function and central value.
+
+        Args:
+            function (callable): The function to be differentiated. Must return
+                scalar or vector output.
+            central_value (float): The point at which the derivative is
+                evaluated.
+        """
         self.function = function
         self.central_value = central_value
         self.diagnostics_data = None
@@ -60,55 +72,57 @@ class AdaptiveFitDerivative:
         floor_accept_multiplier: float = 2.0,
         n_workers: int = 1,
     ):
-        """
-        Estimate the derivative of a function using adaptive polynomial fitting.
+        """Computes class derivative using adaptive polynomial fitting.
 
-        This method evaluates the target function at symmetric points around a central value,
-        fits a polynomial of the specified order, and computes the derivative from that fit.
-        If the fit quality does not meet the specified tolerance, it adaptively prunes the
-        worst residual points and refits. If all attempts fail, it falls back to a finite
-        difference estimate or accepts a fit based on a looser criterion.
+        This method evaluates the target function at symmetric points around
+        a central value, fits a polynomial of the specified order, and computes
+        the derivative from that fit. If the fit quality does not meet the
+        specified tolerance, it adaptively prunes the worst residual points and
+        refits. If all attempts fail, it falls back to a finite difference
+        estimate or accepts a fit based on a looser criterion.
 
-        Parameters
-        ----------
-        derivative_order: int, optional
-            The order of the derivative to compute (default is 1). Must be 1, 2, 3, or 4.
-            Higher orders are not currently supported and will raise a ValueError;
-            the computation will not proceed.
-        min_samples : int, optional
-            Minimum number of total samples to start with. Must be large enough to support the fit
-            and any fallback strategies. Default is 7.
-        fit_tolerance : float, optional
-            Maximum acceptable relative residual for the polynomial fit (default is 0.05, i.e 5%).
-        include_zero : bool, optional
-            Whether to include the central point in the sampling grid (default is True).
-        fallback_mode : str, optional
-            Strategy if the fit fails to meet the tolerance at the minimum sample count.
-            Options are:
+        Args:
+            derivative_order (int, optional): The order of the derivative to
+                compute (default is 1). Must be 1, 2, 3, or 4.
+            min_samples (int, optional): Minimum number of total samples to
+                start with. Must be large enough to support the fit and any
+                fallback strategies. Default is 7.
+            fit_tolerance (float, optional): Maximum acceptable relative
+                residual for the polynomial fit. Default is 0.05, i.e 5%.
+            include_zero (bool, optional): Whether to include the central
+                point in the sampling grid. Default is `True`.
+            fallback_mode: Strategy if the fit fails to meet
+                the tolerance at the minimum sample count. Options are:
 
-                - "finite_difference": always reject and use finite difference fallback.
-                - "poly_at_floor": always accept the polynomial fit at floor regardless of residuals.
-                - "auto": accept the polynomial at floor if:
+                    - `"finite_difference"`: always reject and use finite difference
+                      fallback.
+                    - `"poly_at_floor"`: always accept the polynomial fit at floor
+                      regardless of residuals.
+                    - `"auto"`: accept the polynomial at floor if both of the
+                      following conditions hold:
 
-                    * (max_residual < floor_accept_multiplier × fit_tolerance) AND
-                    * (median_residual < fit_tolerance);
+                        * (max_residual < floor_accept_multiplier × fit_tolerance)
+                        * (median_residual < fit_tolerance);
 
-                  otherwise fall back to finite differences.
+                      otherwise fall back to finite differences.
 
-            Default is "finite_difference".
-        floor_accept_multiplier : float, optional
-            Tolerance multiplier used in "auto" fallback mode. Default is 2.0.
-        diagnostics : bool, optional
-            Whether to return diagnostic information such as residuals, fit values,
-            and pruning status. Default is False.
-        n_workers: int, optional
-            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
+                Default is `"finite_difference"`.
+            floor_accept_multiplier: Tolerance multiplier
+                used in "auto" fallback mode. Default is 2.0.
+            diagnostics (bool, optional): Whether to return diagnostic
+                information such as residuals, fit values, and pruning status.
+                Default is `False`.
+            n_workers: Number of worker to use in multiprocessing. Default is 1
+                (no multiprocessing).
 
-        Returns
-        -------
-        np.ndarray or (np.ndarray, dict)
-            The estimated derivative(s). If `diagnostics` is True, returns a tuple with the
-            derivative array and a dictionary of diagnostic data.
+        Returns:
+            :class:`np.ndarray`, (:class:`np.ndarray`, dict): The estimated
+                derivative(s). If `diagnostics` is `True`, returns a tuple
+                with the derivative array and a dictionary of diagnostic data.
+
+        Raises:
+            ValueError: An error occurred attempting to comput derivatives
+                of order higher than 4.
         """
         if derivative_order not in [1, 2, 3, 4]:
             raise ValueError(
@@ -316,31 +330,31 @@ class AdaptiveFitDerivative:
         step_mode="auto",  # "auto" | "relative" | "absolute"
         x_small_threshold=1e-3,
     ):
-        """
-        Returns an array of absolute step sizes to use for adaptive sampling.
+        """Returns an array of absolute step sizes to use for adaptive sampling.
 
-        Parameters:
-            central_value : float or None
-               The central value around which to generate offsets. If None, uses `self.central_value`.
-            base_rel : float
-               Base relative step size as a fraction of the central value. Default is 1%.
-            base_abs : float
-               Base absolute step size for small central values. Default is 1e-6.
-            factor : float
-               Factor by which to increase the step size for each offset. Default is 1.5.
-            num_offsets : int
-               Number of offsets to generate. Default is 10.
-            max_rel : float
-               Maximum relative step size as a fraction of the central value. Default is 5%.
-            max_abs : float
-               Maximum absolute step size. Default is 1e-2.
-            step_mode : str
-               Mode for determining step sizes: "auto", "relative", or "absolute". Defaults to "auto".
-            x_small_threshold : float
-               Threshold below which the central value is considered small. Default is 1e-3.
+        Args:
+            central_value (float_optional): The central value around which to
+                generate offsets. If None, uses `self.central_value`.
+            base_rel (float, optional): Base relative step size as a fraction
+                of the central value. Default is 1%.
+            base_abs (float, optional): Base absolute step size for small
+                central values. Default is 1e-6.
+            factor (float, optional): Factor by which to increase the step
+                size for each offset. Default is 1.5.
+            num_offsets (int, optional): Number of offsets to generate. Default
+                is 10.
+            max_rel (float, optional): Maximum relative step size as a fraction
+                of the central value. Default is 5%.
+            max_abs (float, optional): Maximum absolute step size.
+                Default is 1e-2.
+            step_mode (str, optional): Mode for determining step sizes: "auto",
+                "relative", or "absolute". Defaults to "auto".
+            x_small_threshold (float, optional): Threshold below which the
+                central value is considered small. Default is 1e-3.
 
         Returns:
-            Absolute step sizes (positive only), not including the central 0 step.
+            :class:`np.ndarray`: An array with absolute step sizes (positive
+                only), not including the central 0 step.
         """
         x0 = (
             self.central_value
@@ -375,40 +389,40 @@ class AdaptiveFitDerivative:
         include_zero: bool,
         min_samples: int,
     ):
+        """Construct a symmetric array of sampling offsets around central value.
+
+        The method adaptively builds a grid of offsets by mirroring around the
+        center, ensuring that the number of total points (including optional
+        center) is sufficient for fitting the requested derivative order. It
+        expands the offset range as needed until the required minimum number of
+        points is met, up to a maximum span.
+
+        Args:
+            central_value (float): The central point around which the offsets
+                are generated. This is the point at which the derivative will
+                be evaluated.
+            derivative_order (int): The order of the derivative to be computed.
+                Determines the minimum polynomial degree, which affects the
+                number of required sample points.
+            include_zero: Whether to include the central point (zero
+                offset) in the sampling grid.
+            min_samples: The minimum number of total sampling points to
+                start with before pruning. This interacts with
+                `self.min_used_points` (default = 5), which is the minimum
+                number of points required to perform a polynomial fit, and with
+                the derivative order to determine the final required number of
+                usable samples.
+
+        Returns:
+            (:class:`np.ndarray`, int): A tuple containing
+
+            - an array of symmetric offsets relative to `self.central_value`,
+              optionally including zero. These define where the function will be
+              evaluated.
+            - The minimum number of samples that must be retained during
+              adaptive fitting for the derivative estimate to proceed
+              (i.e. the floor used in pruning logic).
         """
-        Construct a symmetric array of sampling offsets around `central_value` for polynomial fitting.
-
-        The method adaptively builds a grid of offsets by mirroring around the center,
-        ensuring that the number of total points (including optional center) is sufficient
-        for fitting the requested derivative order. It expands the offset range as needed
-        until the required minimum number of points is met, up to a maximum span.
-
-        Parameters
-        ----------
-        central_value : float
-            The central point around which the offsets are generated. This is the point at which
-            the derivative will be evaluated.
-        derivative_order : int
-            The order of the derivative to be computed. Determines the minimum polynomial degree,
-            which affects the number of required sample points.
-        include_zero : bool
-            Whether to include the central point (zero offset) in the sampling grid.
-        min_samples : int
-            The minimum number of total sampling points to start with before pruning.
-            This interacts with `self.min_used_points` (default = 5), which is the
-            minimum number of points required to perform a polynomial fit, and with
-            the derivative order to determine the final required number of usable samples
-
-        Returns
-        -------
-        x_offsets : np.ndarray
-            Array of symmetric offsets relative to `self.central_value`, optionally including zero.
-            These define where the function will be evaluated.
-        required_points : int
-            The minimum number of samples that must be retained during adaptive fitting
-            for the derivative estimate to proceed (i.e. the floor used in pruning logic).
-        """
-
         # Enforce a hard floor of >=5 used points
         if self.min_used_points < 5:
             warnings.warn(
@@ -439,22 +453,16 @@ class AdaptiveFitDerivative:
     def _fit_once(
         self, x_vals: np.ndarray, y_vals: np.ndarray, derivative_order: int
     ):
-        """
-        Perform one normalized weighted polynomial fit on (x_vals, y_vals).
+        """Perform one normalized weighted polynomial fit on (x_vals, y_vals).
 
-        Parameters
-        ----------
-        x_vals : np.ndarray
-            Sample x values used in the fit.
-        y_vals : np.ndarray
-            Corresponding function values.
-        derivative_order : int
-            Order of the derivative to fit.
+        Args:
+            x_vals: Sample x values used in the fit.
+            y_vals: function values corresponsing to `x_vals`.
+            derivative_order: Order of the derivative to fit.
 
-        Returns
-        -------
-        dict
-            Dictionary containing fit result, polynomial object, residuals, and metadata.
+        Returns:
+            dict: Dictionary containing fit result, polynomial object,
+                residuals, and metadata.
         """
         # Normalize coordinates around the center for conditioning
         t_vals = x_vals - self.central_value
@@ -508,45 +516,52 @@ class AdaptiveFitDerivative:
         fallback_mode: str,
         floor_accept_multiplier: float,
     ):
-        """
-        Determine whether to accept a polynomial fit computed at the minimum stencil size ("floor").
+        """Determine whether to accept a polynomial fit.
 
-        This function is called when the adaptive fitting loop has reached its smallest
-        allowable number of sample points (`at_floor=True`) but has not yet met the target
-        residual tolerance. Depending on the fallback strategy and the quality of the residuals,
-        the method decides whether the fit should be accepted anyway or whether to trigger
-        a fallback (e.g., finite difference).
+        The fit is computed at the minimum stencil size ("floor").
 
-        Parameters
-        ----------
-        last_residuals : np.ndarray or None
-            Residuals from the last attempted polynomial fit. If None, acceptance is based only
-            on fallback_mode and at_floor status.
-        at_floor : bool
-            Whether the algorithm has reached the minimum allowed number of sample points.
-        fit_tolerance : float
-            The user-specified threshold for acceptable residuals. Typically a small value like 1e-4.
-        fallback_mode : str
-            Strategy to follow when the fit fails at the floor. Options include:
-            - "poly_at_floor": always accept the fit at floor regardless of residuals
-            - "auto": accept if residuals are close enough to tolerance
-            - "finite_difference": always reject and fall back to finite differences
-        floor_accept_multiplier : float
-            Tolerance multiplier for fallback_mode="auto". Allows leniency for accepting slightly
-            worse-than-tolerance fits if residuals are close. Typically 1.5–2.0.
+        This function is called when the adaptive fitting loop has reached its
+        smallest allowable number of sample points (`at_floor=True`) but has
+        not yet met the target residual tolerance. Depending on the fallback
+        strategy and the quality of the residuals, the method decides whether
+        the fit should be accepted anyway or whether to trigger a fallback
+        (e.g., finite difference).
 
-        Returns
-        -------
-        accept : bool
-            Whether to accept the polynomial fit despite failing to meet tolerance.
-        tag : str
-            Human-readable diagnostic tag describing the decision outcome. One of:
-            - "not_at_floor"
-            - "poly_at_floor"
-            - "auto_accept_at_floor"
-            - "auto_reject"
-            - "auto_no_residuals"
-            - "finite_difference"
+        Args:
+            last_residuals: Residuals from the last attempted polynomial fit.
+                If ``None``, acceptance is based only on fallback_mode and
+                `at_floor` status.
+            at_floor: Whether the algorithm has reached the minimum allowed
+                number of sample points.
+            fit_tolerance: The user-specified threshold for acceptablei
+                residuals. Typically a small value like 1e-4.
+            fallback_mode: Strategy to follow when the fit fails at the floor.
+                Options include:
+
+                  - "poly_at_floor: always accept the fit at floor regardless
+                    of residuals
+                  - "auto": accept if residuals are close enough to tolerance
+                  - "finite_difference": always reject and fall back to finite
+                    differences
+
+            floor_accept_multiplier: Tolerance multiplier for
+                `fallback_mode="auto"`. Allows leniency for accepting slightly
+                worse-than-tolerance fits if residuals are close.
+                Typically 1.5–2.0.
+
+        Returns:
+         (bool, str): a tuple containing
+
+            - A boolean signifying whether the polynomial fit should be accepted
+              despite failing to meet tolerance.
+            - Human-readable diagnostic tag describing the decision outcome.
+              One of:
+              - "not_at_floor"
+              - "poly_at_floor"
+              - "auto_accept_at_floor"
+              - "auto_reject"
+              - "auto_no_residuals"
+              - "finite_difference"
         """
         if not at_floor:
             return False, "not_at_floor"
@@ -572,33 +587,33 @@ class AdaptiveFitDerivative:
         return False, "finite_difference"
 
     def _fallback_derivative(self, derivative_order, n_workers=1):
-        """
-        Compute the derivative using a finite difference method when adaptive fitting fails.
+        """Compute the derivative using a finite difference method.
 
-        This method is only called as a last resort if the adaptive polynomial fitting
-        procedure:
+        Used when adaptive fitting fails.
+
+        This method is only called as a last resort if the adaptive polynomial
+        fitting procedure:
           - Cannot achieve the specified residual tolerance, or
           - Encounters numerical issues such as singular matrix errors.
 
-        In such cases, it delegates the computation to `FiniteDifferenceDerivative`,
-        which uses a high-order finite difference scheme to estimate the derivative
-        at the same central point.
+        In such cases, it delegates the computation to
+        :class:`derivkit.finite_difference.FiniteDifferenceDerivative`,
+        which uses a high-order finite difference scheme to estimate the
+        derivative at the same central point.
 
-        Parameters
-        ----------
-        derivative_order : int
-            The order of the derivative to compute. Must be one of the orders supported
-            by `FiniteDifferenceDerivative` (currently 1–4).
-        n_workers: int, optional
-            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
+        Args:
+            derivative_order (int):
+                The order of the derivative to compute. Must be one of the
+                orders supported by :class:`derivkit.finite_difference.FiniteDifferenceDerivative`
+                (currently 1–4).
+            n_workers (int, optional): Number of worker to use in
+                multiprocessing. Default is 1 (no multiprocessing).
 
-        Returns
-        -------
-        np.ndarray
-            The fallback derivative estimate(s) as a 1D array, with one value per
-            output component of the target function.
+        Returns:
+            :class:`np.ndarray`: The fallback derivative estimate(s) as a 1D
+                array, with one value per output component of the target
+                function.
         """
-
         warnings.warn(
             "Falling back to finite difference derivative.", RuntimeWarning
         )
@@ -613,20 +628,16 @@ class AdaptiveFitDerivative:
         return np.atleast_1d(result)
 
     def recommend_fit_tolerance(self, dx=1e-3, verbose=True):
-        """
-        Suggests a fit_tolerance value based on local function variation.
+        """Suggests a fit_tolerance value based on local function variation.
 
-        Parameters
-        ----------
-        dx : float
-            Offset used to probe nearby values.
-        verbose : bool
-            Whether to print out the suggested value.
+        Args:
+            dx (float, optional): Offset used to probe nearby values. Default
+                value is `1e-3`.
+            verbose (bool, optional): Whether to print out the suggested value.
+                Default value is `True`.
 
-        Returns
-        -------
-        float
-            Recommended fit_tolerance.
+        Returns:
+            float: Recommended fit_tolerance.
         """
         try:
             y_plus = np.atleast_1d(self.function(self.central_value + dx))
@@ -655,11 +666,11 @@ class AdaptiveFitDerivative:
             return 0.05
 
     def _compute_weights(self, x_vals):
-        """
-        Compute scale-aware inverse-distance weights centered at ``central_value``.
+        """Compute scale-aware inverse-distance weights around ``central_value``.
 
-        This weighting emphasizes samples closest to the expansion point ``x0 = self.central_value``
-        while remaining numerically stable across *very small* and *very large* parameter scales.
+        This weighting emphasizes samples closest to the expansion point
+        ``x0 = self.central_value`` while remaining numerically stable across
+        *very small* and *very large* parameter scales.
 
         **Formulation**
         ----------------
@@ -669,45 +680,49 @@ class AdaptiveFitDerivative:
         and define the weights
             ``w_i = 1 / (d_i + eps)``.
 
-        - The additive softening ``eps`` prevents a singular weight at the center (where ``d_i = 0``).
-        - Tying ``eps`` to the span ``D`` makes the weighting *scale-invariant*: the relative
-          emphasis near the center is similar whether ``x0`` is ~1e-4 or ~1e4.
+        - The additive softening ``eps`` prevents a singular weight at the
+          center (where ``d_i = 0``).
+        - Tying ``eps`` to the span ``D`` makes the weighting *scale-invariant*:
+          the relative emphasis near the center is similar whether ``x0``
+          is ~1e-4 or ~1e4.
 
         **Intuition**
         --------------
         With ``eps = 1e-3 * D``, the center-to-edge weight ratio is roughly:
             ``w(0) / w(D) ≈ (D + eps) / eps ≈ D / eps ≈ 10^3``.
-        So points near ``x0`` can carry ~1000× more weight than the farthest points—strong,
-        but not overwhelming. You can tune this by changing the 1e-3 factor:
+        So points near ``x0`` can carry ~1000× more weight than the farthest
+        points—strong, but not overwhelming. You can tune this by changing the
+        1e-3 factor:
         - Larger factor (e.g., ``1e-2``) → milder emphasis (~100×).
         - Smaller factor (e.g., ``1e-4``) → sharper emphasis (~10,000×).
 
         **Why not a fixed epsilon?**
         -----------------------------
         A constant (e.g., ``1e-4``) behaves poorly across scales:
-        - If the step span is tiny (<< 1e-4), the constant dominates and flattens the weights
-          (little central emphasis).
-        - If the span is large (>> 1e-4), the center weight becomes excessively dominant.
+        - If the step span is tiny (<< 1e-4), the constant dominates and
+          flattens the weights (little central emphasis).
+        - If the span is large (>> 1e-4), the center weight becomes excessively
+          dominant.
 
-        By scaling ``eps`` with the current span, the weighting profile adapts automatically.
+        By scaling ``eps`` with the current span, the weighting profile adapts
+        automatically.
 
-        Parameters
-        ----------
-        x_vals : np.ndarray
-            Sample locations used in fitting. Shape ``(n_points,)``.
-
-        Returns
-        -------
-        np.ndarray
-            Weights of shape ``(n_points,)``. These are **not normalized**; downstream code
-            (e.g., ``np.polyfit(..., w=weights)``) uses them as relative weights. If a normalized
-            weight vector is required, divide by ``weights.sum()``.
-
-        Notes
+        Notes:
         -----
         - Complexity is O(n).
-        - The absolute floor ``1e-9`` guards degenerate cases (e.g., ``D ≈ 0``) and prevents
-          overflow even if multiple samples coincide with ``x0``.
+        - The absolute floor ``1e-9`` guards degenerate cases (e.g., ``D ≈ 0``)
+          and prevents overflow even if multiple samples coincide with ``x0``.
+
+        Args:
+            x_vals (:class:`np.ndarray`): Sample locations used in fitting.
+                Shape ``(n_points,)``.
+
+        Returns:
+            :class:`np.ndarray`: Weights of shape ``(n_points,)``. These are
+                **not normalized**; downstream code (e.g.,
+                ``np.polyfit(..., w=weights)``) uses them as relative weights.
+                If a normalized weight vector is required, divide by
+                ``weights.sum()``.
         """
         d = np.abs(x_vals - self.central_value)
         eps = max(np.max(d) * 1e-3, 1e-9)  # 0.1% of span with tiny floor
@@ -725,40 +740,39 @@ class AdaptiveFitDerivative:
         keep_center: bool = True,
         keep_symmetric: bool = True,
     ):
-        """
-        Remove points whose relative residual exceeds ``fit_tolerance``, then refit.
+        """Removes points whose relative residual exceeds tolerance.
+
+        The function refits after the residuals have been removed.
 
         Strategy
         --------
-        - Sort points by residual (worst-first) and remove up to ``max_remove`` per call.
-        - Never drop the center sample (closest to ``central_value``) if ``keep_center`` is True.
-        - If ``keep_symmetric`` is True, also remove the mirror of the removed point
-          about ``central_value`` when possible (to keep sampling balanced).
+        - Sort points by residual (worst-first) and remove up to ``max_remove``
+          per call.
+        - Never drop the center sample (closest to ``central_value``) if
+          ``keep_center`` is True.
+        - If ``keep_symmetric`` is True, also remove the mirror of the removed
+          point about ``central_value`` when possible (to keep sampling
+          balanced).
         - Never reduce the number of points below ``required_points``.
 
-        Parameters
-        ----------
-        x_vals, y_vals : np.ndarray
-            Current sample abscissae and ordinates (same length).
-        residuals : np.ndarray
-            Relative residuals for the *current* fit at ``x_vals``.
-        fit_tolerance : float
-            Acceptable residual threshold (e.g., 0.05 for 5%).
-        required_points : int
-            Minimum number of points allowed after pruning.
-        max_remove : int, optional
-            Maximum number of points to remove in this call (default 2).
-        keep_center : bool, optional
-            If True, never remove the point closest to ``central_value``.
-        keep_symmetric : bool, optional
-            If True, attempt to remove a mirror point along with the worst point.
+        Args:
+            x_vals: Current sample abscissae.
+            y_vals: Current sample ordinates (must be the same length as
+                ``x_vals``).
+            residuals: Relative residuals for the *current* fit at ``x_vals``.
+            fit_tolerance : Acceptable residual threshold (e.g., 0.05 for 5%).
+            required_points: Minimum number of points allowed after pruning.
+            max_remove: Maximum number of points to remove in this call (default 2).
+            keep_center: If True, never remove the point closest to
+                ``central_value``. Default is `True`.
+            keep_symmetric: If True, attempt to remove a mirror point along with
+                the worst point.
 
-        Returns
-        -------
-        x_new, y_new : np.ndarray
-            Pruned arrays (may be unchanged).
-        removed_any : bool
-            True if at least one point was removed.
+        Returns:
+            (:class:`np.ndarray`, :class:`np.ndarray`, bool): A tuple containing
+
+                - Pruned arrays x_vals and y_vals (may be unchanged).
+                - A boolean which is `True` if at least one point was removed.
         """
         assert len(x_vals) == len(y_vals) == len(residuals)
 
@@ -814,25 +828,20 @@ class AdaptiveFitDerivative:
     def _store_diagnostics_entry(
         self, x_all, x_used, y_used, y_fit, residuals
     ):
-        """
-        Store diagnostic info for a single component.
+        """Stores diagnostic info for a single component.
 
-        Parameters
-        ----------
-        x_all : np.ndarray
-            All x values used in the fit.
-        x_used : np.ndarray or None
-            x values actually used in the fit (None if no points were used).
-        y_used : np.ndarray or None
-            y values corresponding to `x_used` (None if no points were used).
-        y_fit : np.ndarray or None
-            Fitted y values corresponding to `x_used` (None if no points were used).
-        residuals : np.ndarray or None
-            Residuals of the fit corresponding to `y_used` (None if no points were used).
+        Updates the diagnostics_data dictionary with the new entry.
 
-        Returns
-        -------
-            Updates the diagnostics_data dictionary with the new entry.
+        Args:
+            x_all (:class:`np.ndarray`): All x values used in the fit.
+            x_used (:class:`np.ndarray`): x values actually used in the fit
+                (``None`` if no points were used).
+            y_used (:class:`np.ndarray`): y values corresponding to ``x_used``
+                (None if no points were used).
+            y_fit (:class:`np.ndarray`): Fitted y values corresponding to
+                `x_used` (None if no points were used).
+            residuals (:class:`np.ndarray`): Residuals of the fit corresponding
+                to `y_used` (None if no points were used).
         """
         if self.diagnostics_data is None:
             return

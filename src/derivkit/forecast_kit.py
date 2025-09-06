@@ -1,3 +1,21 @@
+"""Provides tools for facilitating experimental forecasts.
+
+The user must specify the observables, fiducial values and covariance matrix
+at which the derivative should be evaluated. Derivatives of the first order
+are Fisher derivatives. Derivatives of second order are evaluated using the
+derivative approximation for likelihoods (DALI) technique as described in
+https://doi.org/10.1103/PhysRevD.107.103506.
+
+More details about available options can be found in the documentation of
+the methods.
+
+Typical usage example:
+
+    forecaster = ForecastKit(observables, fiducial_values, covariance_matrix)
+    fisher = forecaster.get_derivatives(derivative_order = 1)
+    dali = forecaster.get_derivatives(derivative_order = 2)
+"""
+
 from copy import deepcopy
 
 import numpy as np
@@ -6,25 +24,41 @@ from derivkit.kit import DerivativeKit
 
 
 class ForecastKit:
-    """
-    Provides tools for facilitating experimental forecasts.
+    """Provides tools for facilitating experimental forecasts.
 
-    Parameters
-    ----------
-    function : callable
-        The scalar or vector-valued function to differentiate.
-        It should accept a list or array of parameter values as input and return
-        either a scalar or a NumPy array of observable values.
-    central_values : array-like
-        The point(s) at which the derivative is evaluated.
-        A 1D array or list of parameter values matching the expected input of the function.
-    covariance_matrix : array-like
-        The covariance matrix of the observables.
-        Should be a square matrix with shape (n_observables, n_observables), where
-        n_observables is the number of observables returned by the function.
+    Args:
+         function (callable): The scalar or vector-valued function to
+             differentiate. It should accept a list or array of parameter
+             values as input and return either a scalar or a
+             :class:`np.ndarray` of observable values.
+         central_values (class:`np.ndarray`): The point(s) at which the
+             derivative is evaluated. A 1D array or list of parameter values
+             matching the expected input of the function.
+         covariance_matrix (class:`np.ndarray`): The covariance matrix of
+             the observables. Should be a square matrix with shape
+             (n_observables, n_observables), where n_observables is the
+             number of observables returned by the function.
+         n_parameters (int): The number of elements of central_values.
+         n_observables (int): The number of cosmic observables. Determined
+             from the dimension of :param:`covariance_matrix`.
     """
 
     def __init__(self, function, central_values, covariance_matrix):
+        """Initialises the class.
+
+        Args:
+            function (callable): The scalar or vector-valued function to
+                differentiate. It should accept a list or array of parameter
+                values as input and return either a scalar or a
+                :class:`np.ndarray` of observable values.
+            central_values (class:`np.ndarray`): The points at which the
+                derivative is evaluated. A 1D array or list of parameter values
+                matching the expected input of the function.
+            covariance_matrix (class:`np.ndarray`): The covariance matrix of
+                the observables. Should be a square matrix with shape
+                (n_observables, n_observables), where n_observables is the
+                number of observables returned by the function.
+        """
         self.function = function
         self.central_values = np.atleast_1d(central_values)
         self.covariance_matrix = covariance_matrix
@@ -32,26 +66,34 @@ class ForecastKit:
         self.n_observables = len(covariance_matrix)
 
     def get_derivatives(self, derivative_order, n_workers=1):
-        """
-        Returns derivatives of the observables, according to the requested
-            order of the derivatives.
+        """Returns derivatives of the observables of the requested order.
 
-        Parameters
-        ----------
-        derivative_order : int
-            The requested order, d, of the derivatives.
-                d = 1 returns first-order derivatives.
-                d = 2 returns second-order derivatives.
+        Args:
+            derivative_order (int): The requested order d of the derivatives:
+
+                - d = 1 returns first-order derivatives.
+                - d = 2 returns second-order derivatives.
+
                 Currently only d = 1, 2 are supported.
-        n_workers: int, optional
-            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
 
-        Returns
-        -------
-        np.ndarray
-            An array of derivative values.
-                d = 1 returns an array with shape (n_parameters, n_observables)  containing first-order derivatives.
-                d = 2 returns an array with shape (n_parameters, n_parameters, n_observables) containing second-order derivatives.
+            n_workers (int, optional): Number of worker to use in
+                multiprocessing. Default is 1 (no multiprocessing).
+
+        Returns:
+            :class:`np.ndarray`: An array of derivative values:
+
+                - d = 1 returns an array with shape
+                  (:param:`n_parameters`, :param:`n_observables`) containing
+                  first-order derivatives.
+                - d = 2 returns an array with shape
+                  :param:`n_parameters`, :param:`n_parameters`, :param:`n_observables`)
+                  containing second-order derivatives.
+
+        Raises:
+            ValueError: An error occurred if a derivative was requested of
+                higher order than 2.
+            RuntimeError: An error occurred if a ValueError was not raised
+                after calling the function.
         """
         if derivative_order not in [1, 2]:
             raise ValueError(
@@ -124,32 +166,39 @@ class ForecastKit:
         raise RuntimeError("Unreachable code reached in get_forecast_tensors.")
 
     def get_forecast_tensors(self, forecast_order=1, n_workers=1):
-        """
-        Returns a set of tensors, according to the requested order of the forecast.
+        """Returns a set of tensors according to the requested order of the forecast.
 
-        Parameters
-        ----------
-            forecast_order : int
-                The requested order, D, of the forecast.
+        Args:
+            forecast_order (int): The requested order D of the forecast:
 
-                    * D = 1 returns a Fisher matrix.
-                    * D = 2 returns the 3-d and 4-d tensors required for the
-                        doublet-DALI approximation.
-                    * D = 3 would be the triplet-DALI approximation.
+                    - D = 1 returns a Fisher matrix.
+                    - D = 2 returns the 3-d and 4-d tensors required for the
+                      doublet-DALI approximation.
+                    - D = 3 would be the triplet-DALI approximation.
 
                 Currently only D = 1, 2 are supported.
-        n_workers: int, optional
-            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
+            n_workers (int, optional): Number of worker to use in multiprocessing.
+                Default is 1 (no multiprocessing).
 
-        Returns
-        -------
-            np.ndarray
-                A list of numpy arrays.
-                    * D = 1 returns a square matrix of size n_parameters, where n_parameters is the number of
-                        parameters included in the forecast.
-                    * D = 2 returns one array of shapes (n_parameters, n_parameters, n_parameters) and one array of
-                        shape (n_parameters, n_parameters, n_parameters, n_parameters), where n_parameters is the
-                        number of parameters included in the forecast.
+        Returns:
+            :class:`np.ndarray`: A list of numpy arrays:
+
+                    - D = 1 returns a square matrix of size n_parameters, where
+                      n_parameters is the number of parameters included in the
+                      forecast.
+                    - D = 2 returns one array of shapes
+                      (n_parameters, n_parameters, n_parameters) and one array
+                      of shape (n_parameters, n_parameters, n_parameters, n_parameters),
+                      where n_parameters is the number of parameters included
+                      in the forecast.
+
+        Raises:
+            ValueError: A ValueError occurs when a forecase order greater than
+                2 is requested.
+            Exception: An exception occurs if the covariance matrix cannot
+                be inverted.
+            RunTimeError: A RunTimeError occurs if the ValueError was not
+                raised when calling this function.
         """
         if forecast_order not in [1, 2]:
             raise ValueError(
@@ -205,25 +254,24 @@ class ForecastKit:
     def _get_partial_function(
         self, full_function, variable_index, fixed_values
     ):
-        """
-        Returns a single-variable version of a multivariate function, where all
-        parameters except one are held fixed.
+        """Returns a single-variable version of a multivariate function.
 
-        Parameters
-        ----------
-        full_function : callable
-            A function that takes a list of n_parameters parameters and returns
-            a vector of n_observables observables.
-        variable_index : int
-            Index of the parameter to treat as the variable.
-        fixed_values : list or np.ndarray
-            The list of parameter values to use as fixed inputs for all parameters
-            except the one being varied.
+        A single parameter must be specified by index. AAll others parameters
+        are held fixed.
 
-        Returns
-        -------
-        callable
-            A function of a single variable, suitable for use in differentiation.
+        Args:
+            full_function (callable): A function that takes a list of
+                n_parameters parameters and returns a vector of n_observables
+                observables.
+            variable_index (int): The index of the parameter to treat as the
+                variable.
+            fixed_values (list or np.ndarray): The list of parameter values to
+                use as fixed inputs for all parameters except the one being
+                varied.
+
+        Returns:
+            callable: A function of a single variable, suitable for use in
+                differentiation.
         """
 
         def partial_function(x):

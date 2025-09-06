@@ -1,3 +1,5 @@
+"""Provides an assorted number of styling utilities."""
+
 import os
 import time
 from time import perf_counter
@@ -21,41 +23,18 @@ apply_plot_style()
 
 
 class PlotKit:
-    """
-    A high-level plotting utility for evaluating and comparing numerical derivative methods.
+    """A high-level plotting utility for evaluating and comparing numerical derivative methods.
 
     This class provides multiple plotting routines to assess the accuracy and behavior of
     finite difference and adaptive polynomial fit derivative estimates under noisy conditions.
 
-    Parameters
-    ----------
-    function : callable
-        The target function for which derivatives will be evaluated.
-    central_value : float
-        The point at which the derivative is computed.
-    derivative_order : int, optional
-        The order of the derivative to compute (default is 1).
-    fit_tolerance : float, optional
-        Residual tolerance used in adaptive fitting (default is 0.05).
-    plot_dir : str, optional
-        Directory in which to save generated plots (default is "plots").
-    linewidth : float, optional
-        Line width to use for plots. Uses default style if not specified.
-    colors : dict, optional
-        A dictionary of color overrides keyed by method name (e.g., 'finite', 'adaptive').
-    gradient_colors : dict, optional
-        Optional color map or overrides for gradients or tolerance bands.
-    true_derivative_fn : callable, optional
-        Optional function to compute the true derivative for reference.
-
-    Attributes
-    ----------
-    derivs : DerivativeKit
-        Internal instance used to compute derivatives using both finite and adaptive methods.
-    h : PlotHelpers
-        Helper instance used for diagnostics, noise injection, and figure saving.
-    seed : int
-        Random seed for reproducibility in plots involving noise.
+    Attributes:
+        derivs : DerivativeKit
+            Internal instance used to compute derivatives using both finite and adaptive methods.
+        h : PlotHelpers
+            Helper instance used for diagnostics, noise injection, and figure saving.
+        seed : int
+            Random seed for reproducibility in plots involving noise.
     """
 
     def __init__(
@@ -70,6 +49,28 @@ class PlotKit:
         gradient_colors: Optional[dict] = None,
         true_derivative_fn=None,
     ):
+        """Initialises the class.
+
+        Args:
+            function : callable
+                The target function for which derivatives will be evaluated.
+            central_value : float
+                The point at which the derivative is computed.
+            derivative_order : int, optional
+                The order of the derivative to compute (default is 1).
+            fit_tolerance : float, optional
+                Residual tolerance used in adaptive fitting (default is 0.05).
+            plot_dir : str, optional
+                Directory in which to save generated plots (default is "plots").
+            linewidth : float, optional
+                Line width to use for plots. Uses default style if not specified.
+            colors : dict, optional
+                A dictionary of color overrides keyed by method name (e.g., 'finite', 'adaptive').
+            gradient_colors : dict, optional
+                Optional color map or overrides for gradients or tolerance bands.
+            true_derivative_fn : callable, optional
+                Optional function to compute the true derivative for reference.
+        """
         self.function = function
         self.central_value = central_value
         self.plot_dir = plot_dir
@@ -94,20 +95,17 @@ class PlotKit:
         )
 
     def color(self, key: str) -> str:
-        """
-        Retrieve the color assigned to a specific plot element key.
+        """Retrieve the color assigned to a specific plot element key.
 
-        Parameters
-        ----------
-        key : str
-            Identifier for the color key (e.g., 'finite', 'adaptive', 'central', etc.).
+        Args:
+            key : str
+                Identifier for the color key (e.g., 'finite', 'adaptive', 'central', etc.).
 
-        Returns
-        -------
-        str
-            The hex code or named color string associated with the key.
+        Returns:
+            str
+                The hex code or named color string associated with the key.
 
-        Notes
+        Notes:
         -----
         - Falls back to the default color mapping if the key was not explicitly overridden.
         - Used internally for consistent styling across plots.
@@ -123,35 +121,35 @@ class PlotKit:
         title=None,
         extra_info=None,
     ):
-        """
-        Plot overlaid histograms of derivative estimates from stencil and adaptive methods
-        under repeated noisy evaluations.
+        """Plot overlaid histograms of derivative estimates.
 
-        This method runs multiple trials of noisy function evaluations, computes the derivative
-        using both the finite difference and adaptive fitting methods, and plots their empirical
-        distributions overlaid as histograms.
+        The estimates are determined from stencil and adaptive method under
+        repeated noisy evaluations.
 
-        Parameters
-        ----------
-        derivative_order: int
-            Order of the derivative to compute (e.g., 1 for first derivative).
-        noise_std : float, optional
-            Standard deviation of the Gaussian noise added to the function (default is 0.01).
-        trials : int, optional
-            Number of repeated noisy evaluations to perform (default is 100).
-        bins : int, optional
-            Number of bins to use in the histogram (default is 20).
-        title : str, optional
-            Optional title for the plot.
-        extra_info : str, optional
-            Additional string to append to the saved filename.
+        This method runs multiple trials of noisy function evaluations,
+        computes the derivative using both the finite difference and
+        adaptive fitting methods, and plots their empiricala distributions
+        overlaid as histograms.
 
-        Notes
+        Args:
+            derivative_order: int
+                Order of the derivative to compute (e.g., 1 for first derivative).
+            noise_std : float, optional
+                Standard deviation of the Gaussian noise added to the function (default is 0.01).
+            trials : int, optional
+                Number of repeated noisy evaluations to perform (default is 100).
+            bins : int, optional
+                Number of bins to use in the histogram (default is 20).
+            title : str, optional
+                Optional title for the plot.
+            extra_info : str, optional
+                Additional string to append to the saved filename.
+
+        Notes:
         -----
         - Excludes outliers based on 1st and 99th percentiles to improve plot readability.
         - Displays method-specific variance in the legend for comparison.
         """
-
         plt.figure(figsize=(7.2, 5.2))
         plt.rcParams.update(
             {
@@ -235,34 +233,31 @@ class PlotKit:
         title=None,
         extra_info=None,
     ):
-        """
-        Visualize the adaptive polynomial fit on a noisy function segment.
+        """Visualize the adaptive polynomial fit on a noisy function segment.
 
         This method creates a reproducible noisy realization of the input function
         over a local region around `central_value` and shows which points are used or excluded
         by the adaptive fitting method. It also overlays the fitted polynomial and its
         tolerance band.
 
-        Parameters
-        ----------
-        derivative_order : int
-            The order of the derivative to compute (e.g., 1 for first derivative).
-            Defaults to 1.
-        noise_std : float, optional
-            Standard deviation of the Gaussian noise added to the function (default is 0.01).
-        width : float, optional
-            Width of the interval around `central_value` for generating the noisy segment (default is 0.2).
-        title : str, optional
-            Optional title for the plot.
-        extra_info : str, optional
-            Additional string to append to the saved filename.
+        Args:
+            derivative_order : int
+                The order of the derivative to compute (e.g., 1 for first derivative).
+                Defaults to 1.
+            noise_std : float, optional
+                Standard deviation of the Gaussian noise added to the function (default is 0.01).
+            width : float, optional
+                Width of the interval around `central_value` for generating the noisy segment (default is 0.2).
+            title : str, optional
+                Optional title for the plot.
+            extra_info : str, optional
+                Additional string to append to the saved filename.
 
-        Notes
+        Notes:
         -----
         - Uses a fixed random seed for reproducibility.
         - Highlights the internal logic of the adaptive derivative fitting mechanism visually.
         """
-
         noisy_func = self.h.make_noisy_interpolated_function(
             function=self.function,
             central_value=self.central_value,
@@ -374,34 +369,31 @@ class PlotKit:
         title=None,
         extra_info=None,
     ):
-        """
-        Plot mean squared error (MSE) of derivative estimates vs. noise level.
+        """Plot mean squared error (MSE) of derivative estimates vs. noise level.
 
         This method evaluates both finite difference and adaptive derivative estimators
         across a range of Gaussian noise standard deviations. It plots:
         - MSE vs. noise level (log scale)
         - Relative difference between adaptive and finite MSEs
 
-        Parameters
-        ----------
-        derivative_order : int
-            The order of the derivative to compute (e.g., 1 for first derivative).
-        noise_levels : array-like
-            List or array of noise standard deviation values to test.
-        trials : int, optional
-            Number of Monte Carlo trials per noise level (default is 50).
-        title : str, optional
-            Optional title for the plot.
-        extra_info : str, optional
-            Additional string to append to the saved filename.
+        Args:
+            derivative_order : int
+                The order of the derivative to compute (e.g., 1 for first derivative).
+            noise_levels : array-like
+                List or array of noise standard deviation values to test.
+            trials : int, optional
+                Number of Monte Carlo trials per noise level (default is 50).
+            title : str, optional
+                Optional title for the plot.
+            extra_info : str, optional
+                Additional string to append to the saved filename.
 
-        Notes
+        Notes:
         -----
         - Finite difference uses a fixed step size relative to `central_value`.
         - Adaptive fit uses polynomial regression with tolerance-controlled filtering.
         - Useful for comparing robustness of methods under varying noise.
         """
-
         true_val = self.h.reference_derivative(self.central_value)
         rng = np.random.default_rng(42)  # master seed for this figure
 
@@ -500,30 +492,27 @@ class PlotKit:
     def plot_ecdf_errors(
         self, noise_std=0.01, trials=200, title=None, extra_info=None
     ):
-        """
-        Plot empirical cumulative distribution functions (ECDFs) of squared errors.
+        """Plot empirical cumulative distribution functions (ECDFs) of squared errors.
 
         This method compares the distribution of squared errors from finite difference and
         adaptive derivative estimators by plotting their ECDFs under repeated noisy evaluations.
 
-        Parameters
-        ----------
-        noise_std : float, optional
-            Standard deviation of the Gaussian noise added to the function (default is 0.01).
-        trials : int, optional
-            Number of Monte Carlo trials to generate error samples (default is 200).
-        title : str, optional
-            Optional title for the plot.
-        extra_info : str, optional
-            Additional string to append to the saved filename.
+        Args:
+            noise_std : float, optional
+                Standard deviation of the Gaussian noise added to the function (default is 0.01).
+            trials : int, optional
+                Number of Monte Carlo trials to generate error samples (default is 200).
+            title : str, optional
+                Optional title for the plot.
+            extra_info : str, optional
+                Additional string to append to the saved filename.
 
-        Notes
+        Notes:
         -----
         - ECDF provides a full view of the error distribution, not just summary statistics.
         - The reference derivative value is used to compute true squared error per trial.
         - Useful for visualizing which method tends to produce smaller errors more often.
         """
-
         true_val = self.h.reference_derivative(self.central_value)
         rng = np.random.default_rng(123)
 
@@ -581,8 +570,7 @@ class PlotKit:
     def plot_paired_error_differences(
         self, noise_std=0.01, trials=200, title=None, extra_info=None
     ):
-        """
-        Plot paired squared error differences between adaptive and finite methods.
+        """Plot paired squared error differences between adaptive and finite methods.
 
         This method runs repeated noisy derivative trials and computes the squared error
         for both adaptive and finite difference methods. It then plots the pairwise
@@ -593,24 +581,22 @@ class PlotKit:
         - Finite better (Δ > 0)
         - Tie (Δ = 0)
 
-        Parameters
-        ----------
-        noise_std : float, optional
-            Standard deviation of the Gaussian noise added to the function (default is 0.01).
-        trials : int, optional
-            Number of paired Monte Carlo trials to run (default is 200).
-        title : str, optional
-            Optional title for the plot.
-        extra_info : str, optional
-            Additional string to append to the saved filename.
+        Args:
+            noise_std : float, optional
+                Standard deviation of the Gaussian noise added to the function (default is 0.01).
+            trials : int, optional
+                Number of paired Monte Carlo trials to run (default is 200).
+            title : str, optional
+                Optional title for the plot.
+            extra_info : str, optional
+                Additional string to append to the saved filename.
 
-        Notes
+        Notes:
         -----
         - A horizontal line at Δ = 0 indicates equal performance.
         - The estimated win rate (P(Δ < 0)) is shown in the legend.
         - This visualization provides intuitive insight into method-wise reliability.
         """
-
         true_val = self.h.reference_derivative(self.central_value)
         rng = np.random.default_rng(123)
 
@@ -720,38 +706,38 @@ def plot_multi_order_error_vs_noise(
     extra_info=None,
     plot_dir="plots",
 ):
-    """
-    Plot mean squared error (MSE) versus inverse signal-to-noise ratio (1/SNR)
-    for multiple derivative orders and estimation methods.
+    """Plot mean squared error versus inverse signal-to-noise ratio.
+
+    The mean squared error (MSE) and inverse signal-to-noise ratio (SNR) are
+    determined for multiple derivative orders and estimation methods.
 
     The function injects Gaussian noise into the target function, scaled inversely
     with SNR and proportionally to |f(x)|. It compares the performance of finite
     difference and adaptive polynomial fitting methods.
 
-    Parameters
-    ----------
-    function : callable
-        Target function to differentiate.
-    central_value : float
-        Point at which the derivative is computed.
-    snr_values : array-like, optional
-        List or array of SNR values (default is log-spaced from 10 to 1e5).
-    orders : tuple of int, optional
-        Derivative orders to evaluate (default: (1, 2, 3)).
-    trials : int, optional
-        Number of Monte Carlo trials per SNR and order (default: 50).
-    fit_tolerance : float or dict, optional
-        Residual tolerance used in adaptive fitting. Can be a float or a dict keyed by order.
-    clip_threshold : float, optional
-        Maximum allowed squared error; larger values are clipped to prevent skew (default: 1e6).
-    title : str, optional
-        Title for the plot.
-    extra_info : str, optional
-        Additional string to append to the saved filename.
-    plot_dir : str, optional
-        Directory in which to save generated plots (default is "plots").
+    Args:
+        function : callable
+            Target function to differentiate.
+        central_value : float
+            Point at which the derivative is computed.
+        snr_values : array-like, optional
+            List or array of SNR values (default is log-spaced from 10 to 1e5).
+        orders : tuple of int, optional
+            Derivative orders to evaluate (default: (1, 2, 3)).
+        trials : int, optional
+            Number of Monte Carlo trials per SNR and order (default: 50).
+        fit_tolerance : float or dict, optional
+            Residual tolerance used in adaptive fitting. Can be a float or a dict keyed by order.
+        clip_threshold : float, optional
+            Maximum allowed squared error; larger values are clipped to prevent skew (default: 1e6).
+        title : str, optional
+            Title for the plot.
+        extra_info : str, optional
+            Additional string to append to the saved filename.
+        plot_dir : str, optional
+            Directory in which to save generated plots (default is "plots").
 
-    Notes
+    Notes:
     -----
     - Uses a fixed random seed for reproducibility.
     - Derivatives are computed using both finite differences and adaptive polynomial fitting.
@@ -875,27 +861,23 @@ def plot_multi_order_error_vs_noise(
 
 
 def slow_function(x, sleep_time):
-    """
-    Simulates a slow, compute-intensive mathematical function.
+    """Simulates a slow, compute-intensive mathematical function.
 
     This function applies a non-linear transformation to the input `x` involving
     sine, exponential decay, and logarithmic growth, repeated 100 times to mimic
     computational load. Additionally, it pauses execution for a specified duration
     using `time.sleep`.
 
-    Parameters
-    ----------
-    x : float or np.ndarray
-        Input value(s) to be processed.
-    sleep_time : float
-        Time in seconds to pause execution before starting computation.
+    Args:
+        x : float or np.ndarray
+            Input value(s) to be processed.
+        sleep_time : float
+            Time in seconds to pause execution before starting computation.
 
-    Returns
-    -------
-    float or np.ndarray
-        Transformed value(s) after applying the repeated operation.
+    Returns:
+        float or np.ndarray
+            Transformed value(s) after applying the repeated operation.
     """
-
     time.sleep(sleep_time)
     for _ in range(100):
         x = np.sin(x**2) * np.exp(-(x**2)) + np.log(1 + x**2)
@@ -903,29 +885,26 @@ def slow_function(x, sleep_time):
 
 
 def make_slow_func(sleep_time):
+    """Creates a lambda function that wraps `slow_function` with a fixed sleep time.
+
+    Args:
+        sleep_time : float
+            Time in seconds that the wrapped function will sleep before computation.
+
+    Returns:
+        function
+            A lambda function that takes `x` as input and calls `slow_function(x, sleep_time)`.
     """
-    Creates a lambda function that wraps `slow_function` with a fixed sleep time.
-
-    Parameters
-    ----------
-    sleep_time : float
-        Time in seconds that the wrapped function will sleep before computation.
-
-    Returns
-    -------
-    function
-        A lambda function that takes `x` as input and calls `slow_function(x, sleep_time)`.
-    """
-
     return lambda x: slow_function(x, sleep_time)
 
 
 def plot_timing_for_order(
     order, sleep_times, timings_adaptive, timings_finite
 ):
-    """
-    Plot timing benchmarks comparing adaptive and finite difference methods
-    for a given derivative order as a function of simulated function evaluation time.
+    """Plot timing benchmarks comparing adaptive and finite difference methods.
+
+    The comparison is plotted for a given derivative order as a function of
+    simulated function evaluation time.
 
     This function assumes access to global dictionaries `timings_adaptive` and
     `timings_finite`, which store timing results for various derivative orders,
@@ -934,21 +913,15 @@ def plot_timing_for_order(
     factor of the adaptive method relative to finite differences, and visualizes
     the timing comparison.
 
-    Parameters
-    ----------
-    order : int
-        The derivative order for which to generate the timing comparison plot.
-    sleep_times : list of float
-        List of simulated function evaluation times (in seconds) used for the x-axis.
-    timings_adaptive : dict
-        Dictionary containing timing results for the adaptive method, keyed by derivative order.
-    timings_finite : dict
-        Dictionary containing timing results for the finite difference method, keyed by derivative order.
-
-    Returns
-    -------
-    None
-        Displays a matplotlib plot and prints the slowdown factor in the legend.
+    Args:
+        order : int
+            The derivative order for which to generate the timing comparison plot.
+        sleep_times : list of float
+            List of simulated function evaluation times (in seconds) used for the x-axis.
+        timings_adaptive : dict
+            Dictionary containing timing results for the adaptive method, keyed by derivative order.
+        timings_finite : dict
+            Dictionary containing timing results for the finite difference method, keyed by derivative order.
     """
     x = np.array(sleep_times)
     y_adaptive = np.array(timings_adaptive[order])
@@ -996,9 +969,10 @@ def plot_timing_for_order(
 def benchmark_derivative_timing_vs_order(
     function, central_value, orders, stencil_points=5, stencil_stepsize=0.01
 ):
-    """
-    Benchmark and plot the evaluation time of adaptive vs. finite difference
-    derivative estimation methods across multiple derivative orders.
+    """Benchmark and plot the evaluation time of adaptive vs. finite differences.
+
+    The benchmarking is done for derivative estimation methods across multiple
+    derivative orders.
 
     This function measures and compares the runtime of the `DerivativeKit`'s
     adaptive and finite difference methods for computing derivatives of the
@@ -1006,23 +980,17 @@ def benchmark_derivative_timing_vs_order(
     It generates a plot showing how the evaluation time scales with derivative order
     and the relative slowdown of adaptive vs. finite difference.
 
-    Parameters
-    ----------
-    function : callable
-        The function to differentiate.
-    central_value : float
-        The point at which the derivative is evaluated.
-    orders : list of int
-        The derivative orders to benchmark.
-    stencil_points: int, optional
-        Number of stencil points to use for the finite difference method (default is 5).
-    stencil_stepsize: float, optional
-        Step size for the finite difference stencil (default is 0.01).
-
-    Returns
-    -------
-    None
-        Displays a matplotlib plot comparing timing for each method and their ratio.
+    Args:
+        function : callable
+            The function to differentiate.
+        central_value : float
+            The point at which the derivative is evaluated.
+        orders : list of int
+            The derivative orders to benchmark.
+        stencil_points: int, optional
+            Number of stencil points to use for the finite difference method (default is 5).
+        stencil_stepsize: float, optional
+            Step size for the finite difference stencil (default is 0.01).
     """
     adaptive_times = []
     finite_times = []
@@ -1119,38 +1087,33 @@ def plot_adaptive_timing_sweeps(
     output_filename=None,
     n_workers=1,
 ):
-    """
-    Benchmark and plot timing results for adaptive derivative estimation as a function of:
+    """Benchmark and plot timing results for adaptive derivative estimation.
+
+    The benchmarking is done as a function of:
     (1) `min_used_points` with fixed `fit_tolerance`
     (2) `fit_tolerance` with fixed `min_used_points`
 
-    Parameters
-    ----------
-    sleep_time : float
-        Artificial delay in function evaluation.
-    central_value : float
-        Point at which to evaluate the derivative.
-    deriv_orders : tuple of int
-        Derivative orders to benchmark and plot.
-    fit_tolerance_fixed : float
-        The fixed fit tolerance used when sweeping `min_used_points`.
-    min_used_points_fixed : int
-        The fixed number of points used when sweeping `fit_tolerance`.
-    min_pts_list : array-like, optional
-        Values of `min_used_points` to sweep. Default: np.arange(5, 30, 2).
-    fit_tolerances : array-like, optional
-        Values of `fit_tolerance` to sweep. Default: np.logspace(-4, log10(0.2), 14).
-    save_fig : bool
-        If True, saves the figure to 'plots/adaptive_timing_sweeps.{png,pdf}'.
-    output_filename : str or None
-        If provided, also saves the benchmark results to a `.npz` file.
-    n_workers: int, optional
-            Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
-
-    Returns
-    -------
-    None
-        Displays the plot. Optionally saves results and/or figure.
+    Args:
+        sleep_time : float
+            Artificial delay in function evaluation.
+        central_value : float
+            Point at which to evaluate the derivative.
+        deriv_orders : tuple of int
+            Derivative orders to benchmark and plot.
+        fit_tolerance_fixed : float
+            The fixed fit tolerance used when sweeping `min_used_points`.
+        min_used_points_fixed : int
+            The fixed number of points used when sweeping `fit_tolerance`.
+        min_pts_list : array-like, optional
+            Values of `min_used_points` to sweep. Default: np.arange(5, 30, 2).
+        fit_tolerances : array-like, optional
+            Values of `fit_tolerance` to sweep. Default: np.logspace(-4, log10(0.2), 14).
+        save_fig : bool
+            If True, saves the figure to 'plots/adaptive_timing_sweeps.{png,pdf}'.
+        output_filename : str or None
+            If provided, also saves the benchmark results to a `.npz` file.
+        n_workers: int, optional
+                Number of worker to use in multiprocessing. Default is 1 (no multiprocessing).
     """
     # === Run benchmark
     if min_pts_list is None:
@@ -1266,34 +1229,32 @@ def plot_function_with_residuals(
     save_fig=True,
     function_name=None,
 ):
-    """
-    Visualize a function and its tangent approximations with residual diagnostics.
+    """Visualize a function and its tangent approximations with residual diagnostics.
 
     This function plots the input function alongside its finite difference and adaptive
     tangent approximations at a given point. It includes diagnostics such as residuals,
     fractional residuals, and optionally the ratio of fractional residuals (adaptive / finite),
     helping to assess the accuracy and behavior of each method.
 
-    Parameters
-    ----------
-    function : callable
-        The target function to differentiate.
-    central_value : float
-        The point x₀ at which the derivative is computed and tangents are anchored.
-    derivative_order : int, optional
-        The order of the derivative to estimate (default is 1).
-    dx : float, optional
-        Half-width of the plotting interval around `central_value` (default is 0.5).
-    title : str, optional
-        Title to display at the top of the figure (default is descriptive).
-    show_ratio_panel : bool, optional
-        If True, adds a fourth panel showing the ratio of fractional residuals (default is True).
-    save_fig : bool, optional
-        If True, saves the resulting plot to 'plots/' directory as PDF and PNG (default is True).
-    function_name : str, optional
-        Name of the function used in saved filenames (default is None).
+    Args:
+        function : callable
+            The target function to differentiate.
+        central_value : float
+            The point x₀ at which the derivative is computed and tangents are anchored.
+        derivative_order : int, optional
+            The order of the derivative to estimate (default is 1).
+        dx : float, optional
+            Half-width of the plotting interval around `central_value` (default is 0.5).
+        title : str, optional
+            Title to display at the top of the figure (default is descriptive).
+        show_ratio_panel : bool, optional
+            If True, adds a fourth panel showing the ratio of fractional residuals (default is True).
+        save_fig : bool, optional
+            If True, saves the resulting plot to 'plots/' directory as PDF and PNG (default is True).
+        function_name : str, optional
+            Name of the function used in saved filenames (default is None).
 
-    Notes
+    Notes:
     -----
     - Uses `DerivativeKit` to estimate derivatives via both adaptive fitting and finite differences.
     - Residuals are defined as: f(x) − T(x), where T(x) is the tangent.

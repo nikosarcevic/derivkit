@@ -1,9 +1,10 @@
+"""Provides assorted utility functions."""
+
 import numpy as np
 
 
 def log_debug_message(message, debug=False, log_file=None, log_to_file=None):
-    """
-    Logs a debug message to stdout and optionally to a file.
+    """Logs a debug message to stdout and optionally to a file.
 
     Args:
         message (str): The debug message to print/log.
@@ -25,8 +26,7 @@ def log_debug_message(message, debug=False, log_file=None, log_to_file=None):
 
 
 def is_finite_and_differentiable(function, x, delta=1e-5, tol=1e-2):
-    """
-    Checks if a function is finite and numerically differentiable at a point.
+    """Checks if a function is finite and numerically differentiable at a point.
 
     Args:
         function (callable): The function to test.
@@ -35,7 +35,8 @@ def is_finite_and_differentiable(function, x, delta=1e-5, tol=1e-2):
         tol (float): Tolerance for differentiability check.
 
     Returns:
-        bool: True if function is finite and differentiable at x, False otherwise.
+        bool: True if function is finite and differentiable at x, False
+            otherwise.
     """
     try:
         f0 = np.asarray(function(x))
@@ -61,8 +62,7 @@ def is_finite_and_differentiable(function, x, delta=1e-5, tol=1e-2):
 
 
 def normalize_derivative(derivative, reference):
-    """
-    Computes the relative error between estimated and reference derivative.
+    """Computes the relative error between estimated and reference derivative.
 
     Args:
         derivative (float or np.ndarray): Estimated derivative.
@@ -75,8 +75,7 @@ def normalize_derivative(derivative, reference):
 
 
 def central_difference_error_estimate(step_size, order=1):
-    """
-    Provides a rough truncation error estimate for central differences.
+    """Provides a rough truncation error estimate for central differences.
 
     Args:
         step_size (float): Finite difference step size.
@@ -98,11 +97,10 @@ def central_difference_error_estimate(step_size, order=1):
 
 
 def is_symmetric_grid(x_vals):
-    """
-    Checks if evaluation grid is symmetric around 0.
+    """Checks if evaluation grid is symmetric around 0.
 
     Args:
-        x_vals (np.ndarray): Evaluation points (1D).
+        x_vals (:class:`np.ndarray`): Evaluation points (1D).
 
     Returns:
         bool: True if grid is symmetric, False otherwise.
@@ -116,8 +114,7 @@ def is_symmetric_grid(x_vals):
 
 
 def generate_test_function(name="sin"):
-    """
-    Returns a known test function and its first/second derivatives.
+    """Returns a known test function and its first/second derivatives.
 
     Args:
         name (str): One of 'sin', 'exp', 'polynomial', 'gaussian'.
