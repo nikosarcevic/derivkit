@@ -58,9 +58,14 @@ class ForecastKit:
                 the observables. Should be a square matrix with shape
                 (n_observables, n_observables), where n_observables is the
                 number of observables returned by the function.
+
+        Raises:
+            ValueError: raised if covariance_matrix is not a square numpy array.
         """
         self.function = function
         self.central_values = np.atleast_1d(central_values)
+        if not covariance_matrix.shape[0] == covariance_matrix.shape[1]:
+            raise ValueError("covariance_matrix must be a square numpy array.")
         self.covariance_matrix = covariance_matrix
         self.n_parameters = len(self.central_values)
         self.n_observables = len(covariance_matrix)
