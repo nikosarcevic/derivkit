@@ -64,7 +64,12 @@ class ForecastKit:
         """
         self.function = function
         self.central_values = np.atleast_1d(central_values)
-        if not covariance_matrix.shape[0] == covariance_matrix.shape[1]:
+        if not covariance_matrix.ndim < 3:
+            raise ValueError(
+                        "covariance_matrix must be at most two-dimensional but "
+                        f"dimensions is {covariance_matrix.ndim}."
+            )
+        if covariance_matrix.ndim == 2 and not covariance_matrix.shape[0] == covariance_matrix.shape[1]:
             raise ValueError("covariance_matrix must be a square numpy array.")
         self.covariance_matrix = covariance_matrix
         self.n_parameters = len(self.central_values)
