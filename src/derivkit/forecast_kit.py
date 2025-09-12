@@ -11,9 +11,9 @@ the methods.
 
 Typical usage example:
 
-    forecaster = ForecastKit(observables, fiducial_values, covariance_matrix)
-    fisher = forecaster.get_derivatives(derivative_order = 1)
-    dali = forecaster.get_derivatives(derivative_order = 2)
+>>>    forecaster = ForecastKit(observables, fiducial_values, covariance_matrix)
+>>>    fisher = forecaster.get_derivatives(derivative_order = 1)
+>>>    dali = forecaster.get_derivatives(derivative_order = 2)
 """
 
 from copy import deepcopy

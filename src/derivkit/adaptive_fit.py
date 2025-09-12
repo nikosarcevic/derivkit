@@ -6,7 +6,7 @@ options can be found in the documentation of the methods.
 
 Typical usage example:
 
-  derivative = AdaptiveFitDerivative(function_to_differentiate, 1).compute()
+>>> derivative = AdaptiveFitDerivative(function_to_differentiate, 1).compute()
 
 derivative is the derivative of function_to_differerentiate at value 1.
 """
