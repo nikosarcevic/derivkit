@@ -378,7 +378,9 @@ class PlotHelpers:
         )
 
     def make_less_noisy(self, function, sigma=0.01, seed=42):
-        """Add signal-scaled noise to a function (noise ∝ |f(x)|).
+        """Add signal-scaled noise to a function.
+
+        The noise is propportional to the absolute value of the function.
 
         Args:
             function : callable

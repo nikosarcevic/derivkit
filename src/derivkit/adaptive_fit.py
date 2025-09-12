@@ -708,7 +708,7 @@ class AdaptiveFitDerivative:
         automatically.
 
         Notes:
-        -----
+        ------
         - Complexity is O(n).
         - The absolute floor ``1e-9`` guards degenerate cases (e.g., ``D ≈ 0``)
           and prevents overflow even if multiple samples coincide with ``x0``.

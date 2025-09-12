@@ -48,17 +48,16 @@ class FiniteDifferenceDerivative:
     - 9-point: first and second-order
 
     Examples:
-    --------
+    ---------
     >>> f = lambda x: x**3
     >>> d = FiniteDifferenceDerivative(function=f, central_value=2.0)
     >>> d.compute(derivative_order=2)
-    12.0
     """
 
     def __init__(self, function, central_value, log_file=None, debug=False):
         """Initialises the class based on function and central value.
 
-        Attributes:
+        Arguments:
             function (callable): The function to differentiate. Must accept a
                 single float and return either a float or a 1D array-like object.
             central_value (float): The point at which the derivative is evaluated.

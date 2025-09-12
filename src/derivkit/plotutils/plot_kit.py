@@ -106,7 +106,7 @@ class PlotKit:
                 The hex code or named color string associated with the key.
 
         Notes:
-        -----
+        ------
         - Falls back to the default color mapping if the key was not explicitly overridden.
         - Used internally for consistent styling across plots.
         """
@@ -146,7 +146,7 @@ class PlotKit:
                 Additional string to append to the saved filename.
 
         Notes:
-        -----
+        ------
         - Excludes outliers based on 1st and 99th percentiles to improve plot readability.
         - Displays method-specific variance in the legend for comparison.
         """
@@ -254,7 +254,7 @@ class PlotKit:
                 Additional string to append to the saved filename.
 
         Notes:
-        -----
+        ------
         - Uses a fixed random seed for reproducibility.
         - Highlights the internal logic of the adaptive derivative fitting mechanism visually.
         """
@@ -389,7 +389,7 @@ class PlotKit:
                 Additional string to append to the saved filename.
 
         Notes:
-        -----
+        ------
         - Finite difference uses a fixed step size relative to `central_value`.
         - Adaptive fit uses polynomial regression with tolerance-controlled filtering.
         - Useful for comparing robustness of methods under varying noise.
@@ -508,7 +508,7 @@ class PlotKit:
                 Additional string to append to the saved filename.
 
         Notes:
-        -----
+        ------
         - ECDF provides a full view of the error distribution, not just summary statistics.
         - The reference derivative value is used to compute true squared error per trial.
         - Useful for visualizing which method tends to produce smaller errors more often.
@@ -592,7 +592,7 @@ class PlotKit:
                 Additional string to append to the saved filename.
 
         Notes:
-        -----
+        ------
         - A horizontal line at Δ = 0 indicates equal performance.
         - The estimated win rate (P(Δ < 0)) is shown in the legend.
         - This visualization provides intuitive insight into method-wise reliability.
@@ -738,7 +738,7 @@ def plot_multi_order_error_vs_noise(
             Directory in which to save generated plots (default is "plots").
 
     Notes:
-    -----
+    ------
     - Uses a fixed random seed for reproducibility.
     - Derivatives are computed using both finite differences and adaptive polynomial fitting.
     - Noise is scaled as: `sigma = max(|f(x)|, 1e-3) / SNR` to avoid division by very small amplitudes.
@@ -1255,7 +1255,7 @@ def plot_function_with_residuals(
             Name of the function used in saved filenames (default is None).
 
     Notes:
-    -----
+    ------
     - Uses `DerivativeKit` to estimate derivatives via both adaptive fitting and finite differences.
     - Residuals are defined as: f(x) − T(x), where T(x) is the tangent.
     - Fractional residuals are normalized by the function value.
