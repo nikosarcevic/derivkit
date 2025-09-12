@@ -11,9 +11,9 @@ the methods.
 
 Typical usage example:
 
-    forecaster = ForecastKit(observables, fiducial_values, covariance_matrix)
-    fisher = forecaster.get_derivatives(derivative_order = 1)
-    dali = forecaster.get_derivatives(derivative_order = 2)
+>>>    forecaster = ForecastKit(observables, fiducial_values, covariance_matrix)
+>>>    fisher = forecaster.get_derivatives(derivative_order = 1)
+>>>    dali = forecaster.get_derivatives(derivative_order = 2)
 """
 
 from copy import deepcopy
@@ -26,7 +26,7 @@ from derivkit.kit import DerivativeKit
 class ForecastKit:
     """Provides tools for facilitating experimental forecasts.
 
-    Args:
+    Attributes:
          function (callable): The scalar or vector-valued function to
              differentiate. It should accept a list or array of parameter
              values as input and return either a scalar or a
@@ -38,9 +38,9 @@ class ForecastKit:
              the observables. Should be a square matrix with shape
              (n_observables, n_observables), where n_observables is the
              number of observables returned by the function.
-         n_parameters (int): The number of elements of central_values.
+         n_parameters (int): The number of elements of `central_values`.
          n_observables (int): The number of cosmic observables. Determined
-             from the dimension of :param:`covariance_matrix`.
+             from the dimension of `covariance_matrix`.
     """
 
     def __init__(self, function, central_values, covariance_matrix):
@@ -93,10 +93,10 @@ class ForecastKit:
             :class:`np.ndarray`: An array of derivative values:
 
                 - d = 1 returns an array with shape
-                  (:param:`n_parameters`, :param:`n_observables`) containing
+                  (`n_parameters`, `n_observables`) containing
                   first-order derivatives.
                 - d = 2 returns an array with shape
-                  :param:`n_parameters`, :param:`n_parameters`, :param:`n_observables`)
+                  `n_parameters`, `n_parameters`, `n_observables`)
                   containing second-order derivatives.
 
         Raises:

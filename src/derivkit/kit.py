@@ -8,8 +8,8 @@ documentation of the methods.
 
 Typical usage example:
 
-  derivative = DerivativeKit(function_to_differentiate, 1)
-  adaptive = derivative.adaptive.compute()
+>>>  derivative = DerivativeKit(function_to_differentiate, 1)
+>>>  adaptive = derivative.adaptive.compute()
 
 derivative is the derivative of function_to_differerentiate at value 1.
 """

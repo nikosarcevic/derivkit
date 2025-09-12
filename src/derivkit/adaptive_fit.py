@@ -6,7 +6,7 @@ options can be found in the documentation of the methods.
 
 Typical usage example:
 
-  derivative = AdaptiveFitDerivative(function_to_differentiate, 1).compute()
+>>> derivative = AdaptiveFitDerivative(function_to_differentiate, 1).compute()
 
 derivative is the derivative of function_to_differerentiate at value 1.
 """
@@ -708,7 +708,7 @@ class AdaptiveFitDerivative:
         automatically.
 
         Notes:
-        -----
+        ------
         - Complexity is O(n).
         - The absolute floor ``1e-9`` guards degenerate cases (e.g., ``D ≈ 0``)
           and prevents overflow even if multiple samples coincide with ``x0``.
