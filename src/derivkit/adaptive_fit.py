@@ -85,8 +85,9 @@ class AdaptiveFitDerivative:
             derivative_order (int, optional): The order of the derivative to
                 compute (default is 1). Must be 1, 2, 3, or 4.
             min_samples (int, optional): Minimum number of total samples to
-                start with. Must be large enough to support the fit and any
-                fallback strategies. Default is 7.
+                start with. Must be at least equal to the bigger value of
+                derivative_order + 2, self.min_used_points, to have an
+                effect. Smaller values are ignored. Default is 7.
             fit_tolerance (float, optional): Maximum acceptable relative
                 residual for the polynomial fit. Default is 0.05, i.e 5%.
             include_zero (bool, optional): Whether to include the central
@@ -129,6 +130,15 @@ class AdaptiveFitDerivative:
                 f"Invalid derivative_order={derivative_order}. "
                 "Only derivative orders 1 to 4 are supported; "
                 "higher orders are not currently implemented."
+            )
+        if min_samples - derivative_order < 2:
+            warnings.warn(
+                "min_samples must be at least equal to the bigger value of "
+                f"2 + derivative_order = {2+derivative_order} and "
+                f"self.min_used_points = {self.min_used_points}"
+                "to support the fit and fallback strategies. Smaller values "
+                f"are ignored. Actual value is {min_samples}.",
+                RuntimeWarning,
             )
 
         # Sampling grid
@@ -407,11 +417,12 @@ class AdaptiveFitDerivative:
             include_zero: Whether to include the central point (zero
                 offset) in the sampling grid.
             min_samples: The minimum number of total sampling points to
-                start with before pruning. This interacts with
+                start with before pruning. Must be larger than both
                 `self.min_used_points` (default = 5), which is the minimum
-                number of points required to perform a polynomial fit, and with
-                the derivative order to determine the final required number of
-                usable samples.
+                number of points required to perform a polynomial fit, and
+                derivative_order+2 to have an effect. If this is the case,
+                it is used to determine the final required number of
+                usable samples. Otherwise, it is ignored.
 
         Returns:
             (:class:`np.ndarray`, int): A tuple containing
