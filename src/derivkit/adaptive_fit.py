@@ -85,7 +85,7 @@ class AdaptiveFitDerivative:
             derivative_order (int, optional): The order of the derivative to
                 compute (default is 1). Must be 1, 2, 3, or 4.
             min_samples (int, optional): Minimum number of total samples to
-                start with. Must be at least equal to the bigger value of
+                start with. Must be at least equal to the larger value of
                 derivative_order + 2, self.min_used_points, to have an
                 effect. Smaller values are ignored. Default is 7.
             fit_tolerance (float, optional): Maximum acceptable relative
@@ -133,7 +133,7 @@ class AdaptiveFitDerivative:
             )
         if min_samples - derivative_order < 2:
             warnings.warn(
-                "min_samples must be at least equal to the bigger value of "
+                "min_samples must be at least equal to the larger value of "
                 f"2 + derivative_order = {2+derivative_order} and "
                 f"self.min_used_points = {self.min_used_points}"
                 "to support the fit and fallback strategies. Smaller values "
