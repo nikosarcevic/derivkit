@@ -1,0 +1,1729 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="derivkit.adaptive_fit module" href="derivkit.adaptive_fit.html" /><link rel="prev" title="derivkit" href="modules.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
+        <title>derivkit package - Derivkit documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">Derivkit  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">Derivkit  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">derivkit</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of derivkit</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">derivkit package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of derivkit package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html">derivkit.adaptive_fit module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.finite_difference.html">derivkit.finite_difference module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.forecast_kit.html">derivkit.forecast_kit module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.kit.html">derivkit.kit module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.utils.html">derivkit.utils module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/derivkit.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="derivkit-package">
+<h1>derivkit package<a class="headerlink" href="#derivkit-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="derivkit.adaptive_fit.html">derivkit.adaptive_fit module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative.function"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative.central_value"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.central_value</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative.diagnostics_data"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.diagnostics_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative.min_used_points"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.min_used_points</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative.compute"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.compute()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative.get_adaptive_offsets"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.get_adaptive_offsets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.adaptive_fit.html#derivkit.adaptive_fit.AdaptiveFitDerivative.recommend_fit_tolerance"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.recommend_fit_tolerance()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="derivkit.finite_difference.html">derivkit.finite_difference module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.finite_difference.html#derivkit.finite_difference.FiniteDifferenceDerivative"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.finite_difference.html#derivkit.finite_difference.FiniteDifferenceDerivative.function"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.finite_difference.html#derivkit.finite_difference.FiniteDifferenceDerivative.central_value"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.central_value</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.finite_difference.html#derivkit.finite_difference.FiniteDifferenceDerivative.log_file"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.log_file</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.finite_difference.html#derivkit.finite_difference.FiniteDifferenceDerivative.debug"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.debug</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.finite_difference.html#derivkit.finite_difference.FiniteDifferenceDerivative.compute"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.compute()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.finite_difference.html#derivkit.finite_difference.FiniteDifferenceDerivative.get_finite_difference_tables"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.get_finite_difference_tables()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="derivkit.forecast_kit.html">derivkit.forecast_kit module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.forecast_kit.html#derivkit.forecast_kit.ForecastKit"><code class="docutils literal notranslate"><span class="pre">ForecastKit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.forecast_kit.html#derivkit.forecast_kit.ForecastKit.function"><code class="docutils literal notranslate"><span class="pre">ForecastKit.function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.forecast_kit.html#derivkit.forecast_kit.ForecastKit.n_parameters"><code class="docutils literal notranslate"><span class="pre">ForecastKit.n_parameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.forecast_kit.html#derivkit.forecast_kit.ForecastKit.n_observables"><code class="docutils literal notranslate"><span class="pre">ForecastKit.n_observables</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.forecast_kit.html#derivkit.forecast_kit.ForecastKit.get_derivatives"><code class="docutils literal notranslate"><span class="pre">ForecastKit.get_derivatives()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.forecast_kit.html#derivkit.forecast_kit.ForecastKit.get_forecast_tensors"><code class="docutils literal notranslate"><span class="pre">ForecastKit.get_forecast_tensors()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="derivkit.kit.html">derivkit.kit module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.kit.html#derivkit.kit.DerivativeKit"><code class="docutils literal notranslate"><span class="pre">DerivativeKit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.kit.html#derivkit.kit.DerivativeKit.adaptive"><code class="docutils literal notranslate"><span class="pre">DerivativeKit.adaptive</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.kit.html#derivkit.kit.DerivativeKit.finite"><code class="docutils literal notranslate"><span class="pre">DerivativeKit.finite</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivkit.kit.html#derivkit.kit.DerivativeKit.get_used_points"><code class="docutils literal notranslate"><span class="pre">DerivativeKit.get_used_points()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="derivkit.utils.html">derivkit.utils module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.utils.html#derivkit.utils.central_difference_error_estimate"><code class="docutils literal notranslate"><span class="pre">central_difference_error_estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.utils.html#derivkit.utils.generate_test_function"><code class="docutils literal notranslate"><span class="pre">generate_test_function()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.utils.html#derivkit.utils.is_finite_and_differentiable"><code class="docutils literal notranslate"><span class="pre">is_finite_and_differentiable()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.utils.html#derivkit.utils.is_symmetric_grid"><code class="docutils literal notranslate"><span class="pre">is_symmetric_grid()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.utils.html#derivkit.utils.log_debug_message"><code class="docutils literal notranslate"><span class="pre">log_debug_message()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="derivkit.utils.html#derivkit.utils.normalize_derivative"><code class="docutils literal notranslate"><span class="pre">normalize_derivative()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-derivkit">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-derivkit" title="Link to this heading">¶</a></h2>
+<p>Provides all derivkit methods.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">AdaptiveFitDerivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Computes derivatives using an adaptive polynomial fitting approach.</p>
+<p>This method evaluates a function at symmetrically spaced points around
+a central value, fits a polynomial of specified degree (equal to the
+derivative order), and computes the derivative by evaluating the derivative
+of the polynomial at the central point.</p>
+<p>If the polynomial fit fails to meet a specified residual tolerance, the
+method adaptively removes points with the largest relative residuals
+(optionally in symmetric pairs) and refits until the tolerance is met or the
+minimum sample count is reached.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative.function" title="Link to this definition">¶</a></dt>
+<dd><p>The function to be differentiated. Must return
+scalar or vector output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative.central_value">
+<span class="sig-name descname"><span class="pre">central_value</span></span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative.central_value" title="Link to this definition">¶</a></dt>
+<dd><p>The point at which the derivative is evaluated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative.diagnostics_data">
+<span class="sig-name descname"><span class="pre">diagnostics_data</span></span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative.diagnostics_data" title="Link to this definition">¶</a></dt>
+<dd><p>The diagnostic data collected during
+the fitting process, if requested. Defaults to <cite>None</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative.min_used_points">
+<span class="sig-name descname"><span class="pre">min_used_points</span></span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative.min_used_points" title="Link to this definition">¶</a></dt>
+<dd><p>The default minimum number of samples required
+for fitting. This is used to ensure that the polynomial fit has
+enough data points to be meaningful.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialises the class based on the function and central value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>callable</em>) – The function to be differentiated. Must return
+scalar or vector output.</p></li>
+<li><p><strong>central_value</strong> (<em>float</em>) – The point at which the derivative is
+evaluated.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagnostics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'finite_difference'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor_accept_multiplier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative.compute" title="Link to this definition">¶</a></dt>
+<dd><p>Computes class derivative using adaptive polynomial fitting.</p>
+<p>This method evaluates the target function at symmetric points around
+a central value, fits a polynomial of the specified order, and computes
+the derivative from that fit. If the fit quality does not meet the
+specified tolerance, it adaptively prunes the worst residual points and
+refits. If all attempts fail, it falls back to a finite difference
+estimate or accepts a fit based on a looser criterion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> (<em>int</em><em>, </em><em>optional</em>) – The order of the derivative to
+compute (default is 1). Must be 1, 2, 3, or 4.</p></li>
+<li><p><strong>min_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum number of total samples to
+start with. Must be at least equal to the larger value of
+derivative_order + 2, self.min_used_points, to have an
+effect. Smaller values are ignored. Default is 7.</p></li>
+<li><p><strong>fit_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum acceptable relative
+residual for the polynomial fit. Default is 0.05, i.e 5%.</p></li>
+<li><p><strong>include_zero</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include the central
+point in the sampling grid. Default is <cite>True</cite>.</p></li>
+<li><p><strong>fallback_mode</strong> – <p>Strategy if the fit fails to meet
+the tolerance at the minimum sample count. Options are:</p>
+<blockquote>
+<div><ul>
+<li><p><cite>”finite_difference”</cite>: always reject and use finite difference
+fallback.</p></li>
+<li><p><cite>”poly_at_floor”</cite>: always accept the polynomial fit at floor
+regardless of residuals.</p></li>
+<li><p><cite>”auto”</cite>: accept the polynomial at floor if both of the
+following conditions hold:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>(max_residual &lt; floor_accept_multiplier × fit_tolerance)</p></li>
+<li><p>(median_residual &lt; fit_tolerance);</p></li>
+</ul>
+</div></blockquote>
+<p>otherwise fall back to finite differences.</p>
+</li>
+</ul>
+</div></blockquote>
+<p>Default is <cite>“finite_difference”</cite>.</p>
+</p></li>
+<li><p><strong>floor_accept_multiplier</strong> – Tolerance multiplier
+used in “auto” fallback mode. Default is 2.0.</p></li>
+<li><p><strong>diagnostics</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return diagnostic
+information such as residuals, fit values, and pruning status.
+Default is <cite>False</cite>.</p></li>
+<li><p><strong>n_workers</strong> – Number of worker to use in multiprocessing. Default is 1
+(no multiprocessing).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The estimated</dt><dd><p>derivative(s). If <cite>diagnostics</cite> is <cite>True</cite>, returns a tuple
+with the derivative array and a dictionary of diagnostic data.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>, (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>, dict)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – An error occurred attempting to comput derivatives
+    of order higher than 4.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative.get_adaptive_offsets">
+<span class="sig-name descname"><span class="pre">get_adaptive_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">central_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_rel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_offsets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_small_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative.get_adaptive_offsets" title="Link to this definition">¶</a></dt>
+<dd><p>Returns an array of absolute step sizes to use for adaptive sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>central_value</strong> (<em>float_optional</em>) – The central value around which to
+generate offsets. If None, uses <cite>self.central_value</cite>.</p></li>
+<li><p><strong>base_rel</strong> (<em>float</em><em>, </em><em>optional</em>) – Base relative step size as a fraction
+of the central value. Default is 1%.</p></li>
+<li><p><strong>base_abs</strong> (<em>float</em><em>, </em><em>optional</em>) – Base absolute step size for small
+central values. Default is 1e-6.</p></li>
+<li><p><strong>factor</strong> (<em>float</em><em>, </em><em>optional</em>) – Factor by which to increase the step
+size for each offset. Default is 1.5.</p></li>
+<li><p><strong>num_offsets</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of offsets to generate. Default
+is 10.</p></li>
+<li><p><strong>max_rel</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum relative step size as a fraction
+of the central value. Default is 5%.</p></li>
+<li><p><strong>max_abs</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum absolute step size.
+Default is 1e-2.</p></li>
+<li><p><strong>step_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Mode for determining step sizes: “auto”,
+“relative”, or “absolute”. Defaults to “auto”.</p></li>
+<li><p><strong>x_small_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Threshold below which the
+central value is considered small. Default is 1e-3.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>An array with absolute step sizes (positive</dt><dd><p>only), not including the central 0 step.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.AdaptiveFitDerivative.recommend_fit_tolerance">
+<span class="sig-name descname"><span class="pre">recommend_fit_tolerance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.AdaptiveFitDerivative.recommend_fit_tolerance" title="Link to this definition">¶</a></dt>
+<dd><p>Suggests a fit_tolerance value based on local function variation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dx</strong> (<em>float</em><em>, </em><em>optional</em>) – Offset used to probe nearby values. Default
+value is <cite>1e-3</cite>.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to print out the suggested value.
+Default value is <cite>True</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Recommended fit_tolerance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="derivkit.DerivativeKit">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">DerivativeKit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.DerivativeKit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides access to adaptive and finite difference derivative calculators.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.DerivativeKit.adaptive">
+<span class="sig-name descname"><span class="pre">adaptive</span></span><a class="headerlink" href="#derivkit.DerivativeKit.adaptive" title="Link to this definition">¶</a></dt>
+<dd><p>Adaptive polynomial
+fit-based derivative method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>:class:<code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.DerivativeKit.finite">
+<span class="sig-name descname"><span class="pre">finite</span></span><a class="headerlink" href="#derivkit.DerivativeKit.finite" title="Link to this definition">¶</a></dt>
+<dd><p>High-order finite
+difference stencil-based method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>:class:`` FiniteDifferenceDerivative``</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialises the class based on function and central value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> – The scalar or vector-valued function to differentiate.</p></li>
+<li><p><strong>central_value</strong> – The point at which the derivative is evaluated.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.DerivativeKit.get_used_points">
+<span class="sig-name descname"><span class="pre">get_used_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.DerivativeKit.get_used_points" title="Link to this definition">¶</a></dt>
+<dd><p>Returns x and y points used in the adaptive fit (for component 0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> – Order of the derivative to compute diagnostics
+for (default is 1).</p></li>
+<li><p><strong>n_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of worker to use in
+multiprocessing. Default is 1 (no multiprocessing).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of <code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="derivkit.FiniteDifferenceDerivative">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">FiniteDifferenceDerivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.FiniteDifferenceDerivative" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Computes numerical derivatives using central finite difference stencils.</p>
+<p>This class supports the calculation of first to fourth-order derivatives
+for scalar or vector-valued functions. It uses high-accuracy central
+difference formulas with configurable stencil sizes (3-, 5-, 7-, or 9-point).</p>
+<p>For scalar-valued functions, a single float is returned. For vector-valued
+functions, the derivative is computed component-wise and returned as a
+NumPy array.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.FiniteDifferenceDerivative.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#derivkit.FiniteDifferenceDerivative.function" title="Link to this definition">¶</a></dt>
+<dd><p>callable
+The function to differentiate. Must accept a single float and return either
+a float or a 1D array-like object.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.FiniteDifferenceDerivative.central_value">
+<span class="sig-name descname"><span class="pre">central_value</span></span><a class="headerlink" href="#derivkit.FiniteDifferenceDerivative.central_value" title="Link to this definition">¶</a></dt>
+<dd><p>float
+The point at which the derivative is evaluated.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.FiniteDifferenceDerivative.log_file">
+<span class="sig-name descname"><span class="pre">log_file</span></span><a class="headerlink" href="#derivkit.FiniteDifferenceDerivative.log_file" title="Link to this definition">¶</a></dt>
+<dd><p>str, optional
+Path to a file where debug information may be logged.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.FiniteDifferenceDerivative.debug">
+<span class="sig-name descname"><span class="pre">debug</span></span><a class="headerlink" href="#derivkit.FiniteDifferenceDerivative.debug" title="Link to this definition">¶</a></dt>
+<dd><p>bool, optional
+If True, debug information will be printed or logged.</p>
+</dd></dl>
+
+<section id="supported-stencil-and-derivative-combinations">
+<h3>Supported Stencil and Derivative Combinations<a class="headerlink" href="#supported-stencil-and-derivative-combinations" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>3-point: first-order only</p></li>
+<li><p>5-point: first to fourth-order</p></li>
+<li><p>7-point: first and second-order</p></li>
+<li><p>9-point: first and second-order</p></li>
+</ul>
+</section>
+<section id="examples">
+<h3>Examples:<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">FiniteDifferenceDerivative</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">central_value</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">derivative_order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Initialises the class based on function and central value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param function<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The function to differentiate. Must accept a
+single float and return either a float or a 1D array-like object.</p>
+</dd>
+<dt class="field-even">type function<span class="colon">:</span></dt>
+<dd class="field-even"><p>callable</p>
+</dd>
+<dt class="field-odd">param central_value<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The point at which the derivative is evaluated.</p>
+</dd>
+<dt class="field-even">type central_value<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param log_file<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to a file where debug information may
+be logged.</p>
+</dd>
+<dt class="field-even">type log_file<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, optional</p>
+</dd>
+<dt class="field-odd">param debug<span class="colon">:</span></dt>
+<dd class="field-odd"><p>If True, debug information will be printed or
+logged.</p>
+</dd>
+<dt class="field-even">type debug<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, optional</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.FiniteDifferenceDerivative.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.FiniteDifferenceDerivative.compute" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the derivative using a central finite difference scheme.</p>
+<p>Supports 3-, 5-, 7-, or 9-point central difference stencils for
+derivative orders 1 through 4 (depending on the stencil size).
+Derivatives are computed for scalar or vector-valued functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> (<em>int</em><em>, </em><em>optional</em>) – The order of the derivative to
+compute. Must be supported by the chosen stencil size.
+Default is 1.</p></li>
+<li><p><strong>stepsize</strong> (<em>float</em><em>, </em><em>optional</em>) – Step size (h) used to evaluate the
+function around the central value. Default is 0.01.</p></li>
+<li><p><strong>num_points</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of points in the finite
+difference stencil. Must be one of [3, 5, 7, 9]. Default is 5.</p></li>
+<li><p><strong>n_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of worker to use in
+multiprocessing. Default is 1 (no multiprocessing).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The estimated derivative. Returns a float for</dt><dd><p>scalar-valued functions, or a NumPy array for vector-valued
+functions.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or np.ndarray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the combination of num_points and derivative_order
+    is not supported.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>The available (num_points, derivative_order) combinations are:</dt><dd><ul class="simple">
+<li><p>3: order 1</p></li>
+<li><p>5: orders 1, 2, 3, 4</p></li>
+<li><p>7: orders 1, 2</p></li>
+<li><p>9: orders 1, 2</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.FiniteDifferenceDerivative.get_finite_difference_tables">
+<span class="sig-name descname"><span class="pre">get_finite_difference_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stepsize</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.FiniteDifferenceDerivative.get_finite_difference_tables" title="Link to this definition">¶</a></dt>
+<dd><p>Returns offset patterns and coefficient tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stepsize</strong> (<em>float</em>) – Stepsize for finite difference calculation.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple of two dictionaries. The first maps from</dt><dd><p>stencil size to symmetric offsets. The second mapps from
+(stencil_size, derivative_order) to coefficient arrays.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(dict, dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="derivkit.ForecastKit">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">ForecastKit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariance_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.ForecastKit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides tools for facilitating experimental forecasts.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.ForecastKit.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#derivkit.ForecastKit.function" title="Link to this definition">¶</a></dt>
+<dd><p>The scalar or vector-valued function to
+differentiate. It should accept a list or array of parameter
+values as input and return either a scalar or a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> of observable values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">central_values</span> <span class="pre">(class</span></span></dt>
+<dd><p><cite>np.ndarray</cite>): The point(s) at which the
+derivative is evaluated. A 1D array or list of parameter values
+matching the expected input of the function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">covariance_matrix</span> <span class="pre">(class</span></span></dt>
+<dd><p><cite>np.ndarray</cite>): The covariance matrix of
+the observables. Should be a square matrix with shape
+(n_observables, n_observables), where n_observables is the
+number of observables returned by the function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.ForecastKit.n_parameters">
+<span class="sig-name descname"><span class="pre">n_parameters</span></span><a class="headerlink" href="#derivkit.ForecastKit.n_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>The number of elements of <cite>central_values</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.ForecastKit.n_observables">
+<span class="sig-name descname"><span class="pre">n_observables</span></span><a class="headerlink" href="#derivkit.ForecastKit.n_observables" title="Link to this definition">¶</a></dt>
+<dd><p>The number of cosmic observables. Determined
+from the dimension of <cite>covariance_matrix</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialises the class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>callable</em>) – The scalar or vector-valued function to
+differentiate. It should accept a list or array of parameter
+values as input and return either a scalar or a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> of observable values.</p></li>
+<li><p><strong>(</strong><strong>class</strong> (<em>covariance_matrix</em>) – <cite>np.ndarray</cite>): The points at which the
+derivative is evaluated. A 1D array or list of parameter values
+matching the expected input of the function.</p></li>
+<li><p><strong>(</strong><strong>class</strong> – <cite>np.ndarray</cite>): The covariance matrix of
+the observables. Should be a square matrix with shape
+(n_observables, n_observables), where n_observables is the
+number of observables returned by the function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – raised if covariance_matrix is not a square numpy array.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.ForecastKit.get_derivatives">
+<span class="sig-name descname"><span class="pre">get_derivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.ForecastKit.get_derivatives" title="Link to this definition">¶</a></dt>
+<dd><p>Returns derivatives of the observables of the requested order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> (<em>int</em>) – <p>The requested order d of the derivatives:</p>
+<ul>
+<li><p>d = 1 returns first-order derivatives.</p></li>
+<li><p>d = 2 returns second-order derivatives.</p></li>
+</ul>
+<p>Currently only d = 1, 2 are supported.</p>
+</p></li>
+<li><p><strong>n_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of worker to use in
+multiprocessing. Default is 1 (no multiprocessing).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>An array of derivative values:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>d = 1 returns an array with shape
+(<cite>n_parameters</cite>, <cite>n_observables</cite>) containing
+first-order derivatives.</p></li>
+<li><p>d = 2 returns an array with shape
+<cite>n_parameters</cite>, <cite>n_parameters</cite>, <cite>n_observables</cite>)
+containing second-order derivatives.</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – An error occurred if a derivative was requested of
+    higher order than 2.</p></li>
+<li><p><strong>RuntimeError</strong> – An error occurred if a ValueError was not raised
+    after calling the function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.ForecastKit.get_forecast_tensors">
+<span class="sig-name descname"><span class="pre">get_forecast_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forecast_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.ForecastKit.get_forecast_tensors" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a set of tensors according to the requested order of the forecast.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forecast_order</strong> (<em>int</em>) – <p>The requested order D of the forecast:</p>
+<blockquote>
+<div><ul>
+<li><p>D = 1 returns a Fisher matrix.</p></li>
+<li><p>D = 2 returns the 3-d and 4-d tensors required for the
+doublet-DALI approximation.</p></li>
+<li><p>D = 3 would be the triplet-DALI approximation.</p></li>
+</ul>
+</div></blockquote>
+<p>Currently only D = 1, 2 are supported.</p>
+</p></li>
+<li><p><strong>n_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of worker to use in multiprocessing.
+Default is 1 (no multiprocessing).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A list of numpy arrays:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>D = 1 returns a square matrix of size n_parameters, where
+n_parameters is the number of parameters included in the
+forecast.</p></li>
+<li><p>D = 2 returns one array of shapes
+(n_parameters, n_parameters, n_parameters) and one array
+of shape (n_parameters, n_parameters, n_parameters, n_parameters),
+where n_parameters is the number of parameters included
+in the forecast.</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – A ValueError occurs when a forecase order greater than
+    2 is requested.</p></li>
+<li><p><strong>Exception</strong> – An exception occurs if the covariance matrix cannot
+    be inverted.</p></li>
+<li><p><strong>RunTimeError</strong> – A RunTimeError occurs if the ValueError was not
+    raised when calling this function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">PlotHelpers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_derivative_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'plots'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Utility class to support plotting and evaluation of numerical derivatives under noise.</p>
+<p>Provides helper functions for:
+- Creating noisy function versions
+- Running derivative estimation trials
+- Comparing different derivative methods
+- Computing or approximating reference derivatives
+- Saving consistent figures to disk</p>
+<p>Initialises the class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> – callable
+Original function to be differentiated.</p></li>
+<li><p><strong>central_value</strong> – float
+Central evaluation point.</p></li>
+<li><p><strong>fit_tolerance</strong> – float, optional
+Tolerance used for adaptive fitting (default is 0.05).</p></li>
+<li><p><strong>true_derivative_fn</strong> – callable, optional
+Ground-truth derivative function, if available.</p></li>
+<li><p><strong>plot_dir</strong> – str, optional
+Directory to save output plots (default is “plots”).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.adaptive_fit_with_outlier_removal">
+<span class="sig-name descname"><span class="pre">adaptive_fit_with_outlier_removal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_inliers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.adaptive_fit_with_outlier_removal" title="Link to this definition">¶</a></dt>
+<dd><p>Fit a line to data after removing outliers.</p>
+<p>The removal is done using a 2.5σ residual filter.
+Ensures the central point (central_value, y_center) is always included in the fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_vals</strong> – array-like
+X coordinates.</p></li>
+<li><p><strong>y_vals</strong> – array-like
+Y coordinates.</p></li>
+<li><p><strong>central_value</strong> – float, optional
+The central x value to enforce inclusion.</p></li>
+<li><p><strong>y_center</strong> – float, optional
+The corresponding f(central_value) value.</p></li>
+<li><p><strong>return_inliers</strong> – bool
+Whether to return a mask of inlier points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>float</dt><dd><p>Slope of the best-fit line.</p>
+</dd>
+<dt>intercept<span class="classifier">float</span></dt><dd><p>Intercept of the best-fit line.</p>
+</dd>
+<dt>inlier_mask<span class="classifier">np.ndarray or None</span></dt><dd><p>Boolean array indicating which points were kept (if return_inliers=True).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>slope</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.get_noisy_derivatives">
+<span class="sig-name descname"><span class="pre">get_noisy_derivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.get_noisy_derivatives" title="Link to this definition">¶</a></dt>
+<dd><p>Compute derivative estimates across multiple noisy trials using finite, adaptive, and Numdifftools methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> – int
+The order of the derivative to compute.</p></li>
+<li><p><strong>noise_std</strong> – float
+Standard deviation of the noise to add to the function.</p></li>
+<li><p><strong>trials</strong> – int
+Number of noisy trials to run.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>tuple of lists</dt><dd><p>(finite_differences, adaptive_fits, numdifftools_estimates)</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.make_additive_noise_function">
+<span class="sig-name descname"><span class="pre">make_additive_noise_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.make_additive_noise_function" title="Link to this definition">¶</a></dt>
+<dd><p>Add Gaussian noise to the function directly, no interpolation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noise_std</strong> – float
+Standard deviation of added noise.</p></li>
+<li><p><strong>seed</strong> – int, optional
+Random seed for reproducibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>callable</dt><dd><p>Noisy function.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.make_less_noisy">
+<span class="sig-name descname"><span class="pre">make_less_noisy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.make_less_noisy" title="Link to this definition">¶</a></dt>
+<dd><p>Add signal-scaled noise to a function.</p>
+<p>The noise is propportional to the absolute value of the function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> – callable
+Base function.</p></li>
+<li><p><strong>sigma</strong> – float
+Noise scaling factor. Default is 0.01.</p></li>
+<li><p><strong>seed</strong> – int
+Seed for the noise RNG. Default is 42.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>callable</dt><dd><p>Noisy version of the input function.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.make_noisy_interpolated_function">
+<span class="sig-name descname"><span class="pre">make_noisy_interpolated_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.make_noisy_interpolated_function" title="Link to this definition">¶</a></dt>
+<dd><p>Create a noisy interpolated version of a function on a local interval around central_value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> – callable
+Function to be sampled.</p></li>
+<li><p><strong>central_value</strong> – float
+Central point of the interval.</p></li>
+<li><p><strong>width</strong> – float
+Half-width of the interval.</p></li>
+<li><p><strong>resolution</strong> – int
+Number of sample points.</p></li>
+<li><p><strong>noise_std</strong> – float
+Standard deviation of added Gaussian noise.</p></li>
+<li><p><strong>seed</strong> – int, optional
+Random seed for reproducibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>callable</dt><dd><p>Interpolated noisy function.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.make_shared_noisy_func">
+<span class="sig-name descname"><span class="pre">make_shared_noisy_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cover_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">401</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.make_shared_noisy_func" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a shared noisy interpolated function with reproducible randomness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sigma</strong> – float
+Standard deviation of the added noise.</p></li>
+<li><p><strong>cover_width</strong> – float, optional
+Width of the interpolation domain.</p></li>
+<li><p><strong>resolution</strong> – int, optional
+Number of points in interpolation grid.</p></li>
+<li><p><strong>seed</strong> – int, optional
+Random seed to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>callable</dt><dd><p>Noisy interpolated function.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.nd_derivative">
+<span class="sig-name descname"><span class="pre">nd_derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.nd_derivative" title="Link to this definition">¶</a></dt>
+<dd><p>Compute derivative using numdifftools.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> – int
+Order of the derivative to compute.</p></li>
+<li><p><strong>x</strong> – float
+Point at which to evaluate the derivative.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>float</dt><dd><p>Derivative estimate from numdifftools.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.reference_derivative">
+<span class="sig-name descname"><span class="pre">reference_derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">21</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.reference_derivative" title="Link to this definition">¶</a></dt>
+<dd><p>Estimate the true derivative via polynomial fitting if no analytical derivative is given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – float, optional
+Point at which to evaluate (defaults to central_value).</p></li>
+<li><p><strong>degree</strong> – int, optional
+Degree of the fitting polynomial.</p></li>
+<li><p><strong>derivative_order</strong> – int, optional
+Order of the derivative to compute (default is 1).</p></li>
+<li><p><strong>half_width</strong> – float, optional
+Half-width of the fitting interval.</p></li>
+<li><p><strong>num</strong> – int, optional
+Number of points to use in the fit.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>float</dt><dd><p>Estimated reference derivative.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.run_derivative_trials_with_noise">
+<span class="sig-name descname"><span class="pre">run_derivative_trials_with_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'finite'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.run_derivative_trials_with_noise" title="Link to this definition">¶</a></dt>
+<dd><p>Run repeated derivative estimation trials with a specified method and added noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – str
+One of {“finite”, “adaptive”, “numdifftools”}.</p></li>
+<li><p><strong>order</strong> – int
+Derivative order to compute.</p></li>
+<li><p><strong>noise_std</strong> – float
+Standard deviation of the noise.</p></li>
+<li><p><strong>trials</strong> – int
+Number of trials to run.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>list</dt><dd><p>Derivative estimates for each trial.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotHelpers.save_fig">
+<span class="sig-name descname"><span class="pre">save_fig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotHelpers.save_fig" title="Link to this definition">¶</a></dt>
+<dd><p>Save the current matplotlib figure to the configured directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> – str
+File name (with extension) for saving the figure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="derivkit.PlotKit">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">PlotKit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'plots'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linewidth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_derivative_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotKit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A high-level plotting utility for evaluating and comparing numerical derivative methods.</p>
+<p>This class provides multiple plotting routines to assess the accuracy and behavior of
+finite difference and adaptive polynomial fit derivative estimates under noisy conditions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.PlotKit.derivs">
+<span class="sig-name descname"><span class="pre">derivs</span></span><a class="headerlink" href="#derivkit.PlotKit.derivs" title="Link to this definition">¶</a></dt>
+<dd><p>DerivativeKit
+Internal instance used to compute derivatives using both finite and adaptive methods.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.PlotKit.h">
+<span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#derivkit.PlotKit.h" title="Link to this definition">¶</a></dt>
+<dd><p>PlotHelpers
+Helper instance used for diagnostics, noise injection, and figure saving.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="derivkit.PlotKit.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><a class="headerlink" href="#derivkit.PlotKit.seed" title="Link to this definition">¶</a></dt>
+<dd><p>int
+Random seed for reproducibility in plots involving noise.</p>
+</dd></dl>
+
+<p>Initialises the class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> – callable
+The target function for which derivatives will be evaluated.</p></li>
+<li><p><strong>central_value</strong> – float
+The point at which the derivative is computed.</p></li>
+<li><p><strong>derivative_order</strong> – int, optional
+The order of the derivative to compute (default is 1).</p></li>
+<li><p><strong>fit_tolerance</strong> – float, optional
+Residual tolerance used in adaptive fitting (default is 0.05).</p></li>
+<li><p><strong>plot_dir</strong> – str, optional
+Directory in which to save generated plots (default is “plots”).</p></li>
+<li><p><strong>linewidth</strong> – float, optional
+Line width to use for plots. Uses default style if not specified.</p></li>
+<li><p><strong>colors</strong> – dict, optional
+A dictionary of color overrides keyed by method name (e.g., ‘finite’, ‘adaptive’).</p></li>
+<li><p><strong>gradient_colors</strong> – dict, optional
+Optional color map or overrides for gradients or tolerance bands.</p></li>
+<li><p><strong>true_derivative_fn</strong> – callable, optional
+Optional function to compute the true derivative for reference.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotKit.adaptive_fit_demo">
+<span class="sig-name descname"><span class="pre">adaptive_fit_demo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotKit.adaptive_fit_demo" title="Link to this definition">¶</a></dt>
+<dd><p>Visualize the adaptive polynomial fit on a noisy function segment.</p>
+<p>This method creates a reproducible noisy realization of the input function
+over a local region around <cite>central_value</cite> and shows which points are used or excluded
+by the adaptive fitting method. It also overlays the fitted polynomial and its
+tolerance band.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> – int
+The order of the derivative to compute (e.g., 1 for first derivative).
+Defaults to 1.</p></li>
+<li><p><strong>noise_std</strong> – float, optional
+Standard deviation of the Gaussian noise added to the function (default is 0.01).</p></li>
+<li><p><strong>width</strong> – float, optional
+Width of the interval around <cite>central_value</cite> for generating the noisy segment (default is 0.2).</p></li>
+<li><p><strong>title</strong> – str, optional
+Optional title for the plot.</p></li>
+<li><p><strong>extra_info</strong> – str, optional
+Additional string to append to the saved filename.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="notes">
+<h3>Notes:<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Uses a fixed random seed for reproducibility.</p></li>
+<li><p>Highlights the internal logic of the adaptive derivative fitting mechanism visually.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotKit.color">
+<span class="sig-name descname"><span class="pre">color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#derivkit.PlotKit.color" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve the color assigned to a specific plot element key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> – str
+Identifier for the color key (e.g., ‘finite’, ‘adaptive’, ‘central’, etc.).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>str</dt><dd><p>The hex code or named color string associated with the key.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+<section id="id1">
+<h3>Notes:<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Falls back to the default color mapping if the key was not explicitly overridden.</p></li>
+<li><p>Used internally for consistent styling across plots.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotKit.plot_ecdf_errors">
+<span class="sig-name descname"><span class="pre">plot_ecdf_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotKit.plot_ecdf_errors" title="Link to this definition">¶</a></dt>
+<dd><p>Plot empirical cumulative distribution functions (ECDFs) of squared errors.</p>
+<p>This method compares the distribution of squared errors from finite difference and
+adaptive derivative estimators by plotting their ECDFs under repeated noisy evaluations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noise_std</strong> – float, optional
+Standard deviation of the Gaussian noise added to the function (default is 0.01).</p></li>
+<li><p><strong>trials</strong> – int, optional
+Number of Monte Carlo trials to generate error samples (default is 200).</p></li>
+<li><p><strong>title</strong> – str, optional
+Optional title for the plot.</p></li>
+<li><p><strong>extra_info</strong> – str, optional
+Additional string to append to the saved filename.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="id2">
+<h3>Notes:<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>ECDF provides a full view of the error distribution, not just summary statistics.</p></li>
+<li><p>The reference derivative value is used to compute true squared error per trial.</p></li>
+<li><p>Useful for visualizing which method tends to produce smaller errors more often.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotKit.plot_error_vs_noise">
+<span class="sig-name descname"><span class="pre">plot_error_vs_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_levels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotKit.plot_error_vs_noise" title="Link to this definition">¶</a></dt>
+<dd><p>Plot mean squared error (MSE) of derivative estimates vs. noise level.</p>
+<p>This method evaluates both finite difference and adaptive derivative estimators
+across a range of Gaussian noise standard deviations. It plots:
+- MSE vs. noise level (log scale)
+- Relative difference between adaptive and finite MSEs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> – int
+The order of the derivative to compute (e.g., 1 for first derivative).</p></li>
+<li><p><strong>noise_levels</strong> – array-like
+List or array of noise standard deviation values to test.</p></li>
+<li><p><strong>trials</strong> – int, optional
+Number of Monte Carlo trials per noise level (default is 50).</p></li>
+<li><p><strong>title</strong> – str, optional
+Optional title for the plot.</p></li>
+<li><p><strong>extra_info</strong> – str, optional
+Additional string to append to the saved filename.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="id3">
+<h3>Notes:<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Finite difference uses a fixed step size relative to <cite>central_value</cite>.</p></li>
+<li><p>Adaptive fit uses polynomial regression with tolerance-controlled filtering.</p></li>
+<li><p>Useful for comparing robustness of methods under varying noise.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotKit.plot_overlaid_histograms">
+<span class="sig-name descname"><span class="pre">plot_overlaid_histograms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotKit.plot_overlaid_histograms" title="Link to this definition">¶</a></dt>
+<dd><p>Plot overlaid histograms of derivative estimates.</p>
+<p>The estimates are determined from stencil and adaptive method under
+repeated noisy evaluations.</p>
+<p>This method runs multiple trials of noisy function evaluations,
+computes the derivative using both the finite difference and
+adaptive fitting methods, and plots their empiricala distributions
+overlaid as histograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative_order</strong> – int
+Order of the derivative to compute (e.g., 1 for first derivative).</p></li>
+<li><p><strong>noise_std</strong> – float, optional
+Standard deviation of the Gaussian noise added to the function (default is 0.01).</p></li>
+<li><p><strong>trials</strong> – int, optional
+Number of repeated noisy evaluations to perform (default is 100).</p></li>
+<li><p><strong>bins</strong> – int, optional
+Number of bins to use in the histogram (default is 20).</p></li>
+<li><p><strong>title</strong> – str, optional
+Optional title for the plot.</p></li>
+<li><p><strong>extra_info</strong> – str, optional
+Additional string to append to the saved filename.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="id4">
+<h3>Notes:<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Excludes outliers based on 1st and 99th percentiles to improve plot readability.</p></li>
+<li><p>Displays method-specific variance in the legend for comparison.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="derivkit.PlotKit.plot_paired_error_differences">
+<span class="sig-name descname"><span class="pre">plot_paired_error_differences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.PlotKit.plot_paired_error_differences" title="Link to this definition">¶</a></dt>
+<dd><p>Plot paired squared error differences between adaptive and finite methods.</p>
+<p>This method runs repeated noisy derivative trials and computes the squared error
+for both adaptive and finite difference methods. It then plots the pairwise
+differences: Δ = error²_adaptive − error²_finite.</p>
+<p>Points are jittered horizontally to show density and grouped into:
+- Adaptive better (Δ &lt; 0)
+- Finite better (Δ &gt; 0)
+- Tie (Δ = 0)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noise_std</strong> – float, optional
+Standard deviation of the Gaussian noise added to the function (default is 0.01).</p></li>
+<li><p><strong>trials</strong> – int, optional
+Number of paired Monte Carlo trials to run (default is 200).</p></li>
+<li><p><strong>title</strong> – str, optional
+Optional title for the plot.</p></li>
+<li><p><strong>extra_info</strong> – str, optional
+Additional string to append to the saved filename.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="id5">
+<h3>Notes:<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>A horizontal line at Δ = 0 indicates equal performance.</p></li>
+<li><p>The estimated win rate (P(Δ &lt; 0)) is shown in the legend.</p></li>
+<li><p>This visualization provides intuitive insight into method-wise reliability.</p></li>
+</ul>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="derivkit.central_difference_error_estimate">
+<span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">central_difference_error_estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.central_difference_error_estimate" title="Link to this definition">¶</a></dt>
+<dd><p>Provides a rough truncation error estimate for central differences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step_size</strong> (<em>float</em>) – Finite difference step size.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – Order of the derivative (1 to 4).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Estimated error magnitude.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="derivkit.generate_test_function">
+<span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">generate_test_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sin'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.generate_test_function" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a known test function and its first/second derivatives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – One of ‘sin’, ‘exp’, ‘polynomial’, ‘gaussian’.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(f(x), df/dx, d2f/dx2)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="derivkit.is_finite_and_differentiable">
+<span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">is_finite_and_differentiable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.is_finite_and_differentiable" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if a function is finite and numerically differentiable at a point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>callable</em>) – The function to test.</p></li>
+<li><p><strong>x</strong> (<em>float</em><em> or </em><em>np.ndarray</em>) – The input value(s).</p></li>
+<li><p><strong>delta</strong> (<em>float</em>) – Step size for finite difference.</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – Tolerance for differentiability check.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>True if function is finite and differentiable at x, False</dt><dd><p>otherwise.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="derivkit.is_symmetric_grid">
+<span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">is_symmetric_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.is_symmetric_grid" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if evaluation grid is symmetric around 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x_vals</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code>) – Evaluation points (1D).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if grid is symmetric, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="derivkit.log_debug_message">
+<span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">log_debug_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.log_debug_message" title="Link to this definition">¶</a></dt>
+<dd><p>Logs a debug message to stdout and optionally to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>str</em>) – The debug message to print/log.</p></li>
+<li><p><strong>debug</strong> (<em>bool</em>) – Whether to print the message.</p></li>
+<li><p><strong>log_file</strong> (<em>str</em><em> or </em><em>None</em>) – Path to the log file.</p></li>
+<li><p><strong>log_to_file</strong> (<em>bool</em><em> or </em><em>None</em>) – Whether to write the message to the file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="derivkit.normalize_derivative">
+<span class="sig-prename descclassname"><span class="pre">derivkit.</span></span><span class="sig-name descname"><span class="pre">normalize_derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivative</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#derivkit.normalize_derivative" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the relative error between estimated and reference derivative.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivative</strong> (<em>float</em><em> or </em><em>np.ndarray</em>) – Estimated derivative.</p></li>
+<li><p><strong>reference</strong> (<em>float</em><em> or </em><em>np.ndarray</em>) – True/reference derivative.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized relative error.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="derivkit.adaptive_fit.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">derivkit.adaptive_fit module</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="modules.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">derivkit</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Nikolina Šarčević
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">derivkit package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-derivkit">Module contents</a><ul>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative</span></code></a><ul>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative.function"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.function</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative.central_value"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.central_value</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative.diagnostics_data"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.diagnostics_data</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative.min_used_points"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.min_used_points</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative.compute"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.compute()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative.get_adaptive_offsets"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.get_adaptive_offsets()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.AdaptiveFitDerivative.recommend_fit_tolerance"><code class="docutils literal notranslate"><span class="pre">AdaptiveFitDerivative.recommend_fit_tolerance()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#derivkit.DerivativeKit"><code class="docutils literal notranslate"><span class="pre">DerivativeKit</span></code></a><ul>
+<li><a class="reference internal" href="#derivkit.DerivativeKit.adaptive"><code class="docutils literal notranslate"><span class="pre">DerivativeKit.adaptive</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.DerivativeKit.finite"><code class="docutils literal notranslate"><span class="pre">DerivativeKit.finite</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.DerivativeKit.get_used_points"><code class="docutils literal notranslate"><span class="pre">DerivativeKit.get_used_points()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#derivkit.FiniteDifferenceDerivative"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative</span></code></a><ul>
+<li><a class="reference internal" href="#derivkit.FiniteDifferenceDerivative.function"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.function</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.FiniteDifferenceDerivative.central_value"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.central_value</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.FiniteDifferenceDerivative.log_file"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.log_file</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.FiniteDifferenceDerivative.debug"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.debug</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.FiniteDifferenceDerivative.compute"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.compute()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.FiniteDifferenceDerivative.get_finite_difference_tables"><code class="docutils literal notranslate"><span class="pre">FiniteDifferenceDerivative.get_finite_difference_tables()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#derivkit.ForecastKit"><code class="docutils literal notranslate"><span class="pre">ForecastKit</span></code></a><ul>
+<li><a class="reference internal" href="#derivkit.ForecastKit.function"><code class="docutils literal notranslate"><span class="pre">ForecastKit.function</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.ForecastKit.n_parameters"><code class="docutils literal notranslate"><span class="pre">ForecastKit.n_parameters</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.ForecastKit.n_observables"><code class="docutils literal notranslate"><span class="pre">ForecastKit.n_observables</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.ForecastKit.get_derivatives"><code class="docutils literal notranslate"><span class="pre">ForecastKit.get_derivatives()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.ForecastKit.get_forecast_tensors"><code class="docutils literal notranslate"><span class="pre">ForecastKit.get_forecast_tensors()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers"><code class="docutils literal notranslate"><span class="pre">PlotHelpers</span></code></a><ul>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.adaptive_fit_with_outlier_removal"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.adaptive_fit_with_outlier_removal()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.get_noisy_derivatives"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.get_noisy_derivatives()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.make_additive_noise_function"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.make_additive_noise_function()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.make_less_noisy"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.make_less_noisy()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.make_noisy_interpolated_function"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.make_noisy_interpolated_function()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.make_shared_noisy_func"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.make_shared_noisy_func()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.nd_derivative"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.nd_derivative()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.reference_derivative"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.reference_derivative()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.run_derivative_trials_with_noise"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.run_derivative_trials_with_noise()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotHelpers.save_fig"><code class="docutils literal notranslate"><span class="pre">PlotHelpers.save_fig()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#derivkit.PlotKit"><code class="docutils literal notranslate"><span class="pre">PlotKit</span></code></a><ul>
+<li><a class="reference internal" href="#derivkit.PlotKit.derivs"><code class="docutils literal notranslate"><span class="pre">PlotKit.derivs</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.h"><code class="docutils literal notranslate"><span class="pre">PlotKit.h</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.seed"><code class="docutils literal notranslate"><span class="pre">PlotKit.seed</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.adaptive_fit_demo"><code class="docutils literal notranslate"><span class="pre">PlotKit.adaptive_fit_demo()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.color"><code class="docutils literal notranslate"><span class="pre">PlotKit.color()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.plot_ecdf_errors"><code class="docutils literal notranslate"><span class="pre">PlotKit.plot_ecdf_errors()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.plot_error_vs_noise"><code class="docutils literal notranslate"><span class="pre">PlotKit.plot_error_vs_noise()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.plot_overlaid_histograms"><code class="docutils literal notranslate"><span class="pre">PlotKit.plot_overlaid_histograms()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.PlotKit.plot_paired_error_differences"><code class="docutils literal notranslate"><span class="pre">PlotKit.plot_paired_error_differences()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#derivkit.central_difference_error_estimate"><code class="docutils literal notranslate"><span class="pre">central_difference_error_estimate()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.generate_test_function"><code class="docutils literal notranslate"><span class="pre">generate_test_function()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.is_finite_and_differentiable"><code class="docutils literal notranslate"><span class="pre">is_finite_and_differentiable()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.is_symmetric_grid"><code class="docutils literal notranslate"><span class="pre">is_symmetric_grid()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.log_debug_message"><code class="docutils literal notranslate"><span class="pre">log_debug_message()</span></code></a></li>
+<li><a class="reference internal" href="#derivkit.normalize_derivative"><code class="docutils literal notranslate"><span class="pre">normalize_derivative()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
