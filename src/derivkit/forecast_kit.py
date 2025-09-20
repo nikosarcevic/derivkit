@@ -11,9 +11,9 @@ the methods.
 
 Typical usage example:
 
->>>    forecaster = ForecastKit(observables, fiducial_values, covariance_matrix)
->>>    fisher = forecaster.get_derivatives(derivative_order = 1)
->>>    dali = forecaster.get_derivatives(derivative_order = 2)
+>>>    forecaster = ForecastKit(function=model, theta0=theta0, cov=cov)
+>>>    fisher = forecaster.fisher()
+>>>   g_tensor, h_tensor = forecaster.dali()
 """
 
 from copy import deepcopy
@@ -34,16 +34,16 @@ class ForecastKit:
          theta0 (class:`np.ndarray`): The point(s) at which the
              derivative is evaluated. A 1D array or list of parameter values
              matching the expected input of the function.
-         covariance_matrix (class:`np.ndarray`): The covariance matrix of
+         cov (class:`np.ndarray`): The covariance matrix of
              the observables. Should be a square matrix with shape
              (n_observables, n_observables), where n_observables is the
              number of observables returned by the function.
          n_parameters (int): The number of elements of `theta0`.
          n_observables (int): The number of cosmic observables. Determined
-             from the dimension of `covariance_matrix`.
+             from the dimension of `cov`.
     """
 
-    def __init__(self, function, theta0, covariance_matrix):
+    def __init__(self, function, theta0, cov):
         """Initialises the class.
 
         Args:
@@ -54,28 +54,122 @@ class ForecastKit:
             theta0 (class:`np.ndarray`): The points at which the
                 derivative is evaluated. A 1D array or list of parameter values
                 matching the expected input of the function.
-            covariance_matrix (class:`np.ndarray`): The covariance matrix of
+            cov (class:`np.ndarray`): The covariance matrix of
                 the observables. Should be a square matrix with shape
                 (n_observables, n_observables), where n_observables is the
                 number of observables returned by the function.
 
         Raises:
-            ValueError: raised if covariance_matrix is not a square numpy array.
+            ValueError: raised if cov is not a square numpy array.
         """
         self.function = function
         self.theta0 = np.atleast_1d(theta0)
-        if not covariance_matrix.ndim < 3:
+        if not cov.ndim < 3:
             raise ValueError(
-                        "covariance_matrix must be at most two-dimensional but "
-                        f"dimensions is {covariance_matrix.ndim}."
+                        "cov must be at most two-dimensional but "
+                        f"dimensions is {cov.ndim}."
             )
-        if covariance_matrix.ndim == 2 and not covariance_matrix.shape[0] == covariance_matrix.shape[1]:
-            raise ValueError("covariance_matrix must be a square numpy array.")
-        self.covariance_matrix = covariance_matrix
+        if cov.ndim == 2 and not cov.shape[0] == cov.shape[1]:
+            raise ValueError("cov must be a square numpy array.")
+        self.cov = cov
         self.n_parameters = len(self.theta0)
-        self.n_observables = len(covariance_matrix)
+        self.n_observables = len(cov)
 
-    def get_derivatives(self, derivative_order, n_workers=1):
+    def fisher(self, *, n_workers: int = 1):
+        """Return the Fisher information matrix (P,P)."""
+        return self.get_forecast_tensors(forecast_order=1, n_workers=n_workers)
+
+    def dali(self, *, n_workers: int = 1):
+        """Return the doublet-DALI tensors (G,H) with shapes (P,P,P) and (P,P,P,P)."""
+        return self.get_forecast_tensors(forecast_order=2, n_workers=n_workers)
+
+    def get_forecast_tensors(self, forecast_order=1, n_workers=1):
+        """Returns a set of tensors according to the requested order of the forecast.
+
+        Args:
+            forecast_order (int): The requested order D of the forecast:
+
+                    - D = 1 returns a Fisher matrix.
+                    - D = 2 returns the 3-d and 4-d tensors required for the
+                      doublet-DALI approximation.
+                    - D = 3 would be the triplet-DALI approximation.
+
+                Currently only D = 1, 2 are supported.
+            n_workers (int, optional): Number of worker to use in multiprocessing.
+                Default is 1 (no multiprocessing).
+
+        Returns:
+            :class:`np.ndarray`: A list of numpy arrays:
+
+                    - D = 1 returns a square matrix of size n_parameters, where
+                      n_parameters is the number of parameters included in the
+                      forecast.
+                    - D = 2 returns one array of shapes
+                      (n_parameters, n_parameters, n_parameters) and one array
+                      of shape (n_parameters, n_parameters, n_parameters, n_parameters),
+                      where n_parameters is the number of parameters included
+                      in the forecast.
+
+        Raises:
+            ValueError: A ValueError occurs when a forecase order greater than
+                2 is requested.
+            Exception: An exception occurs if the covariance matrix cannot
+                be inverted.
+            RunTimeError: A RunTimeError occurs if the ValueError was not
+                raised when calling this function.
+        """
+        if forecast_order not in [1, 2]:
+            raise ValueError(
+                "Only Fisher (order 1) and doublet-DALI (order 2) forecasts are currently supported."
+            )
+
+        # Invert the covariance matrix
+        try:
+            invcov = np.linalg.inv(self.cov)
+        except np.linalg.LinAlgError:
+            print("Standard inversion failed. Trying pseudoinverse.")
+            try:
+                invcov = np.linalg.pinv(
+                    self.cov
+                )
+            except Exception as e:
+                print(f"Pseudoinverse also failed: {e}")
+                invcov = np.full(
+                    (self.n_observables, self.n_observables), np.nan
+                )
+
+        if forecast_order == 1:
+            # Compute Fisher matrix
+            dfp1 = self._get_derivatives(
+                derivative_order=1, n_workers=n_workers
+            )
+            # F_ab = sum(i,j) df_i/dp_a * InvCov_ij * df_j/dp_b
+            fisher_ab = np.einsum(
+                "ai,ij,bj->ab", dfp1, invcov, dfp1
+            )
+            return fisher_ab
+
+        elif forecast_order == 2:
+            # Compute doublet-DALI tensors
+            dfp1 = self._get_derivatives(
+                derivative_order=1, n_workers=n_workers
+            )
+            dfp2 = self._get_derivatives(
+                derivative_order=2, n_workers=n_workers
+            )
+            # G_abc = sum(i,j) df_i/(dp_a dp_b )* InvCov_ij * df_j/dp_c
+            g_abc = np.einsum(
+                "abi,ij,cj->abc", dfp2, invcov, dfp1
+            )
+            # H_abcd = sum(i,j) df_i/(dp_a dp_b) * InvCov_ij * df_j/(dp_c dp_d)
+            h_abcd = np.einsum(
+                "abi,ij,cdj->abcd", dfp2, invcov, dfp2
+            )
+            return g_abc, h_abcd
+
+        raise RuntimeError("Unreachable code reached in get_forecast_tensors.")
+
+    def _get_derivatives(self, derivative_order, n_workers=1):
         """Returns derivatives of the observables of the requested order.
 
         Args:
@@ -172,92 +266,6 @@ class ForecastKit:
                         )
 
             return second_order_derivatives
-
-        raise RuntimeError("Unreachable code reached in get_forecast_tensors.")
-
-    def get_forecast_tensors(self, forecast_order=1, n_workers=1):
-        """Returns a set of tensors according to the requested order of the forecast.
-
-        Args:
-            forecast_order (int): The requested order D of the forecast:
-
-                    - D = 1 returns a Fisher matrix.
-                    - D = 2 returns the 3-d and 4-d tensors required for the
-                      doublet-DALI approximation.
-                    - D = 3 would be the triplet-DALI approximation.
-
-                Currently only D = 1, 2 are supported.
-            n_workers (int, optional): Number of worker to use in multiprocessing.
-                Default is 1 (no multiprocessing).
-
-        Returns:
-            :class:`np.ndarray`: A list of numpy arrays:
-
-                    - D = 1 returns a square matrix of size n_parameters, where
-                      n_parameters is the number of parameters included in the
-                      forecast.
-                    - D = 2 returns one array of shapes
-                      (n_parameters, n_parameters, n_parameters) and one array
-                      of shape (n_parameters, n_parameters, n_parameters, n_parameters),
-                      where n_parameters is the number of parameters included
-                      in the forecast.
-
-        Raises:
-            ValueError: A ValueError occurs when a forecase order greater than
-                2 is requested.
-            Exception: An exception occurs if the covariance matrix cannot
-                be inverted.
-            RunTimeError: A RunTimeError occurs if the ValueError was not
-                raised when calling this function.
-        """
-        if forecast_order not in [1, 2]:
-            raise ValueError(
-                "Only Fisher (order 1) and doublet-DALI (order 2) forecasts are currently supported."
-            )
-
-        # Invert the covariance matrix
-        try:
-            inverse_covariance_matrix = np.linalg.inv(self.covariance_matrix)
-        except np.linalg.LinAlgError:
-            print("Standard inversion failed. Trying pseudoinverse.")
-            try:
-                inverse_covariance_matrix = np.linalg.pinv(
-                    self.covariance_matrix
-                )
-            except Exception as e:
-                print(f"Pseudoinverse also failed: {e}")
-                inverse_covariance_matrix = np.full(
-                    (self.n_observables, self.n_observables), np.nan
-                )
-
-        if forecast_order == 1:
-            # Compute Fisher matrix
-            dfp1 = self.get_derivatives(
-                derivative_order=1, n_workers=n_workers
-            )
-            # F_ab = sum(i,j) df_i/dp_a * InvCov_ij * df_j/dp_b
-            fisher_ab = np.einsum(
-                "ai,ij,bj->ab", dfp1, inverse_covariance_matrix, dfp1
-            )
-            return fisher_ab
-
-        elif forecast_order == 2:
-            # Compute doublet-DALI tensors
-            dfp1 = self.get_derivatives(
-                derivative_order=1, n_workers=n_workers
-            )
-            dfp2 = self.get_derivatives(
-                derivative_order=2, n_workers=n_workers
-            )
-            # G_abc = sum(i,j) df_i/(dp_a dp_b )* InvCov_ij * df_j/dp_c
-            g_abc = np.einsum(
-                "abi,ij,cj->abc", dfp2, inverse_covariance_matrix, dfp1
-            )
-            # H_abcd = sum(i,j) df_i/(dp_a dp_b) * InvCov_ij * df_j/(dp_c dp_d)
-            h_abcd = np.einsum(
-                "abi,ij,cdj->abcd", dfp2, inverse_covariance_matrix, dfp2
-            )
-            return g_abc, h_abcd
 
         raise RuntimeError("Unreachable code reached in get_forecast_tensors.")
 
