@@ -1,4 +1,3 @@
-# src/derivkit/forecast_kit.py
 """Provides the ForecastKit class.
 
 A light wrapper around :class:`LikelihoodExpansion` that exposes a simple
