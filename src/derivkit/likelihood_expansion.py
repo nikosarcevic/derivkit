@@ -296,42 +296,36 @@ class LikelihoodExpansion:
     def _build_fisher(self, d1, invcov):
         """Assemble the Fisher information matrix F from first derivatives.
 
-            Args:
-                d1 (np.ndarray): First-order derivatives of observables w.r.t. parameters,
-                    shape (n_parameters, n_observables).
-                invcov (np.ndarray): Inverse covariance of observables,
-                    shape (n_observables, n_observables).
+        Args:
+            d1 (np.ndarray): First-order derivatives of observables w.r.t. parameters,
+                shape (n_parameters, n_observables).
+            invcov (np.ndarray): Inverse covariance of observables,
+                shape (n_observables, n_observables).
 
-            Returns:
-                np.ndarray: Fisher matrix, shape (n_parameters, n_parameters).
+        Returns:
+            np.ndarray: Fisher matrix, shape (n_parameters, n_parameters).
 
-            Notes:
-                Uses `np.einsum("ai,ij,bj->ab", d1, invcov, d1)`.
-            """
+        Notes:
+            Uses `np.einsum("ai,ij,bj->ab", d1, invcov, d1)`.
+        """
         # F_ab = Σ_ij d1[a,i] invcov[i,j] d1[b,j]
         return np.einsum("ai,ij,bj->ab", d1, invcov, d1)
 
     def _build_dali(self, d1, d2, invcov):
         """Assemble the doublet-DALI tensors (G, H) from first/second derivatives.
 
-            Args:
+        Computes:
+            G_abc = Σ_{i,j} d2[a,b,i] · invcov[i,j] · d1[c,j]
+            H_abcd = Σ_{i,j} d2[a,b,i] · invcov[i,j] · d2[c,d,j]
 
-                d1 (np.ndarray): First-order derivatives of observables w.r.t. parameters,
-                    shape (n_parameters, n_observables).
-                d2 (np.ndarray): Second-order derivatives of observables w.r.t. parameters,
-                    shape (n_parameters, n_parameters, n_observables).
-                invcov (np.ndarray): Inverse covariance of observables,
-                    shape (n_observables, n_observables).
+        Args:
+            d1 (np.ndarray): First-order derivatives d(obs)/dθ, shape (P, N).
+            d2 (np.ndarray): Second-order derivatives d²(obs)/dθ², shape (P, P, N).
+            invcov (np.ndarray): Inverse covariance of observables, shape (N, N).
 
-            Returns:
-                Tuple[np.ndarray, np.ndarray]:
-                    - G tensor with shape (n_parameters, n_parameters, n_parameters).
-                    - H tensor with shape (n_parameters, n_parameters, n_parameters, n_parameters).
-
-            Notes:
-                Uses `np.einsum("abi,ij,cj->abc", d2, invcov, d1)` and
-                `np.einsum("abi,ij,cdj->abcd", d2, invcov, d2)`.
-            """
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: G with shape (P, P, P) and H with shape (P, P, P, P).
+        """
         # G_abc = Σ_ij d2[a,b,i] invcov[i,j] d1[c,j]
         g_tensor = np.einsum("abi,ij,cj->abc", d2, invcov, d1)
         # H_abcd = Σ_ij d2[a,b,i] invcov[i,j] d2[c,d,j]
