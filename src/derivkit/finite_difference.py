@@ -134,8 +134,8 @@ class FiniteDifferenceDerivative:
             values = values.reshape(-1, 1)
 
         derivs = np.dot(values.T, coeffs_table[key])
-        # return derivs if derivs.size > 1 else float(derivs.item())
-        return derivs.ravel() if derivs.size > 1 else float(derivs)
+        # return 1D array for multi-output, Python scalar for single-output
+        return derivs.ravel() if derivs.size > 1 else derivs.item()
 
     def get_finite_difference_tables(self, stepsize):
         """Returns offset patterns and coefficient tables.
