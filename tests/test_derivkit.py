@@ -37,28 +37,28 @@ def vector_func():
 
 def test_linear_first_derivative(linear_func):
     """Test that the first derivative of a linear function returns the correct slope."""
-    calc = DerivativeKit(linear_func, central_value=0.0).adaptive
+    calc = DerivativeKit(linear_func, x0=0.0).adaptive
     result = calc.compute(derivative_order=1)
     assert np.isclose(result, 2.0, atol=1e-8)
 
 
 def test_quadratic_second_derivative(quadratic_func):
     """Test that the second derivative of a quadratic function returns the expected constant."""
-    calc = DerivativeKit(quadratic_func, central_value=1.0).adaptive
+    calc = DerivativeKit(quadratic_func, x0=1.0).adaptive
     result = calc.compute(derivative_order=2)
     assert np.isclose(result, 6.0, atol=1e-6)
 
 
 def test_cubic_third_derivative(cubic_func):
     """Test that the third derivative of a cubic function returns the expected constant."""
-    calc = DerivativeKit(cubic_func, central_value=1.0).adaptive
+    calc = DerivativeKit(cubic_func, x0=1.0).adaptive
     result = calc.compute(derivative_order=3)
     assert np.isclose(result, 24.0, rtol=1e-2)
 
 
 def test_quartic_fourth_derivative(quartic_func):
     """Test that the fourth derivative of a quartic function returns the expected constant."""
-    calc = DerivativeKit(quartic_func, central_value=1.0).adaptive
+    calc = DerivativeKit(quartic_func, x0=1.0).adaptive
     result = calc.compute(derivative_order=4)
     assert np.isclose(result, 120.0, rtol=1e-1)
 
@@ -78,14 +78,14 @@ def test_invalid_derivative_order_finite():
 def test_log_derivative_matches_analytic(log_func):
     """Derivative of log at x0 should be 1/x0 without any special flags."""
     x0 = 2.0
-    calc = DerivativeKit(log_func, central_value=x0).adaptive
+    calc = DerivativeKit(log_func, x0=x0).adaptive
     result = calc.compute(derivative_order=1)
     assert np.isclose(result, 1.0 / x0, rtol=1e-3, atol=1e-8)
 
 
 def test_vector_function(vector_func):
     """Test that vector-valued functions return correct shape and values."""
-    calc = DerivativeKit(vector_func, central_value=1.0).adaptive
+    calc = DerivativeKit(vector_func, x0=1.0).adaptive
     result = calc.compute(derivative_order=1)
     assert result.shape == (2,)
     assert np.allclose(result, [1.0, 2.0], rtol=1e-2)
@@ -94,7 +94,7 @@ def test_vector_function(vector_func):
 def test_fallback_used(monkeypatch):
     """Test that fallback to finite differences is used when adaptive fit fails."""
 
-    calc = DerivativeKit(lambda x: np.exp(x), central_value=0.2).adaptive
+    calc = DerivativeKit(lambda x: np.exp(x), x0=0.2).adaptive
 
     def fail_fit(self, x_vals, y_vals, derivative_order):
         return {
@@ -143,10 +143,10 @@ def test_derivative_noise_test_runs():
     assert all(np.isfinite(r) for r in results)
 
 
-def test_zero_central_value():
+def test_zero_x0():
     """Test that derivative at x=0 is computed correctly for a cubic function."""
 
-    result = DerivativeKit(lambda x: x**3, central_value=0.0).adaptive.compute(
+    result = DerivativeKit(lambda x: x**3, x0=0.0).adaptive.compute(
         derivative_order=1
     )
     # Allow tiny numerical residue
@@ -167,7 +167,7 @@ def test_constant_function():
 def test_fallback_triggers_when_fit_unavailable(monkeypatch):
     """If the internal fit cannot be performed, code must fall back to FD (no flags needed)."""
 
-    calc = DerivativeKit(lambda x: np.exp(x), central_value=0.0).adaptive
+    calc = DerivativeKit(lambda x: np.exp(x), x0=0.0).adaptive
 
     def fail_fit(self, x_vals, y_vals, derivative_order):
         return {
@@ -195,7 +195,7 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
 def test_fallback_returns_finite_value_when_fit_fails(monkeypatch):
     """When the fit cannot meet tolerance/structure,
     the implementation should still return a finite FD value."""
-    calc = DerivativeKit(lambda x: 1e-10 * x**3, central_value=1.0).adaptive
+    calc = DerivativeKit(lambda x: 1e-10 * x**3, x0=1.0).adaptive
 
     def fail_fit(self, x_vals, y_vals, derivative_order):
         return {
@@ -222,7 +222,7 @@ def test_fallback_returns_finite_value_when_fit_fails(monkeypatch):
 
 def test_diagnostics_structure_is_present():
     """Diagnostics should return expected keys and aligned shapes."""
-    calc = DerivativeKit(lambda x: np.cos(x), central_value=0.7).adaptive
+    calc = DerivativeKit(lambda x: np.cos(x), x0=0.7).adaptive
     val, diag = calc.compute(derivative_order=2, diagnostics=True)
     assert np.isfinite(val)
     for k in [
@@ -246,7 +246,7 @@ def test_vector_fallback_used():
     """Test fallback on vector-valued function returns valid, finite results."""
 
     calc = DerivativeKit(
-        lambda x: np.array([1e-10 * x**3, 1e-10 * x**2]), central_value=1.0
+        lambda x: np.array([1e-10 * x**3, 1e-10 * x**2]), x0=1.0
     ).adaptive
     result = calc.compute(derivative_order=2, fit_tolerance=1e-5)
     assert result.shape == (2,)
@@ -262,6 +262,6 @@ def test_shape_mismatch_raises():
         )  # triggers mismatch
 
     with pytest.raises(ValueError):
-        DerivativeKit(bad_func, central_value=1.0).adaptive.compute(
+        DerivativeKit(bad_func, x0=1.0).adaptive.compute(
             derivative_order=1
         )
