@@ -21,28 +21,21 @@ from derivkit.finite_difference import FiniteDifferenceDerivative
 
 
 class DerivativeKit:
-    """Provides access to adaptive and finite difference derivative calculators.
-
-    Attributes:
-        adaptive (:class:``AdaptiveFitDerivative``): Adaptive polynomial
-            fit-based derivative method.
-        finite (:class:`` FiniteDifferenceDerivative``): High-order finite
-            difference stencil-based method.
-    """
+    """Provides access to adaptive and finite difference derivative calculators."""
 
     def __init__(
         self,
         function: Callable[[float], float],
-        central_value: float,
+        x0: float,
     ):
         """Initialises the class based on function and central value.
 
         Args:
             function: The scalar or vector-valued function to differentiate.
-            central_value: The point at which the derivative is evaluated.
+            x0: The point at which the derivative is evaluated.
         """
-        self.adaptive = AdaptiveFitDerivative(function, central_value)
-        self.finite = FiniteDifferenceDerivative(function, central_value)
+        self.adaptive = AdaptiveFitDerivative(function, x0)
+        self.finite = FiniteDifferenceDerivative(function, x0)
 
     def get_used_points(self, derivative_order: int = 1, n_workers=1):
         """Returns x and y points used in the adaptive fit (for component 0).

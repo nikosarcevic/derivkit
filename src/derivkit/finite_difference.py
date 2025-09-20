@@ -33,7 +33,7 @@ class FiniteDifferenceDerivative:
         function: callable
             The function to differentiate. Must accept a single float and return either
             a float or a 1D array-like object.
-        central_value : float
+        x0 : float
             The point at which the derivative is evaluated.
         log_file : str, optional
             Path to a file where debug information may be logged.
@@ -50,24 +50,24 @@ class FiniteDifferenceDerivative:
     Examples:
     ---------
     >>> f = lambda x: x**3
-    >>> d = FiniteDifferenceDerivative(function=f, central_value=2.0)
+    >>> d = FiniteDifferenceDerivative(function=f, x0=2.0)
     >>> d.compute(derivative_order=2)
     """
 
-    def __init__(self, function, central_value, log_file=None, debug=False):
+    def __init__(self, function, x0, log_file=None, debug=False):
         """Initialises the class based on function and central value.
 
         Arguments:
             function (callable): The function to differentiate. Must accept a
                 single float and return either a float or a 1D array-like object.
-            central_value (float): The point at which the derivative is evaluated.
+            x0 (float): The point at which the derivative is evaluated.
             log_file (str, optional): Path to a file where debug information may
                 be logged.
             debug (bool, optional): If True, debug information will be printed or
                 logged.
         """
         self.function = function
-        self.central_value = central_value
+        self.x0 = x0
         self.debug = debug
         self.log_file = log_file
 
@@ -121,7 +121,7 @@ class FiniteDifferenceDerivative:
             )
 
         stencil = np.array(
-            [self.central_value + i * stepsize for i in offsets[num_points]]
+            [self.x0 + i * stepsize for i in offsets[num_points]]
         )
 
         if n_workers > 1:
@@ -134,8 +134,8 @@ class FiniteDifferenceDerivative:
             values = values.reshape(-1, 1)
 
         derivs = np.dot(values.T, coeffs_table[key])
-        # return derivs if derivs.size > 1 else float(derivs.item())
-        return derivs.ravel() if derivs.size > 1 else float(derivs)
+        # return 1D array for multi-output, Python scalar for single-output
+        return derivs.ravel() if derivs.size > 1 else derivs.item()
 
     def get_finite_difference_tables(self, stepsize):
         """Returns offset patterns and coefficient tables.

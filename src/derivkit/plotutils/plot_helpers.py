@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numdifftools as nd
 import numpy as np
 
-from derivkit.kit import DerivativeKit
+from derivkit.derivative_kit import DerivativeKit
 
 
 class PlotHelpers:
