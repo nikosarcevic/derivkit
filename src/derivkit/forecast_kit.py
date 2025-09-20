@@ -12,9 +12,11 @@ Typical usage example:
 """
 
 from typing import Callable, Sequence
+
 import numpy as np
 
 from derivkit.likelihood_expansion import LikelihoodExpansion
+
 
 
 class ForecastKit:

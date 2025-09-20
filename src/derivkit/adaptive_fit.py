@@ -6,7 +6,7 @@ options can be found in the documentation of the methods.
 
 Typical usage example:
 
->>> derivative = AdaptiveFitDerivative(function_to_differentiate, 1).compute()
+>>> derivative = AdaptiveFitDerivative(function, 1).compute()
 
 derivative is the derivative of function_to_differerentiate at value 1.
 """
@@ -122,7 +122,7 @@ class AdaptiveFitDerivative:
                 with the derivative array and a dictionary of diagnostic data.
 
         Raises:
-            ValueError: An error occurred attempting to comput derivatives
+            ValueError: An error occurred attempting to compute derivatives
                 of order higher than 4.
         """
         if derivative_order not in [1, 2, 3, 4]:
@@ -195,7 +195,6 @@ class AdaptiveFitDerivative:
                 try:
                     fit = self._fit_once(x_vals, y_vals, derivative_order)
                 except TypeError:
-                    # If monkeypatched as a plain function (no self), call via the class
                     fit = type(self)._fit_once(x_vals, y_vals, derivative_order)
                 last_fit = fit
                 if not fit["ok"]:
@@ -310,13 +309,10 @@ class AdaptiveFitDerivative:
                             "reason": "fit_not_within_tolerance_or_insufficient_points",
                         }
                     )
-                detail = ""
-                if last_resid is not None:
-                    detail = f" (last max residual {np.max(last_resid):.3g} vs tol {fit_tolerance:.3g})"
                 warnings.warn(
-                    f"[AdaptiveFitDerivative] Falling back to finite difference derivative"
-                    f" (polynomial fit did not meet tolerance).",
-                    RuntimeWarning,)
+                    "[AdaptiveFitDerivative] Falling back to finite differences because polynomial fit did not meet tolerance.",
+                    RuntimeWarning,
+                )
 
         if diagnostics:
             self.diagnostics_data["fit_poly"] = (
@@ -471,7 +467,7 @@ class AdaptiveFitDerivative:
 
         Args:
             x_vals: Sample x values used in the fit.
-            y_vals: function values corresponsing to `x_vals`.
+            y_vals: function values corresponding to `x_vals`.
             derivative_order: Order of the derivative to fit.
 
         Returns:
@@ -547,7 +543,7 @@ class AdaptiveFitDerivative:
                 `at_floor` status.
             at_floor: Whether the algorithm has reached the minimum allowed
                 number of sample points.
-            fit_tolerance: The user-specified threshold for acceptablei
+            fit_tolerance: The user-specified threshold for acceptable
                 residuals. Typically a small value like 1e-4.
             fallback_mode: Strategy to follow when the fit fails at the floor.
                 Options include:

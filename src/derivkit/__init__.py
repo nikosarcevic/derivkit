@@ -1,9 +1,10 @@
 """Provides all derivkit methods."""
 
 from .adaptive_fit import AdaptiveFitDerivative
-from .finite_difference import FiniteDifferenceDerivative
-from .forecast_kit import ForecastKit
 from .derivative_kit import DerivativeKit
+from .finite_difference import FiniteDifferenceDerivative
+from .forecast_kit import ForecastKit as ForecastKit
+from .likelihood_expansion import LikelihoodExpansion as LikelihoodExpansion
 from .plotutils.plot_helpers import PlotHelpers
 from .plotutils.plot_kit import PlotKit
 from .utils import (
@@ -27,6 +28,6 @@ __all__ = [
     "central_difference_error_estimate",
     "is_symmetric_grid",
     "generate_test_function",
-    "ForecastKit"
-    "LikelihoodExpansion"
+    "ForecastKit",
+    "LikelihoodExpansion",
 ]

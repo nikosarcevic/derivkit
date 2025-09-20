@@ -16,12 +16,13 @@ Typical usage example:
 >>>    g_tensor, h_tensor = like.dali()
 """
 
-from copy import deepcopy
 import warnings
+from copy import deepcopy
 
 import numpy as np
 
 from derivkit.derivative_kit import DerivativeKit
+
 
 
 class LikelihoodExpansion:
