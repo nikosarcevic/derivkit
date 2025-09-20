@@ -21,8 +21,7 @@ from derivkit.finite_difference import FiniteDifferenceDerivative
 
 
 class DerivativeKit:
-    """Provides access to adaptive and finite difference derivative calculators.
-    """
+    """Provides access to adaptive and finite difference derivative calculators."""
 
     def __init__(
         self,

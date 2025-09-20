@@ -18,8 +18,7 @@ from derivkit.likelihood_expansion import LikelihoodExpansion
 
 
 class ForecastKit:
-    """Provides access to Fisher and DALI likelihood-expansion tensors.
-    """
+    """Provides access to Fisher and DALI likelihood-expansion tensors."""
 
     def __init__(
         self,
@@ -31,13 +30,9 @@ class ForecastKit:
 
         Args:
             function: Model mapping parameters to observables (1D array-like in, 1D array out).
-            theta0: Fiducial parameter values (shape (P,)).
-            cov: Observables covariance (shape (N, N)).
-
-        Notes:
-            The model function should accept a 1D array-like input of shape (P,)
-            and return a 1D NumPy array of shape (N,). Here, P is the number of
-            model parameters (P = len(theta0)) and N is the number of observables (N = cov.shape[0]).
+            theta0: Fiducial parameter values (shape (P,)). Here, P is the number of
+                    model parameters (P = len(theta0))
+            cov: Observables covariance (shape (N, N)). N is the number of observables (N = cov.shape[0])
         """
         self._lx = LikelihoodExpansion(function, theta0, cov)
 
