@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from derivkit import DerivativeKit
+from derivkit.derivative_kit import DerivativeKit
 
 
 # Example fixture definitions if missing
@@ -96,7 +96,7 @@ def test_fallback_used(monkeypatch):
 
     calc = DerivativeKit(lambda x: np.exp(x), x0=0.2).adaptive
 
-    def fail_fit(self, x_vals, y_vals, derivative_order):
+    def fail_fit(x_vals, y_vals, derivative_order):
         return {
             "ok": False,
             "reason": "singular_normal_equations",
@@ -169,7 +169,7 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
 
     calc = DerivativeKit(lambda x: np.exp(x), x0=0.0).adaptive
 
-    def fail_fit(self, x_vals, y_vals, derivative_order):
+    def fail_fit(x_vals, y_vals, derivative_order):
         return {
             "ok": False,
             "reason": "singular_normal_equations",

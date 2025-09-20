@@ -1,29 +1,18 @@
 """Test functions for the ForecastKit class."""
 import numpy
 import pytest
-import scipy
 
 from derivkit.forecast_kit import ForecastKit
+from derivkit.likelihood_expansion import LikelihoodExpansion
 
 
 def test_derivative_order():
-    """Tests if derivatives of high order raise a ValueError
-
-    High order means higher than 2. The function tests an order of 3
-    and a random number between 4 and 30 inclusive.
-    """
-    forecaster = ForecastKit(lambda x: x,
-        numpy.array([1]),
-        numpy.array([1])
-    )
-    with pytest.raises(ValueError) as exception:
-        forecaster.get_derivatives(derivative_order=3)
-    assert exception.type is ValueError
-    with pytest.raises(ValueError) as exception:
-        forecaster.get_derivatives(
-            derivative_order=numpy.random.randint(low=4, high=30)
-        )
-    assert exception.type is ValueError
+    """High derivative orders (>2) should raise ValueError on LikelihoodExpansion."""
+    like = LikelihoodExpansion(lambda x: x, numpy.array([1]), numpy.array([1]))
+    with pytest.raises(ValueError):
+        like._get_derivatives(derivative_order=3)
+    with pytest.raises(ValueError):
+        like._get_derivatives(derivative_order=numpy.random.randint(low=4, high=30))
 
 
 def test_forecast_order():
@@ -35,29 +24,27 @@ def test_forecast_order():
     High order means higher than 2. The function tests an order of 3
     and a random number between 4 and 30 inclusive.
     """
-    forecaster = ForecastKit(lambda x: x,
-        numpy.array([1]),
-        numpy.array([1]),
-    )
-    with pytest.raises(ValueError) as exception:
-        forecaster.get_forecast_tensors(forecast_order=3)
-    assert exception.type is ValueError
-    with pytest.raises(ValueError) as exception:
-        forecaster.get_forecast_tensors(
-            forecast_order=numpy.random.randint(low=4, high=30)
-        )
-    assert exception.type is ValueError
+    like = LikelihoodExpansion(lambda x: x, numpy.array([1]), numpy.array([1]),)
 
+    with pytest.raises(ValueError):
+                like.get_forecast_tensors(forecast_order=3)
 
-def test_failed_pseudoinverse():
-    """Tests if failed pseudoinverse generates NaNs."""
+    with pytest.raises(ValueError):
+                like.get_forecast_tensors(forecast_order = numpy.random.randint(low=4, high=30))
+
+def test_pseudoinverse_path_no_nan():
+    """If inversion fails, pseudoinverse path should still return finite numbers."""
+    # singular covariance -> forces pinv path
     forecaster = ForecastKit(lambda x: x,
-        numpy.array([1]),
-        numpy.array([1]),
+        numpy.array([1.0]),
+        numpy.array([[0.0]]),
     )
-    for i in range(1, 3):
-        result = forecaster.get_forecast_tensors(forecast_order=i)
-        assert map(numpy.isnan, result)
+    fisher = forecaster.fisher()
+    assert numpy.isfinite(fisher).all()
+    tensor_g, tensor_h = forecaster.dali()
+    assert numpy.isfinite(tensor_g).all()
+    assert numpy.isfinite(tensor_h).all()
+
 
 @pytest.mark.parametrize(
     (
@@ -65,8 +52,8 @@ def test_failed_pseudoinverse():
         "fiducials, "
         "covariance_matrix, "
         "expected_fisher, "
-        "expected_DALI_G, "
-        "expected_DALI_H"
+        "expected_dali_g, "
+        "expected_dali_h"
     ),
     [
         pytest.param( 
@@ -180,8 +167,8 @@ def test_forecast(
     fiducials,
     covariance_matrix,
     expected_fisher,
-    expected_DALI_G,
-    expected_DALI_H
+    expected_dali_g,
+    expected_dali_h
 ):
     """Test the output of get_forecast_tensors to reference values.
 
@@ -194,9 +181,9 @@ def test_forecast(
             computation of the forecast tensors
         expected_fisher (numpy.array): The second order (derivative) forecast
             tensor (the Fisher matrix)
-        expected_DALI_G (numpy.array): The first third order forecast tensor,
+        expected_dali_g (numpy.array): The first third order forecast tensor,
             third order in derivatives
-        expected_DALI_H (numpy.array): The second third order forecast tensor,
+        expected_dali_h (numpy.array): The second third order forecast tensor,
             fourth order in derivatives
     """
     observables = model
@@ -204,7 +191,6 @@ def test_forecast(
     covmat = covariance_matrix
 
     forecaster = ForecastKit(observables, fiducial_values, covmat)
-    number_fiducial_values = len(fiducial_values)
 
     # It is possible for the computed (and expected) values of the tensors
     # to be much smaller than 0. The default value of the parameter atol of
@@ -212,9 +198,9 @@ def test_forecast(
     # https://numpy.org/doc/stable/reference/generated/numpy.isclose.html.
     # The value has been set to 0 instead, so the tolerance is quantified
     # by only the relative difference.
-    fisher_matrix = forecaster.get_forecast_tensors(forecast_order = 1)
+    fisher_matrix = forecaster.fisher()
     assert numpy.allclose(fisher_matrix, expected_fisher, atol=0)
 
-    DALI_G, DALI_H = forecaster.get_forecast_tensors(forecast_order = 2)
-    assert numpy.allclose(DALI_G, expected_DALI_G, atol=0)
-    assert numpy.allclose(DALI_H, expected_DALI_H, atol=0)
+    dali_g, dali_h = forecaster.dali()
+    assert numpy.allclose(dali_g, expected_dali_g, atol=0)
+    assert numpy.allclose(dali_h, expected_dali_h, atol=0)

@@ -192,7 +192,11 @@ class AdaptiveFitDerivative:
 
             while len(x_vals) >= required_points:
                 # Fit once on current set
-                fit = self._fit_once(x_vals, y_vals, derivative_order)
+                try:
+                    fit = self._fit_once(x_vals, y_vals, derivative_order)
+                except TypeError:
+                    # If monkeypatched as a plain function (no self), call via the class
+                    fit = type(self)._fit_once(x_vals, y_vals, derivative_order)
                 last_fit = fit
                 if not fit["ok"]:
                     # singular normal equations; break to FD / floor handling
@@ -310,10 +314,9 @@ class AdaptiveFitDerivative:
                 if last_resid is not None:
                     detail = f" (last max residual {np.max(last_resid):.3g} vs tol {fit_tolerance:.3g})"
                 warnings.warn(
-                    f"[AdaptiveFitDerivative] Falling back to finite differences because polynomial fit "
-                    f"did not meet tolerance{detail}.",
-                    RuntimeWarning,
-                )
+                    f"[AdaptiveFitDerivative] Falling back to finite difference derivative"
+                    f" (polynomial fit did not meet tolerance).",
+                    RuntimeWarning,)
 
         if diagnostics:
             self.diagnostics_data["fit_poly"] = (

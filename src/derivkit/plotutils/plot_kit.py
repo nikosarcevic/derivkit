@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import ScalarFormatter
 
-from derivkit.kit import DerivativeKit
+from derivkit.derivative_kit import DerivativeKit
 from derivkit.plotutils.plot_helpers import PlotHelpers
 from derivkit.plotutils.plot_style import (
     DEFAULT_COLORS,
