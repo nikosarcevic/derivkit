@@ -8,12 +8,6 @@ https://doi.org/10.1103/PhysRevD.107.103506.
 
 More details about available options can be found in the documentation of
 the methods.
-
-Typical usage example:
-
->>>    like = LikelihoodExpansion(function=model, theta0=theta0, cov=cov)
->>>    fisher = like.fisher()
->>>    g_tensor, h_tensor = like.dali()
 """
 
 import warnings
@@ -76,13 +70,6 @@ class LikelihoodExpansion:
         self.n_parameters = self.theta0.shape[0]
         self.n_observables = self.cov.shape[0]
 
-    def fisher(self, *, n_workers: int = 1):
-        """Return the Fisher information matrix (P,P)."""
-        return self.get_forecast_tensors(forecast_order=1, n_workers=n_workers)
-
-    def dali(self, *, n_workers: int = 1):
-        """Return the doublet-DALI tensors (G,H) with shapes (P,P,P) and (P,P,P,P)."""
-        return self.get_forecast_tensors(forecast_order=2, n_workers=n_workers)
 
     def get_forecast_tensors(self, forecast_order=1, n_workers=1):
         """Returns a set of tensors according to the requested order of the forecast.
@@ -118,25 +105,18 @@ class LikelihoodExpansion:
             RuntimeWarning: If `cov` is not symmetric (it is symmetrized),
                 is ill-conditioned (large condition number), or inversion
                 falls back to the pseudoinverse.
-
-        Notes:
-            Uses internal first- and second-order derivatives:
-            - d1 (Jacobian): shape (P, N)
-            - d2: shape (P, P, N)
-            Fisher: F_ab = Σ_{i,j} d1[a,i] * invcov[i,j] * d1[b,j]
-            DALI:
-                G_abc = Σ_{i,j} d2[a,b,i] * invcov[i,j] * d1[c,j]
-                H_abcd = Σ_{i,j} d2[a,b,i] * invcov[i,j] * d2[c,d,j]
         """
         if forecast_order not in [1, 2]:
             raise ValueError(
                 "Only Fisher (order 1) and doublet-DALI (order 2) forecasts are currently supported."
             )
 
+        # Check model output dimension
         y0 = np.atleast_1d(self.function(self.theta0))
         if y0.shape[0] != self.n_observables:
             raise ValueError(
-                f"Model output dim {y0.shape[0]} != cov dim {self.n_observables}."
+                f"Expected {self.n_observables} observables from model (from cov {self.cov.shape}), "
+                f"but got {y0.shape[0]} (output shape {y0.shape})."
             )
 
         # Compute inverse covariance matrix
@@ -279,7 +259,15 @@ class LikelihoodExpansion:
         return partial_function
 
     def _inv_cov(self):
-        """Return inverse covariance; warn on issues."""
+        """Return the inverse covariance matrix with minimal diagnostics.
+
+        Warns:
+            RuntimeWarning: If cov is non-symmetric (checked via allclose),
+                ill-conditioned (cond > 1e12), or if inversion falls back to pinv.
+
+        Returns:
+            np.ndarray: Inverse covariance matrix, shape (n_observables, n_observables).
+        """
         cov = self.cov
 
         # warn only; do not symmetrize, to match historical fixture values
@@ -306,10 +294,44 @@ class LikelihoodExpansion:
             return np.linalg.pinv(cov)
 
     def _build_fisher(self, d1, invcov):
+        """Assemble the Fisher information matrix F from first derivatives.
+
+            Args:
+                d1 (np.ndarray): First-order derivatives of observables w.r.t. parameters,
+                    shape (n_parameters, n_observables).
+                invcov (np.ndarray): Inverse covariance of observables,
+                    shape (n_observables, n_observables).
+
+            Returns:
+                np.ndarray: Fisher matrix, shape (n_parameters, n_parameters).
+
+            Notes:
+                Uses `np.einsum("ai,ij,bj->ab", d1, invcov, d1)`.
+            """
         # F_ab = Σ_ij d1[a,i] invcov[i,j] d1[b,j]
         return np.einsum("ai,ij,bj->ab", d1, invcov, d1)
 
     def _build_dali(self, d1, d2, invcov):
+        """Assemble the doublet-DALI tensors (G, H) from first/second derivatives.
+
+            Args:
+
+                d1 (np.ndarray): First-order derivatives of observables w.r.t. parameters,
+                    shape (n_parameters, n_observables).
+                d2 (np.ndarray): Second-order derivatives of observables w.r.t. parameters,
+                    shape (n_parameters, n_parameters, n_observables).
+                invcov (np.ndarray): Inverse covariance of observables,
+                    shape (n_observables, n_observables).
+
+            Returns:
+                Tuple[np.ndarray, np.ndarray]:
+                    - G tensor with shape (n_parameters, n_parameters, n_parameters).
+                    - H tensor with shape (n_parameters, n_parameters, n_parameters, n_parameters).
+
+            Notes:
+                Uses `np.einsum("abi,ij,cj->abc", d2, invcov, d1)` and
+                `np.einsum("abi,ij,cdj->abcd", d2, invcov, d2)`.
+            """
         # G_abc = Σ_ij d2[a,b,i] invcov[i,j] d1[c,j]
         g_tensor = np.einsum("abi,ij,cj->abc", d2, invcov, d1)
         # H_abcd = Σ_ij d2[a,b,i] invcov[i,j] d2[c,d,j]
