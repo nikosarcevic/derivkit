@@ -37,7 +37,7 @@ class AdaptiveFitDerivative:
     Attributes:
         function (callable): The function to be differentiated. Must return
             scalar or vector output.
-        central_value (float): The point at which the derivative is evaluated.
+        x0 (float): The point at which the derivative is evaluated.
         diagnostics_data (dict, optional): The diagnostic data collected during
             the fitting process, if requested. Defaults to `None`.
         min_used_points (int): The default minimum number of samples required
@@ -45,17 +45,17 @@ class AdaptiveFitDerivative:
             enough data points to be meaningful.
     """
 
-    def __init__(self, function, central_value):
+    def __init__(self, function, x0):
         """Initialises the class based on the function and central value.
 
         Args:
             function (callable): The function to be differentiated. Must return
                 scalar or vector output.
-            central_value (float): The point at which the derivative is
+            x0 (float): The point at which the derivative is
                 evaluated.
         """
         self.function = function
-        self.central_value = central_value
+        self.x0 = x0
         self.diagnostics_data = None
         self.min_used_points = (
             5  # Minimum number of samples required for fitting
@@ -143,12 +143,12 @@ class AdaptiveFitDerivative:
 
         # Sampling grid
         x_offsets, required_points = self._build_x_offsets(
-            central_value=self.central_value,
+            x0=self.x0,
             derivative_order=derivative_order,
             include_zero=include_zero,
             min_samples=min_samples,
         )
-        x_values = self.central_value + x_offsets
+        x_values = self.x0 + x_offsets
 
         # Evaluate the function at those points
         if n_workers > 1:
@@ -330,7 +330,7 @@ class AdaptiveFitDerivative:
 
     def get_adaptive_offsets(
         self,
-        central_value=None,
+        x0=None,
         base_rel=0.01,  # 1% of central value as first relative step
         base_abs=1e-6,  # absolute step if absolute central value is small
         factor=1.5,
@@ -343,8 +343,8 @@ class AdaptiveFitDerivative:
         """Returns an array of absolute step sizes to use for adaptive sampling.
 
         Args:
-            central_value (float_optional): The central value around which to
-                generate offsets. If None, uses `self.central_value`.
+            x0 (float_optional): The central value around which to
+                generate offsets. If None, uses `self.x0`.
             base_rel (float, optional): Base relative step size as a fraction
                 of the central value. Default is 1%.
             base_abs (float, optional): Base absolute step size for small
@@ -367,9 +367,9 @@ class AdaptiveFitDerivative:
                 only), not including the central 0 step.
         """
         x0 = (
-            self.central_value
-            if central_value is None
-            else float(central_value)
+            self.x0
+            if x0 is None
+            else float(x0)
         )
         use_abs = (step_mode == "absolute") or (
             step_mode == "auto" and abs(x0) < x_small_threshold
@@ -394,7 +394,7 @@ class AdaptiveFitDerivative:
 
     def _build_x_offsets(
         self,
-        central_value,
+        x0,
         derivative_order,
         include_zero: bool,
         min_samples: int,
@@ -408,7 +408,7 @@ class AdaptiveFitDerivative:
         points is met, up to a maximum span.
 
         Args:
-            central_value (float): The central point around which the offsets
+            x0 (float): The central point around which the offsets
                 are generated. This is the point at which the derivative will
                 be evaluated.
             derivative_order (int): The order of the derivative to be computed.
@@ -427,7 +427,7 @@ class AdaptiveFitDerivative:
         Returns:
             (:class:`np.ndarray`, int): A tuple containing
 
-            - an array of symmetric offsets relative to `self.central_value`,
+            - an array of symmetric offsets relative to `self.x0`,
               optionally including zero. These define where the function will be
               evaluated.
             - The minimum number of samples that must be retained during
@@ -446,7 +446,7 @@ class AdaptiveFitDerivative:
             min_samples, max(self.min_used_points, order_based_floor)
         )
 
-        offsets = self.get_adaptive_offsets(central_value=central_value)
+        offsets = self.get_adaptive_offsets(x0=x0)
         growth_limit = offsets[-1] * (1.5**3)
 
         while True:
@@ -476,7 +476,7 @@ class AdaptiveFitDerivative:
                 residuals, and metadata.
         """
         # Normalize coordinates around the center for conditioning
-        t_vals = x_vals - self.central_value
+        t_vals = x_vals - self.x0
         h = np.max(np.abs(t_vals))
         h = max(h, 1e-12)  # avoid divide-by-zero
         u_vals = t_vals / h
@@ -630,7 +630,7 @@ class AdaptiveFitDerivative:
         )
         fd = FiniteDifferenceDerivative(
             function=self.function,
-            central_value=self.central_value,
+            x0=self.x0,
         )
         result = fd.compute(
             derivative_order=derivative_order, n_workers=n_workers
@@ -651,10 +651,10 @@ class AdaptiveFitDerivative:
             float: Recommended fit_tolerance.
         """
         try:
-            y_plus = np.atleast_1d(self.function(self.central_value + dx))
-            y_minus = np.atleast_1d(self.function(self.central_value - dx))
+            y_plus = np.atleast_1d(self.function(self.x0 + dx))
+            y_minus = np.atleast_1d(self.function(self.x0 - dx))
             variation = np.max(np.abs(y_plus - y_minus))
-            scale = np.abs(self.central_value)
+            scale = np.abs(self.x0)
 
             if variation > 1e3 or scale < 1e-2:
                 tol = 0.1
@@ -677,10 +677,10 @@ class AdaptiveFitDerivative:
             return 0.05
 
     def _compute_weights(self, x_vals):
-        """Compute scale-aware inverse-distance weights around ``central_value``.
+        """Compute scale-aware inverse-distance weights around ``x0``.
 
         This weighting emphasizes samples closest to the expansion point
-        ``x0 = self.central_value`` while remaining numerically stable across
+        ``x0 = self.x0`` while remaining numerically stable across
         *very small* and *very large* parameter scales.
 
         **Formulation**
@@ -735,7 +735,7 @@ class AdaptiveFitDerivative:
                 If a normalized weight vector is required, divide by
                 ``weights.sum()``.
         """
-        d = np.abs(x_vals - self.central_value)
+        d = np.abs(x_vals - self.x0)
         eps = max(np.max(d) * 1e-3, 1e-9)  # 0.1% of span with tiny floor
         return 1.0 / (d + eps)
 
@@ -759,10 +759,10 @@ class AdaptiveFitDerivative:
         --------
         - Sort points by residual (worst-first) and remove up to ``max_remove``
           per call.
-        - Never drop the center sample (closest to ``central_value``) if
+        - Never drop the center sample (closest to ``x0``) if
           ``keep_center`` is True.
         - If ``keep_symmetric`` is True, also remove the mirror of the removed
-          point about ``central_value`` when possible (to keep sampling
+          point about ``x0`` when possible (to keep sampling
           balanced).
         - Never reduce the number of points below ``required_points``.
 
@@ -775,7 +775,7 @@ class AdaptiveFitDerivative:
             required_points: Minimum number of points allowed after pruning.
             max_remove: Maximum number of points to remove in this call (default 2).
             keep_center: If True, never remove the point closest to
-                ``central_value``. Default is `True`.
+                ``x0``. Default is `True`.
             keep_symmetric: If True, attempt to remove a mirror point along with
                 the worst point.
 
@@ -792,7 +792,7 @@ class AdaptiveFitDerivative:
 
         # Identify the sample closest to the expansion point
         center_idx = (
-            int(np.argmin(np.abs(x_vals - self.central_value)))
+            int(np.argmin(np.abs(x_vals - self.x0)))
             if len(x_vals)
             else -1
         )
@@ -824,7 +824,7 @@ class AdaptiveFitDerivative:
                 and keep.sum() - 1 >= required_points
             ):
                 target = (
-                    2.0 * self.central_value - x_vals[j]
+                    2.0 * self.x0 - x_vals[j]
                 )  # mirror of x_j about x0
                 k = int(np.argmin(np.abs(x_vals - target)))
                 if k != j and (not keep_center or k != center_idx) and keep[k]:

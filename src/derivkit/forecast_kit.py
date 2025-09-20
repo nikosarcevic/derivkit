@@ -31,19 +31,19 @@ class ForecastKit:
              differentiate. It should accept a list or array of parameter
              values as input and return either a scalar or a
              :class:`np.ndarray` of observable values.
-         central_values (class:`np.ndarray`): The point(s) at which the
+         theta0 (class:`np.ndarray`): The point(s) at which the
              derivative is evaluated. A 1D array or list of parameter values
              matching the expected input of the function.
          covariance_matrix (class:`np.ndarray`): The covariance matrix of
              the observables. Should be a square matrix with shape
              (n_observables, n_observables), where n_observables is the
              number of observables returned by the function.
-         n_parameters (int): The number of elements of `central_values`.
+         n_parameters (int): The number of elements of `theta0`.
          n_observables (int): The number of cosmic observables. Determined
              from the dimension of `covariance_matrix`.
     """
 
-    def __init__(self, function, central_values, covariance_matrix):
+    def __init__(self, function, theta0, covariance_matrix):
         """Initialises the class.
 
         Args:
@@ -51,7 +51,7 @@ class ForecastKit:
                 differentiate. It should accept a list or array of parameter
                 values as input and return either a scalar or a
                 :class:`np.ndarray` of observable values.
-            central_values (class:`np.ndarray`): The points at which the
+            theta0 (class:`np.ndarray`): The points at which the
                 derivative is evaluated. A 1D array or list of parameter values
                 matching the expected input of the function.
             covariance_matrix (class:`np.ndarray`): The covariance matrix of
@@ -63,7 +63,7 @@ class ForecastKit:
             ValueError: raised if covariance_matrix is not a square numpy array.
         """
         self.function = function
-        self.central_values = np.atleast_1d(central_values)
+        self.theta0 = np.atleast_1d(theta0)
         if not covariance_matrix.ndim < 3:
             raise ValueError(
                         "covariance_matrix must be at most two-dimensional but "
@@ -72,7 +72,7 @@ class ForecastKit:
         if covariance_matrix.ndim == 2 and not covariance_matrix.shape[0] == covariance_matrix.shape[1]:
             raise ValueError("covariance_matrix must be a square numpy array.")
         self.covariance_matrix = covariance_matrix
-        self.n_parameters = len(self.central_values)
+        self.n_parameters = len(self.theta0)
         self.n_observables = len(covariance_matrix)
 
     def get_derivatives(self, derivative_order, n_workers=1):
@@ -117,11 +117,11 @@ class ForecastKit:
             )
             for m in range(self.n_parameters):
                 # 1 parameter to differentiate, and n_parameters-1 parameters to hold fixed
-                central_values_x = deepcopy(self.central_values)
+                theta0_x = deepcopy(self.theta0)
                 function_to_diff = self._get_partial_function(
-                    self.function, m, central_values_x
+                    self.function, m, theta0_x
                 )
-                kit = DerivativeKit(function_to_diff, self.central_values[m])
+                kit = DerivativeKit(function_to_diff, self.theta0[m])
                 first_order_derivatives[m] = kit.adaptive.compute(
                     derivative_order=1, n_workers=n_workers
                 )
@@ -136,12 +136,12 @@ class ForecastKit:
                 for m2 in range(self.n_parameters):
                     if m1 == m2:
                         # 1 parameter to differentiate twice, and n_parameters-1 parameters to hold fixed
-                        central_values_x = deepcopy(self.central_values)
+                        theta0_x = deepcopy(self.theta0)
                         function_to_diff1 = self._get_partial_function(
-                            self.function, m1, central_values_x
+                            self.function, m1, theta0_x
                         )
                         kit1 = DerivativeKit(
-                            function_to_diff1, self.central_values[m1]
+                            function_to_diff1, self.theta0[m1]
                         )
                         second_order_derivatives[m1][m2] = (
                             kit1.adaptive.compute(
@@ -152,18 +152,18 @@ class ForecastKit:
                     else:
                         # 2 parameters to differentiate once, with other parameters held fixed
                         def function_to_diff2(y):
-                            central_values_y = deepcopy(self.central_values)
-                            central_values_y[m2] = y
+                            theta0_y = deepcopy(self.theta0)
+                            theta0_y[m2] = y
                             function_to_diff1 = self._get_partial_function(
-                                self.function, m1, central_values_y
+                                self.function, m1, theta0_y
                             )
                             kit1 = DerivativeKit(
-                                function_to_diff1, self.central_values[m1]
+                                function_to_diff1, self.theta0[m1]
                             )
                             return kit1.adaptive.compute(derivative_order=1)
 
                         kit2 = DerivativeKit(
-                            function_to_diff2, self.central_values[m2]
+                            function_to_diff2, self.theta0[m2]
                         )
                         second_order_derivatives[m1][m2] = (
                             kit2.adaptive.compute(
