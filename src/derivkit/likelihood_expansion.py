@@ -24,7 +24,6 @@ import numpy as np
 from derivkit.derivative_kit import DerivativeKit
 
 
-
 class LikelihoodExpansion:
     """Provides tools for facilitating experimental forecasts.
 

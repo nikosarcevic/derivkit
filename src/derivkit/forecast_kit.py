@@ -18,7 +18,6 @@ import numpy as np
 from derivkit.likelihood_expansion import LikelihoodExpansion
 
 
-
 class ForecastKit:
     """Provides access to Fisher and DALI likelihood-expansion tensors.
 
