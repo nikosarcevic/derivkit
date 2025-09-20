@@ -19,17 +19,6 @@ from derivkit.likelihood_expansion import LikelihoodExpansion
 
 class ForecastKit:
     """Provides access to Fisher and DALI likelihood-expansion tensors.
-
-    Methods:
-        fisher: Method returning the Fisher information matrix (shape (P, P)) with
-        P being the number of model parameters.
-        dali: Method returning the doublet-DALI tensors G and H (shapes (P,P,P) and (P,P,P,P)).
-
-    Notes:
-        This class is a light wrapper around :class:`LikelihoodExpansion`
-        that exposes a simple API for Fisher and DALI tensors.
-        P = n_parameters = len(theta0)
-        N = n_observables = cov.shape[0]
     """
 
     def __init__(

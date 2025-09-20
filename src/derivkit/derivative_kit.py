@@ -22,12 +22,6 @@ from derivkit.finite_difference import FiniteDifferenceDerivative
 
 class DerivativeKit:
     """Provides access to adaptive and finite difference derivative calculators.
-
-    Methods:
-        adaptive (:class:``AdaptiveFitDerivative``): Adaptive polynomial
-            fit-based derivative method.
-        finite (:class:`` FiniteDifferenceDerivative``): High-order finite
-            difference stencil-based method.
     """
 
     def __init__(
