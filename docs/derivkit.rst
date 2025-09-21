@@ -10,6 +10,7 @@ Submodules
    derivkit.adaptive_fit
    derivkit.finite_difference
    derivkit.forecast_kit
+   derivkit.kit
    derivkit.utils
 
 Module contents
