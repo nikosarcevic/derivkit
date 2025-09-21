@@ -1,0 +1,12 @@
+
+name: derivkit-binder
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - matplotlib
+  - ipykernel
+  - pip
+  - pip:
+      - -e .

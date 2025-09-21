@@ -12,3 +12,21 @@ dist
 notebooks/plots/*.png
 notebooks/plots/*.pdf
 docs/_build
+# --- notebooks ---
+.ipynb_checkpoints/
+notebooks/**/outputs/
+notebooks/**/.ipynb_checkpoints/
+notebooks/**/__pycache__/
+
+# --- data / artifacts ---
+data/
+*.h5
+*.npy
+*.npz
+*.csv
+*.png
+*.pdf
+
+# --- python ---
+__pycache__/
+*.py[cod]
