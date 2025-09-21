@@ -38,55 +38,55 @@ def vector_func():
 def test_linear_first_derivative(linear_func):
     """Test that the first derivative of a linear function returns the correct slope."""
     calc = DerivativeKit(linear_func, x0=0.0).adaptive
-    result = calc.compute(derivative_order=1)
+    result = calc.differentiate(order=1)
     assert np.isclose(result, 2.0, atol=1e-8)
 
 
 def test_quadratic_second_derivative(quadratic_func):
     """Test that the second derivative of a quadratic function returns the expected constant."""
     calc = DerivativeKit(quadratic_func, x0=1.0).adaptive
-    result = calc.compute(derivative_order=2)
+    result = calc.differentiate(order=2)
     assert np.isclose(result, 6.0, atol=1e-6)
 
 
 def test_cubic_third_derivative(cubic_func):
     """Test that the third derivative of a cubic function returns the expected constant."""
     calc = DerivativeKit(cubic_func, x0=1.0).adaptive
-    result = calc.compute(derivative_order=3)
+    result = calc.differentiate(order=3)
     assert np.isclose(result, 24.0, rtol=1e-2)
 
 
 def test_quartic_fourth_derivative(quartic_func):
     """Test that the fourth derivative of a quartic function returns the expected constant."""
     calc = DerivativeKit(quartic_func, x0=1.0).adaptive
-    result = calc.compute(derivative_order=4)
+    result = calc.differentiate(order=4)
     assert np.isclose(result, 120.0, rtol=1e-1)
 
 
-def test_invalid_derivative_order_adaptive():
+def test_invalid_order_adaptive():
     """Test that requesting an unsupported derivative order with adaptive raises ValueError."""
     with pytest.raises(ValueError):
-        DerivativeKit(lambda x: x, 1.0).adaptive.compute(derivative_order=5)
+        DerivativeKit(lambda x: x, 1.0).adaptive.differentiate(order=5)
 
 
-def test_invalid_derivative_order_finite():
+def test_invalid_order_finite():
     """Test that requesting an unsupported derivative order with finite difference raises ValueError."""
     with pytest.raises(ValueError):
-        DerivativeKit(lambda x: x, 1.0).finite.compute(derivative_order=5)
+        DerivativeKit(lambda x: x, 1.0).finite.differentiate(order=5)
 
 
 def test_log_derivative_matches_analytic(log_func):
     """Derivative of log at x0 should be 1/x0 without any special flags."""
     x0 = 2.0
     calc = DerivativeKit(log_func, x0=x0).adaptive
-    result = calc.compute(derivative_order=1)
+    result = calc.differentiate(order=1)
     assert np.isclose(result, 1.0 / x0, rtol=1e-3, atol=1e-8)
 
 
 def test_vector_function(vector_func):
     """Test that vector-valued functions return correct shape and values."""
     calc = DerivativeKit(vector_func, x0=1.0).adaptive
-    result = calc.compute(derivative_order=1)
+    result = calc.differentiate(order=1)
     assert result.shape == (2,)
     assert np.allclose(result, [1.0, 2.0], rtol=1e-2)
 
@@ -96,7 +96,7 @@ def test_fallback_used(monkeypatch):
 
     calc = DerivativeKit(lambda x: np.exp(x), x0=0.2).adaptive
 
-    def fail_fit(x_vals, y_vals, derivative_order):
+    def fail_fit(x_vals, y_vals, order):
         return {
             "ok": False,
             "reason": "singular_normal_equations",
@@ -114,7 +114,7 @@ def test_fallback_used(monkeypatch):
     with pytest.warns(
         RuntimeWarning, match="Falling back to finite difference derivative"
     ):
-        val = calc.compute()
+        val = calc.differentiate()
 
     assert np.isfinite(val)
     assert np.isclose(val, np.exp(0.2), rtol=1e-4, atol=1e-8)
@@ -125,8 +125,8 @@ def test_stencil_matches_analytic():
 
     x0 = np.pi / 4
     exact = np.cos(x0)
-    result = DerivativeKit(lambda x: np.sin(x), x0).finite.compute(
-        derivative_order=1
+    result = DerivativeKit(lambda x: np.sin(x), x0).finite.differentiate(
+        order=1
     )
     assert np.isclose(result, exact, rtol=1e-2)
 
@@ -136,7 +136,7 @@ def test_derivative_noise_test_runs():
 
     adaptive = DerivativeKit(lambda x: x**2, 1.0).adaptive
     results = [
-        adaptive.compute(derivative_order=1) + np.random.normal(0, 0.001)
+        adaptive.differentiate(order=1) + np.random.normal(0, 0.001)
         for _ in range(10)
     ]
     assert len(results) == 10
@@ -146,8 +146,8 @@ def test_derivative_noise_test_runs():
 def test_zero_x0():
     """Test that derivative at x=0 is computed correctly for a cubic function."""
 
-    result = DerivativeKit(lambda x: x**3, x0=0.0).adaptive.compute(
-        derivative_order=1
+    result = DerivativeKit(lambda x: x**3, x0=0.0).adaptive.differentiate(
+        order=1
     )
     # Allow tiny numerical residue
     assert np.isclose(result, 0.0, atol=1e-9)
@@ -157,8 +157,8 @@ def test_constant_function():
     """Test that derivatives of a constant function are zero for all orders."""
 
     for order in range(1, 5):
-        result = DerivativeKit(lambda x: 42.0, 1.0).adaptive.compute(
-            derivative_order=1
+        result = DerivativeKit(lambda x: 42.0, 1.0).adaptive.differentiate(
+            order=1
         )
         # Small numerical bias is acceptable; tighten later if needed
         assert np.isclose(result, 0.0, atol=5e-6)
@@ -169,7 +169,7 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
 
     calc = DerivativeKit(lambda x: np.exp(x), x0=0.0).adaptive
 
-    def fail_fit(x_vals, y_vals, derivative_order):
+    def fail_fit(x_vals, y_vals, order):
         return {
             "ok": False,
             "reason": "singular_normal_equations",
@@ -187,7 +187,7 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
     with pytest.warns(
         RuntimeWarning, match="Falling back to finite difference derivative"
     ):
-        val = calc.compute()
+        val = calc.differentiate()
     assert np.isfinite(val)
     assert np.isclose(val, 1.0, rtol=1e-4, atol=1e-8)
 
@@ -197,7 +197,7 @@ def test_fallback_returns_finite_value_when_fit_fails(monkeypatch):
     the implementation should still return a finite FD value."""
     calc = DerivativeKit(lambda x: 1e-10 * x**3, x0=1.0).adaptive
 
-    def fail_fit(self, x_vals, y_vals, derivative_order):
+    def fail_fit(self, x_vals, y_vals, order):
         return {
             "ok": False,
             "reason": "singular_normal_equations",
@@ -214,7 +214,7 @@ def test_fallback_returns_finite_value_when_fit_fails(monkeypatch):
     with pytest.warns(
         RuntimeWarning, match="Falling back to finite difference derivative"
     ):
-        result = calc.compute()
+        result = calc.differentiate()
     # Analytic d2/dx2 of 1e-10 * x^3 at x=1 is 6e-10
     assert np.isfinite(result)
     assert np.isclose(result, 6e-10, rtol=0.2)
@@ -223,7 +223,7 @@ def test_fallback_returns_finite_value_when_fit_fails(monkeypatch):
 def test_diagnostics_structure_is_present():
     """Diagnostics should return expected keys and aligned shapes."""
     calc = DerivativeKit(lambda x: np.cos(x), x0=0.7).adaptive
-    val, diag = calc.compute(derivative_order=2, diagnostics=True)
+    val, diag = calc.differentiate(order=2, diagnostics=True)
     assert np.isfinite(val)
     for k in [
         "x_all",
@@ -248,7 +248,7 @@ def test_vector_fallback_used():
     calc = DerivativeKit(
         lambda x: np.array([1e-10 * x**3, 1e-10 * x**2]), x0=1.0
     ).adaptive
-    result = calc.compute(derivative_order=2, fit_tolerance=1e-5)
+    result = calc.differentiate(order=2, fit_tolerance=1e-5)
     assert result.shape == (2,)
     assert np.all(np.isfinite(result))
 
@@ -262,6 +262,6 @@ def test_shape_mismatch_raises():
         )  # triggers mismatch
 
     with pytest.raises(ValueError):
-        DerivativeKit(bad_func, x0=1.0).adaptive.compute(
-            derivative_order=1
+        DerivativeKit(bad_func, x0=1.0).adaptive.differentiate(
+            order=1
         )

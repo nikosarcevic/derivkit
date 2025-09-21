@@ -6,9 +6,9 @@ options can be found in the documentation of the methods.
 
 Typical usage example:
 
->>> derivative = AdaptiveFitDerivative(function, 1).compute()
+>>> derivative = AdaptiveFitDerivative(function, 1).differentiate(order=1)
 
-derivative is the derivative of function_to_differerentiate at value 1.
+derivative is the first order derivative of function at value 1.
 """
 
 import warnings
@@ -61,10 +61,10 @@ class AdaptiveFitDerivative:
             5  # Minimum number of samples required for fitting
         )
 
-    def compute(
+    def differentiate(
         self,
         include_zero=True,
-        derivative_order=1,
+        order=1,
         min_samples=7,
         diagnostics=False,
         fallback_mode: str = "finite_difference",
@@ -82,11 +82,11 @@ class AdaptiveFitDerivative:
         estimate or accepts a fit based on a looser criterion.
 
         Args:
-            derivative_order (int, optional): The order of the derivative to
+            order (int, optional): The order of the derivative to
                 compute (default is 1). Must be 1, 2, 3, or 4.
             min_samples (int, optional): Minimum number of total samples to
                 start with. Must be at least equal to the larger value of
-                derivative_order + 2, self.min_used_points, to have an
+                order + 2, self.min_used_points, to have an
                 effect. Smaller values are ignored. Default is 7.
             fit_tolerance (float, optional): Maximum acceptable relative
                 residual for the polynomial fit. Default is 0.05, i.e 5%.
@@ -125,16 +125,16 @@ class AdaptiveFitDerivative:
             ValueError: An error occurred attempting to compute derivatives
                 of order higher than 4.
         """
-        if derivative_order not in [1, 2, 3, 4]:
+        if order not in [1, 2, 3, 4]:
             raise ValueError(
-                f"Invalid derivative_order={derivative_order}. "
+                f"Invalid order={order}. "
                 "Only derivative orders 1 to 4 are supported; "
                 "higher orders are not currently implemented."
             )
-        if min_samples - derivative_order < 2:
+        if min_samples - order < 2:
             warnings.warn(
                 "min_samples must be at least equal to the larger value of "
-                f"2 + derivative_order = {2+derivative_order} and "
+                f"2 + order = {2+order} and "
                 f"self.min_used_points = {self.min_used_points}"
                 "to support the fit and fallback strategies. Smaller values "
                 f"are ignored. Actual value is {min_samples}.",
@@ -144,7 +144,7 @@ class AdaptiveFitDerivative:
         # Sampling grid
         x_offsets, required_points = self._build_x_offsets(
             x0=self.x0,
-            derivative_order=derivative_order,
+            order=order,
             include_zero=include_zero,
             min_samples=min_samples,
         )
@@ -193,9 +193,9 @@ class AdaptiveFitDerivative:
             while len(x_vals) >= required_points:
                 # Fit once on current set
                 try:
-                    fit = self._fit_once(x_vals, y_vals, derivative_order)
+                    fit = self._fit_once(x_vals, y_vals, order)
                 except TypeError:
-                    fit = type(self)._fit_once(x_vals, y_vals, derivative_order)
+                    fit = type(self)._fit_once(x_vals, y_vals, order)
                 last_fit = fit
                 if not fit["ok"]:
                     # singular normal equations; break to FD / floor handling
@@ -209,7 +209,7 @@ class AdaptiveFitDerivative:
 
                 # Accept if within tolerance
                 if fit["rel_error"] < fit_tolerance:
-                    m = derivative_order
+                    m = order
                     derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (
                         last_fit["h"] ** m
                     )
@@ -254,7 +254,7 @@ class AdaptiveFitDerivative:
                     floor_accept_multiplier,
                 )
                 if accept:
-                    m = derivative_order
+                    m = order
                     derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (
                         last_fit["h"] ** m
                     )
@@ -289,7 +289,7 @@ class AdaptiveFitDerivative:
             # FD fallback if still not successful
             if not success:
                 fd_val = self._fallback_derivative(
-                    derivative_order, n_workers=n_workers
+                    order, n_workers=n_workers
                 )[idx]
                 derivatives[idx] = fd_val
                 if diagnostics:
@@ -394,7 +394,7 @@ class AdaptiveFitDerivative:
     def _build_x_offsets(
         self,
         x0,
-        derivative_order,
+        order,
         include_zero: bool,
         min_samples: int,
     ):
@@ -410,7 +410,7 @@ class AdaptiveFitDerivative:
             x0 (float): The central point around which the offsets
                 are generated. This is the point at which the derivative will
                 be evaluated.
-            derivative_order (int): The order of the derivative to be computed.
+            order (int): The order of the derivative to be computed.
                 Determines the minimum polynomial degree, which affects the
                 number of required sample points.
             include_zero: Whether to include the central point (zero
@@ -419,7 +419,7 @@ class AdaptiveFitDerivative:
                 start with before pruning. Must be larger than both
                 `self.min_used_points` (default = 5), which is the minimum
                 number of points required to perform a polynomial fit, and
-                derivative_order+2 to have an effect. If this is the case,
+                order+2 to have an effect. If this is the case,
                 it is used to determine the final required number of
                 usable samples. Otherwise, it is ignored.
 
@@ -440,7 +440,7 @@ class AdaptiveFitDerivative:
                 "the recommended minimum of 5. This may reduce polynomial fit stability.",
                 RuntimeWarning,
             )
-        order_based_floor = derivative_order + 2
+        order_based_floor = order + 2
         required_points = max(
             min_samples, max(self.min_used_points, order_based_floor)
         )
@@ -461,14 +461,14 @@ class AdaptiveFitDerivative:
         return x_offsets, required_points
 
     def _fit_once(
-        self, x_vals: np.ndarray, y_vals: np.ndarray, derivative_order: int
+        self, x_vals: np.ndarray, y_vals: np.ndarray, order: int
     ):
         """Perform one normalized weighted polynomial fit on (x_vals, y_vals).
 
         Args:
             x_vals: Sample x values used in the fit.
             y_vals: function values corresponding to `x_vals`.
-            derivative_order: Order of the derivative to fit.
+            order: Order of the derivative to fit.
 
         Returns:
             dict: Dictionary containing fit result, polynomial object,
@@ -486,7 +486,7 @@ class AdaptiveFitDerivative:
         # Weighted polynomial fit in u-space
         try:
             coeffs = np.polyfit(
-                u_vals, y_vals, deg=derivative_order, w=weights
+                u_vals, y_vals, deg=order, w=weights
             )
             poly_u = np.poly1d(coeffs)
         except np.linalg.LinAlgError:
@@ -596,7 +596,7 @@ class AdaptiveFitDerivative:
         # default: finite_difference
         return False, "finite_difference"
 
-    def _fallback_derivative(self, derivative_order, n_workers=1):
+    def _fallback_derivative(self, order, n_workers=1):
         """Compute the derivative using a finite difference method.
 
         Used when adaptive fitting fails.
@@ -612,7 +612,7 @@ class AdaptiveFitDerivative:
         derivative at the same central point.
 
         Args:
-            derivative_order (int):
+            order (int):
                 The order of the derivative to compute. Must be one of the
                 orders supported by :class:`derivkit.finite_difference.FiniteDifferenceDerivative`
                 (currently 1–4).
@@ -631,8 +631,8 @@ class AdaptiveFitDerivative:
             function=self.function,
             x0=self.x0,
         )
-        result = fd.compute(
-            derivative_order=derivative_order, n_workers=n_workers
+        result = fd.differentiate(
+            order=order, n_workers=n_workers
         )
 
         return np.atleast_1d(result)

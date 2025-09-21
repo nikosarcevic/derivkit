@@ -7,9 +7,9 @@ options can be found in the documentation of the methods.
 Typical usage example:
 
 >>>  derivative = FiniteDifferenceDerivative(
->>>    function_to_differentiate,
+>>>    function,
 >>>    1
->>>  ).compute()
+>>>  ).differentiate()
 
 derivative is the derivative of function_to_differerentiate at value 1.
 """
@@ -51,7 +51,7 @@ class FiniteDifferenceDerivative:
     ---------
     >>> f = lambda x: x**3
     >>> d = FiniteDifferenceDerivative(function=f, x0=2.0)
-    >>> d.compute(derivative_order=2)
+    >>> d.differentiate(order=2)
     """
 
     def __init__(self, function, x0, log_file=None, debug=False):
@@ -71,8 +71,8 @@ class FiniteDifferenceDerivative:
         self.debug = debug
         self.log_file = log_file
 
-    def compute(
-        self, derivative_order=1, stepsize=0.01, num_points=5, n_workers=1
+    def differentiate(
+        self, order=1, stepsize=0.01, num_points=5, n_workers=1
     ):
         """Computes the derivative using a central finite difference scheme.
 
@@ -81,7 +81,7 @@ class FiniteDifferenceDerivative:
         Derivatives are computed for scalar or vector-valued functions.
 
         Args:
-            derivative_order (int, optional): The order of the derivative to
+            order (int, optional): The order of the derivative to
                 compute. Must be supported by the chosen stencil size.
                 Default is 1.
             stepsize (float, optional): Step size (h) used to evaluate the
@@ -97,11 +97,11 @@ class FiniteDifferenceDerivative:
                 functions.
 
         Raises:
-            ValueError: If the combination of num_points and derivative_order
+            ValueError: If the combination of num_points and order
                 is not supported.
 
         Notes:
-            The available (num_points, derivative_order) combinations are:
+            The available (num_points, order) combinations are:
                 - 3: order 1
                 - 5: orders 1, 2, 3, 4
                 - 7: orders 1, 2
@@ -114,10 +114,10 @@ class FiniteDifferenceDerivative:
                 f"Unsupported stencil size: {num_points}. Must be one of [3, 5, 7, 9]."
             )
 
-        key = (num_points, derivative_order)
+        key = (num_points, order)
         if key not in coeffs_table:
             raise ValueError(
-                f"Unsupported combination: stencil={num_points}, order={derivative_order}."
+                f"Unsupported combination: stencil={num_points}, order={order}."
             )
 
         stencil = np.array(
@@ -146,7 +146,7 @@ class FiniteDifferenceDerivative:
         Returns:
             (dict, dict): A tuple of two dictionaries. The first maps from
                 stencil size to symmetric offsets. The second mapps from
-                (stencil_size, derivative_order) to coefficient arrays.
+                (stencil_size, order) to coefficient arrays.
         """
         offsets = {
             3: [-1, 0, 1],
