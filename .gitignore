@@ -1,8 +1,5 @@
 .idea
 *__pycache__
-logs/
-plots_tests/
-notebooks/logs/
 *.egg-info
 venv
 build
@@ -10,10 +7,12 @@ dist
 .tox
 .cache
 docs/_build
+logs/
+plots_tests/
 # --- notebooks ---
-.ipynb_checkpoints/
+**.ipynb_checkpoints/
+notebooks/logs/
 notebooks/**/outputs/
-notebooks/**/.ipynb_checkpoints/
 notebooks/**/__pycache__/
 notebooks/plots/*.png
 notebooks/plots/*.pdf
