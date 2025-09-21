@@ -9,14 +9,14 @@ build
 dist
 .tox
 .cache
-notebooks/plots/*.png
-notebooks/plots/*.pdf
 docs/_build
 # --- notebooks ---
 .ipynb_checkpoints/
 notebooks/**/outputs/
 notebooks/**/.ipynb_checkpoints/
 notebooks/**/__pycache__/
+notebooks/plots/*.png
+notebooks/plots/*.pdf
 
 # --- data / artifacts ---
 data/
