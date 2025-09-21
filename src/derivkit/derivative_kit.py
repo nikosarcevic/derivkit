@@ -8,8 +8,8 @@ documentation of the methods.
 
 Typical usage example:
 
->>>  derivative = DerivativeKit(function_to_differentiate, 1)
->>>  adaptive = derivative.adaptive.compute()
+>>>  derivative = DerivativeKit(function, 1)
+>>>  adaptive = derivative.adaptive.differentiate()
 
 derivative is the derivative of function_to_differerentiate at value 1.
 """
@@ -37,11 +37,11 @@ class DerivativeKit:
         self.adaptive = AdaptiveFitDerivative(function, x0)
         self.finite = FiniteDifferenceDerivative(function, x0)
 
-    def get_used_points(self, derivative_order: int = 1, n_workers=1):
+    def get_used_points(self, order: int = 1, n_workers=1):
         """Returns x and y points used in the adaptive fit (for component 0).
 
         Args:
-            derivative_order: Order of the derivative to compute diagnostics
+            order: Order of the derivative to compute diagnostics
                 for (default is 1).
             n_workers (int, optional): Number of worker to use in
                 multiprocessing. Default is 1 (no multiprocessing).
@@ -49,8 +49,8 @@ class DerivativeKit:
         Returns:
             A tuple of :class:`np.ndarray`.
         """
-        _, diagnostics = self.adaptive.compute(
-            derivative_order=derivative_order,
+        _, diagnostics = self.adaptive.differentiate(
+            order=order,
             diagnostics=True,
             n_workers=n_workers,
         )

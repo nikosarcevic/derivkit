@@ -122,20 +122,20 @@ class LikelihoodExpansion:
         # Compute inverse covariance matrix
         invcov = self._inv_cov()
         # Compute first-order derivatives
-        d1 = self._get_derivatives(derivative_order=1, n_workers=n_workers)
+        d1 = self._get_derivatives(order=1, n_workers=n_workers)
 
         if forecast_order == 1:
             return self._build_fisher(d1, invcov)  # Fisher
 
         # Compute second-order derivatives
-        d2 = self._get_derivatives(derivative_order=2, n_workers=n_workers)
+        d2 = self._get_derivatives(order=2, n_workers=n_workers)
         return self._build_dali(d1, d2, invcov)  # doublet-DALI (G, H)
 
-    def _get_derivatives(self, derivative_order, n_workers=1):
+    def _get_derivatives(self, order, n_workers=1):
         """Returns derivatives of the observables of the requested order.
 
         Args:
-            derivative_order (int): The requested order d of the derivatives:
+            order (int): The requested order d of the derivatives:
 
                 - d = 1 returns first-order derivatives.
                 - d = 2 returns second-order derivatives.
@@ -161,12 +161,12 @@ class LikelihoodExpansion:
             RuntimeError: An error occurred if a ValueError was not raised
                 after calling the function.
         """
-        if derivative_order not in [1, 2]:
+        if order not in [1, 2]:
             raise ValueError(
                 "Only first- and second-order derivatives are currently supported."
             )
 
-        if derivative_order == 1:
+        if order == 1:
             # Get the first-order derivatives
             first_order_derivatives  = np.zeros((self.n_parameters, self.n_observables), dtype=float)
             for m in range(self.n_parameters):
@@ -176,12 +176,12 @@ class LikelihoodExpansion:
                     self.function, m, theta0_x
                 )
                 kit = DerivativeKit(function_to_diff, self.theta0[m])
-                first_order_derivatives[m] = kit.adaptive.compute(
-                    derivative_order=1, n_workers=n_workers
+                first_order_derivatives[m] = kit.adaptive.differentiate(
+                    order=1, n_workers=n_workers
                 )
             return first_order_derivatives
 
-        elif derivative_order == 2:
+        elif order == 2:
             # Get the second-order derivatives
             second_order_derivatives = np.zeros((self.n_parameters, self.n_parameters, self.n_observables), dtype=float)
 
@@ -197,8 +197,8 @@ class LikelihoodExpansion:
                             function_to_diff1, self.theta0[m1]
                         )
                         second_order_derivatives[m1][m2] = (
-                            kit1.adaptive.compute(
-                                derivative_order=2, n_workers=n_workers
+                            kit1.adaptive.differentiate(
+                                order=2, n_workers=n_workers
                             )
                         )
 
@@ -213,14 +213,14 @@ class LikelihoodExpansion:
                             kit1 = DerivativeKit(
                                 function_to_diff1, self.theta0[m1]
                             )
-                            return kit1.adaptive.compute(derivative_order=1)
+                            return kit1.adaptive.differentiate(order=1)
 
                         kit2 = DerivativeKit(
                             function_to_diff2, self.theta0[m2]
                         )
                         second_order_derivatives[m1][m2] = (
-                            kit2.adaptive.compute(
-                                derivative_order=1, n_workers=n_workers
+                            kit2.adaptive.differentiate(
+                                order=1, n_workers=n_workers
                             )
                         )
 
