@@ -8,7 +8,7 @@ Typical usage example:
 
 >>> derivative = AdaptiveFitDerivative(function, 1).differentiate(order=1)
 
-derivative is the derivative of function_to_differerentiate at value 1.
+derivative is the derivative of function at value 1.
 """
 
 import warnings

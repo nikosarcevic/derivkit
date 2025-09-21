@@ -144,7 +144,7 @@ def test_derivative_noise_test_runs():
 
 
 def test_zero_x0():
-    """Test that derivative at x=0 is differentiated correctly for a cubic function."""
+    """Test that derivative at x=0 is computed correctly for a cubic function."""
 
     result = DerivativeKit(lambda x: x**3, x0=0.0).adaptive.differentiate(
         order=1
