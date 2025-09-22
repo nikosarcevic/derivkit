@@ -182,137 +182,16 @@ class AdaptiveFitDerivative:
             self.diagnostics_data = None
 
         # Component-wise fit
+        last_fit = None  # Track the last fit for diagnostics
         for idx in range(n_components):
-            x_vals = x_values.copy()
-            y_vals = y_values[:, idx].copy()
-            success = False
-
-            # Track last attempt (for floor acceptance / FD fallback)
-            last_x = last_y = last_yfit = last_resid = None
-
-            while len(x_vals) >= required_points:
-                # Fit once on current set
-                try:
-                    fit = self._fit_once(x_vals, y_vals, order)
-                except TypeError:
-                    fit = type(self)._fit_once(x_vals, y_vals, order)
-                last_fit = fit
-                if not fit["ok"]:
-                    # singular normal equations; break to FD / floor handling
-                    break
-
-                last_x, last_y = x_vals.copy(), y_vals.copy()
-                last_yfit, last_resid = (
-                    fit["y_fit"].copy(),
-                    fit["residuals"].copy(),
-                )
-
-                # Accept if within tolerance
-                if fit["rel_error"] < fit_tolerance:
-                    m = order
-                    derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (
-                        last_fit["h"] ** m
-                    )
-                    if diagnostics:
-                        self._store_diagnostics_entry(
-                            x_values, x_vals, y_vals, last_yfit, last_resid
-                        )
-                        self.diagnostics_data["status"].append(
-                            {
-                                "component": int(idx),
-                                "mode": "poly",
-                                "rel_error": float(fit["rel_error"]),
-                                "accepted": True,
-                            }
-                        )
-                    success = True
-                    break
-
-                # Prune worst residuals and refit
-                x_vals, y_vals, removed = self._prune_by_residuals(
-                    x_vals,
-                    y_vals,
-                    fit["residuals"],
-                    fit_tolerance,
-                    required_points,
-                    max_remove=2,
-                    keep_center=True,
-                    keep_symmetric=True,
-                )
-                if removed:
-                    continue  # loop back with smaller set
-
-                # At floor and still failing tolerance -> decide fallback
-                at_floor = (last_x is not None) and (
-                    len(last_x) == required_points
-                )
-                accept, tag = self._maybe_accept_at_floor(
-                    last_resid,
-                    at_floor,
-                    fit_tolerance,
-                    fallback_mode,
-                    floor_accept_multiplier,
-                )
-                if accept:
-                    m = order
-                    derivatives[idx] = last_fit["poly_u"].deriv(m=m)(0.0) / (
-                        last_fit["h"] ** m
-                    )
-                    if diagnostics:
-                        self._store_diagnostics_entry(
-                            x_values, last_x, last_y, last_yfit, last_resid
-                        )
-                        entry = {
-                            "component": int(idx),
-                            "mode": tag,
-                            "max_resid": float(np.max(last_resid)),
-                            "median_resid": float(np.median(last_resid)),
-                            "fit_tolerance": float(fit_tolerance),
-                            "floor_accept_multiplier": float(
-                                floor_accept_multiplier
-                            ),
-                            "accepted": True,
-                        }
-                        self.diagnostics_data["status"].append(entry)
-                    warnings.warn(
-                        f"[AdaptiveFitDerivative] Accepted polynomial at minimum points ({required_points}) "
-                        f"with residuals above tolerance (max={np.max(last_resid):.3g}, "
-                        f"tol={fit_tolerance:.3g}) using mode='{tag}'.",
-                        RuntimeWarning,
-                    )
-                    success = True
-                    break
-
-                # couldn't accept at floor -> break to FD
-                break
-
-            # FD fallback if still not successful
-            if not success:
-                fd_val = self._fallback_derivative(
-                    order, n_workers=n_workers
-                )[idx]
-                derivatives[idx] = fd_val
-                if diagnostics:
-                    if last_x is not None:
-                        self._store_diagnostics_entry(
-                            x_values, last_x, last_y, last_yfit, last_resid
-                        )
-                    else:
-                        self._store_diagnostics_entry(
-                            x_values, None, None, None, None
-                        )
-                    self.diagnostics_data["status"].append(
-                        {
-                            "component": int(idx),
-                            "mode": "finite_difference",
-                            "accepted": True,
-                            "reason": "fit_not_within_tolerance_or_insufficient_points",
-                        }
-                    )
-                warnings.warn(
-                    "[AdaptiveFitDerivative] Falling back to finite differences because polynomial fit did not meet tolerance.",
-                    RuntimeWarning,
-                )
+            derivative_val, component_last_fit = self._compute_component_derivative(
+                x_values, y_values[:, idx], order, required_points,
+                fit_tolerance, fallback_mode, floor_accept_multiplier,
+                diagnostics, n_workers, idx
+            )
+            derivatives[idx] = derivative_val
+            if component_last_fit is not None:
+                last_fit = component_last_fit
 
         if diagnostics:
             self.diagnostics_data["fit_poly"] = (
@@ -459,6 +338,220 @@ class AdaptiveFitDerivative:
             offsets = np.append(offsets, next_offset)
 
         return x_offsets, required_points
+
+    def _compute_component_derivative(
+        self, x_values, y_component, order, required_points,
+        fit_tolerance, fallback_mode, floor_accept_multiplier,
+        diagnostics, n_workers, component_idx
+    ):
+        """Compute derivative for a single component with adaptive fitting.
+
+        This method handles the main fitting loop for one component, including
+        polynomial fitting, pruning, floor acceptance, and fallback to finite
+        differences if needed.
+
+        Args:
+            x_values: Array of all x sampling points
+            y_component: Function values for this component
+            order: Derivative order to compute
+            required_points: Minimum points required for fitting
+            fit_tolerance: Tolerance for polynomial fit quality
+            fallback_mode: Strategy for handling failed fits
+            floor_accept_multiplier: Tolerance multiplier for floor acceptance
+            diagnostics: Whether to store diagnostic information
+            n_workers: Number of workers for multiprocessing
+            component_idx: Index of the current component being processed
+
+        Returns:
+            tuple: (derivative_value, last_fit_dict) where last_fit_dict
+                   is the last fit attempt or None if no fit was attempted
+        """
+        x_vals = x_values.copy()
+        y_vals = y_component.copy()
+
+        # Track last attempt (for floor acceptance / FD fallback)
+        last_fit_data = {}
+
+        # Try adaptive polynomial fitting
+        result = self._try_adaptive_fitting(
+            x_vals, y_vals, order, required_points, fit_tolerance,
+            fallback_mode, floor_accept_multiplier, last_fit_data
+        )
+
+        if result is not None:
+            # Successful polynomial fit
+            derivative_val, fit_info = result
+            if diagnostics:
+                self._record_successful_fit_diagnostics(
+                    x_values, fit_info, component_idx
+                )
+            return derivative_val, last_fit_data.get("fit")
+
+        # Fallback to finite differences
+        fd_val = self._handle_fallback_to_finite_difference(
+            x_values, order, n_workers, component_idx, diagnostics, last_fit_data
+        )
+        return fd_val, last_fit_data.get("fit")
+
+    def _try_adaptive_fitting(
+        self, x_vals, y_vals, order, required_points, fit_tolerance,
+        fallback_mode, floor_accept_multiplier, last_fit_data
+    ):
+        """Attempt adaptive polynomial fitting with pruning.
+
+        Returns:
+            tuple or None: (derivative_value, fit_info) if successful, None if failed
+        """
+        while len(x_vals) >= required_points:
+            # Attempt polynomial fit
+            fit = self._perform_single_fit(x_vals, y_vals, order)
+            if not fit["ok"]:
+                break  # Singular matrix or other fitting error
+
+            # Store fit data for potential fallback use
+            last_fit_data.update({
+                "fit": fit,
+                "x_vals": x_vals.copy(),
+                "y_vals": y_vals.copy(),
+                "y_fit": fit["y_fit"].copy(),
+                "residuals": fit["residuals"].copy()
+            })
+
+            # Check if fit meets tolerance
+            if fit["rel_error"] < fit_tolerance:
+                derivative_val = self._extract_derivative_from_fit(fit, order)
+                fit_info = {
+                    "mode": "poly",
+                    "x_vals": x_vals,
+                    "y_vals": y_vals,
+                    "y_fit": fit["y_fit"],
+                    "residuals": fit["residuals"],
+                    "rel_error": fit["rel_error"]
+                }
+                return derivative_val, fit_info
+
+            # Try pruning worst residuals
+            x_vals, y_vals, points_removed = self._prune_by_residuals(
+                x_vals, y_vals, fit["residuals"], fit_tolerance, required_points,
+                max_remove=2, keep_center=True, keep_symmetric=True
+            )
+
+            if points_removed:
+                continue  # Retry with fewer points
+
+            # At floor - decide whether to accept or fallback
+            at_floor = len(last_fit_data.get("x_vals", [])) == required_points
+            should_accept, accept_mode = self._maybe_accept_at_floor(
+                last_fit_data.get("residuals"),
+                at_floor, fit_tolerance, fallback_mode, floor_accept_multiplier
+            )
+
+            if should_accept:
+                derivative_val = self._extract_derivative_from_fit(
+                    last_fit_data["fit"], order
+                )
+                fit_info = {
+                    "mode": accept_mode,
+                    "x_vals": last_fit_data["x_vals"],
+                    "y_vals": last_fit_data["y_vals"],
+                    "y_fit": last_fit_data["y_fit"],
+                    "residuals": last_fit_data["residuals"],
+                    "required_points": required_points,
+                    "fit_tolerance": fit_tolerance,
+                    "floor_accept_multiplier": floor_accept_multiplier
+                }
+                self._warn_about_floor_acceptance(fit_info)
+                return derivative_val, fit_info
+
+            break  # Can't accept at floor, fall back to FD
+
+        return None  # Fitting failed, need finite difference fallback
+
+    def _perform_single_fit(self, x_vals, y_vals, order):
+        """Perform a single polynomial fit attempt."""
+        try:
+            return self._fit_once(x_vals, y_vals, order)
+        except TypeError:
+            return type(self)._fit_once(x_vals, y_vals, order)
+
+    def _extract_derivative_from_fit(self, fit, order):
+        """Extract derivative value from polynomial fit."""
+        return fit["poly_u"].deriv(m=order)(0.0) / (fit["h"] ** order)
+
+    def _record_successful_fit_diagnostics(self, x_values, fit_info, component_idx):
+        """Record diagnostics for a successful polynomial fit."""
+        self._store_diagnostics_entry(
+            x_values, fit_info["x_vals"], fit_info["y_vals"],
+            fit_info["y_fit"], fit_info["residuals"]
+        )
+
+        status_entry = {
+            "component": int(component_idx),
+            "mode": fit_info["mode"],
+            "accepted": True,
+        }
+
+        if fit_info["mode"] == "poly":
+            status_entry["rel_error"] = float(fit_info["rel_error"])
+        else:
+            # Floor acceptance mode
+            status_entry.update({
+                "max_resid": float(np.max(fit_info["residuals"])),
+                "median_resid": float(np.median(fit_info["residuals"])),
+                "fit_tolerance": float(fit_info["fit_tolerance"]),
+                "floor_accept_multiplier": float(fit_info["floor_accept_multiplier"])
+            })
+
+        self.diagnostics_data["status"].append(status_entry)
+
+    def _handle_fallback_to_finite_difference(
+        self, x_values, order, n_workers, component_idx, diagnostics, last_fit_data
+    ):
+        """Handle fallback to finite difference method."""
+        fd_val = self._fallback_derivative(order, n_workers=n_workers)[component_idx]
+
+        if diagnostics:
+            # Store diagnostics for the failed attempt
+            if last_fit_data:
+                self._store_diagnostics_entry(
+                    x_values, last_fit_data.get("x_vals"),
+                    last_fit_data.get("y_vals"), last_fit_data.get("y_fit"),
+                    last_fit_data.get("residuals")
+                )
+            else:
+                self._store_diagnostics_entry(x_values, None, None, None, None)
+
+            self.diagnostics_data["status"].append({
+                "component": int(component_idx),
+                "mode": "finite_difference",
+                "accepted": True,
+                "reason": "fit_not_within_tolerance_or_insufficient_points",
+            })
+
+        self._warn_about_finite_difference_fallback()
+        return fd_val
+
+    def _warn_about_floor_acceptance(self, fit_info):
+        """Issue warning about accepting polynomial fit at floor."""
+        residuals = fit_info["residuals"]
+        required_points = fit_info["required_points"]
+        fit_tolerance = fit_info["fit_tolerance"]
+        mode = fit_info["mode"]
+
+        warnings.warn(
+            f"[AdaptiveFitDerivative] Accepted polynomial at minimum points "
+            f"({required_points}) with residuals above tolerance "
+            f"(max={np.max(residuals):.3g}, tol={fit_tolerance:.3g}) "
+            f"using mode='{mode}'.",
+            RuntimeWarning,
+        )
+
+    def _warn_about_finite_difference_fallback(self):
+        """Issue warning about falling back to finite differences."""
+        warnings.warn(
+            "Falling back to finite difference derivative.",
+            RuntimeWarning,
+        )
 
     def _fit_once(
         self, x_vals: np.ndarray, y_vals: np.ndarray, order: int
@@ -624,9 +717,6 @@ class AdaptiveFitDerivative:
                 array, with one value per output component of the target
                 function.
         """
-        warnings.warn(
-            "Falling back to finite difference derivative.", RuntimeWarning
-        )
         fd = FiniteDifferenceDerivative(
             function=self.function,
             x0=self.x0,
