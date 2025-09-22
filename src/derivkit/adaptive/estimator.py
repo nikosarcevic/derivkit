@@ -1,0 +1,291 @@
+"""Adaptive component estimation utilities (fit/prune/fallback loop)."""
+
+from __future__ import annotations
+
+import warnings
+from dataclasses import dataclass
+from typing import Callable, Literal, Optional, Tuple
+
+import numpy as np
+
+Mode = Literal["poly", "auto_accept_at_floor", "poly_at_floor", "finite_difference"]
+
+
+@dataclass
+class ComponentOutcome:
+    """Container for a single component’s result and diagnostics.
+
+    Attributes:
+        value: Estimated derivative value for this component.
+        mode: Which path produced the result (e.g., "poly", "finite_difference").
+        x_used: Abscissae used in the final decision.
+        y_used: Ordinates used in the final decision.
+        y_fit: Fitted values corresponding to `x_used` (if available).
+        residuals: Per-point relative residuals (if available).
+        status: Free-form status/directions used by the caller for logging.
+    """
+
+    value: float
+    mode: Mode
+    x_used: Optional[np.ndarray]
+    y_used: Optional[np.ndarray]
+    y_fit: Optional[np.ndarray]
+    residuals: Optional[np.ndarray]
+    status: dict
+
+
+def _maybe_accept_at_floor(
+    last_residuals: Optional[np.ndarray],
+    at_floor: bool,
+    fit_tolerance: float,
+    fallback_mode: str,
+    floor_accept_multiplier: float,
+) -> Tuple[bool, str]:
+    """Decide whether to accept a fit at the minimum sample count ("floor").
+
+    This is invoked only when pruning cannot further decrease residuals and the
+    algorithm has reached the minimum number of points required by the fit.
+
+    Args:
+        last_residuals: Residuals from the last successful fit, or ``None``.
+        at_floor: Whether the algorithm is at the minimum point count.
+        fit_tolerance: Maximum allowed relative residual (acceptance threshold).
+        fallback_mode: Policy string; accepted values include "poly_at_floor",
+            "auto", or a mode that triggers fallback (e.g., "finite_difference").
+        floor_accept_multiplier: Extra headroom multiplier for the maximum
+            residual when deciding acceptance under "auto".
+
+    Returns:
+        A tuple ``(accept, tag)`` where ``accept`` indicates acceptance and
+        ``tag`` is the chosen mode label for diagnostics.
+    """
+    if not at_floor:
+        return False, "not_at_floor"
+    if fallback_mode == "poly_at_floor":
+        return True, "poly_at_floor"
+    if fallback_mode == "auto":
+        if last_residuals is None:
+            return False, "auto_no_residuals"
+        max_r = float(np.max(last_residuals))
+        med_r = float(np.median(last_residuals))
+        close_enough = (max_r < floor_accept_multiplier * fit_tolerance) and (
+            med_r < fit_tolerance
+        )
+        return (True, "auto_accept_at_floor") if close_enough else (False, "auto_reject")
+    return False, "finite_difference"
+
+
+def prune_by_residuals(
+    x0: float,
+    x_vals: np.ndarray,
+    y_vals: np.ndarray,
+    residuals: np.ndarray,
+    fit_tolerance: float,
+    required_points: int,
+    *,
+    max_remove: int = 2,
+    keep_center: bool = True,
+    keep_symmetric: bool = True,
+) -> Tuple[np.ndarray, np.ndarray, bool]:
+    """Remove worst residuals (and optional symmetric mirrors) above tolerance.
+
+    The routine removes up to ``max_remove`` points whose residuals exceed
+    ``fit_tolerance``, optionally preserving the sample closest to ``x0`` and
+    pruning in symmetric pairs about ``x0``. It never prunes below the
+    ``required_points`` threshold.
+
+    Args:
+        x0: Expansion point around which symmetry is defined.
+        x_vals: 1D sample abscissae.
+        y_vals: 1D sample ordinates aligned with ``x_vals``.
+        residuals: Per-point relative residuals, aligned with ``x_vals``.
+        fit_tolerance: Residual threshold used to decide pruning.
+        required_points: Minimum number of points allowed after pruning.
+        max_remove: Maximum number of points to remove in one pass.
+        keep_center: Whether to preserve the sample closest to ``x0``.
+        keep_symmetric: Whether to remove symmetric mirrors when possible.
+
+    Returns:
+        A tuple ``(x_kept, y_kept, removed_any)`` where ``removed_any`` indicates
+        whether any point was pruned.
+    """
+    x_vals = np.asarray(x_vals, float)
+    y_vals = np.asarray(y_vals, float)
+    residuals = np.asarray(residuals, float)
+    assert x_vals.size == y_vals.size == residuals.size
+
+    order_idx = np.argsort(residuals)[::-1]
+    center_idx = int(np.argmin(np.abs(x_vals - float(x0)))) if x_vals.size else -1
+    keep = np.ones(x_vals.size, dtype=bool)
+    removed = 0
+
+    for j in order_idx:
+        if removed >= max_remove:
+            break
+        if residuals[j] <= fit_tolerance:
+            break
+        if keep_center and j == center_idx:
+            continue
+        if keep.sum() - 1 < required_points:
+            break
+
+        keep[j] = False
+        removed += 1
+
+        if (
+            keep_symmetric
+            and removed < max_remove
+            and (keep.sum() - 1) >= required_points
+        ):
+            target = 2.0 * float(x0) - x_vals[j]
+            k = int(np.argmin(np.abs(x_vals - target)))
+            if k != j and (not keep_center or k != center_idx) and keep[k]:
+                keep[k] = False
+                removed += 1
+
+    if removed == 0:
+        return x_vals, y_vals, False
+    return x_vals[keep], y_vals[keep], True
+
+
+def estimate_component(
+    *,
+    x0: float,
+    x_values: np.ndarray,
+    y_values: np.ndarray,
+    order: int,
+    required_points: int,
+    fit_tolerance: float,
+    fallback_mode: str,
+    floor_accept_multiplier: float,
+    n_workers: int,
+    weight_fn: Callable[[np.ndarray], np.ndarray],
+    fit_once_fn: Callable[[np.ndarray, np.ndarray], dict],
+    fallback_fn: Callable[[], np.ndarray],
+    store_diag: Callable[..., None],
+) -> ComponentOutcome:
+    """Run the adaptive fit/prune/fallback loop for a single component.
+
+    Args:
+        x0: Expansion point used for symmetry and normalization.
+        x_values: 1D abscissae for this component’s evaluations.
+        y_values: 1D ordinates for this component’s evaluations.
+        order: Derivative order to extract from the polynomial fit.
+        required_points: Minimum number of points to accept a fit.
+        fit_tolerance: Residual threshold for fit acceptance.
+        fallback_mode: Strategy string for floor handling ("auto", "poly_at_floor",
+            etc.); non-accepting values will trigger finite-difference fallback.
+        floor_accept_multiplier: Extra headroom for the maximum residual when
+            deciding floor acceptance in "auto" mode.
+        n_workers: Unused here (reserved for signatures parity/injection).
+        weight_fn: Unused here (weights are handled by the injected fit function).
+        fit_once_fn: Callable performing a single weighted fit over the provided
+            samples; must return a dict containing keys:
+            ``ok, h, poly_u, y_fit, residuals, rel_error``.
+        fallback_fn: Callable that returns a 1D array-like with a finite-diff
+            estimate in position 0; used when the polynomial path is rejected.
+        store_diag: Callback to receive diagnostics (no-op by default).
+
+    Returns:
+        ComponentOutcome: The final value, path used, and diagnostics.
+    """
+    x_vals = x_values.copy()
+    y_vals = y_values.copy()
+    last = {"x": None, "y": None, "yfit": None, "resid": None, "fit": None}
+
+    while x_vals.size >= required_points:
+        fit = fit_once_fn(x_vals, y_vals)
+        if not fit["ok"]:
+            break
+
+        last.update(
+            x=x_vals.copy(),
+            y=y_vals.copy(),
+            yfit=fit["y_fit"].copy(),
+            resid=fit["residuals"].copy(),
+            fit=fit,
+        )
+
+        # Accept if beneath tolerance.
+        if fit["rel_error"] < fit_tolerance:
+            m = order
+            val = fit["poly_u"].deriv(m=m)(0.0) / (fit["h"] ** m)
+            return ComponentOutcome(
+                value=float(val),
+                mode="poly",
+                x_used=x_vals,
+                y_used=y_vals,
+                y_fit=fit["y_fit"],
+                residuals=fit["residuals"],
+                status={
+                    "mode": "poly",
+                    "rel_error": float(fit["rel_error"]),
+                    "accepted": True,
+                },
+            )
+
+        # Prune and retry.
+        x_vals, y_vals, removed = prune_by_residuals(
+            x0,
+            x_vals,
+            y_vals,
+            fit["residuals"],
+            fit_tolerance,
+            required_points,
+            max_remove=2,
+            keep_center=True,
+            keep_symmetric=True,
+        )
+        if removed:
+            continue
+
+        # At floor: decide accept or fallback.
+        at_floor = (last["x"] is not None) and (last["x"].size == required_points)
+        accept, tag = _maybe_accept_at_floor(
+            last["resid"], at_floor, fit_tolerance, fallback_mode, floor_accept_multiplier
+        )
+        if accept:
+            m = order
+            val = last["fit"]["poly_u"].deriv(m=m)(0.0) / (last["fit"]["h"] ** m)
+            warnings.warn(
+                (
+                    "[AdaptiveFitDerivative] Accepted polynomial at minimum points "
+                    f"({required_points}) with residuals above tolerance "
+                    f"(max={np.max(last['resid']):.3g}, tol={fit_tolerance:.3g}) "
+                    f"using mode='{tag}'."
+                ),
+                RuntimeWarning,
+            )
+            return ComponentOutcome(
+                value=float(val),
+                mode=tag,
+                x_used=last["x"],
+                y_used=last["y"],
+                y_fit=last["yfit"],
+                residuals=last["resid"],
+                status={"mode": tag, "accepted": True},
+            )
+        break
+
+    # Fallback.
+    fd = float(fallback_fn()[0])
+    warnings.warn(
+        (
+            "[AdaptiveFitDerivative] Falling back to finite differences because "
+            "polynomial fit did not meet tolerance."
+        ),
+        RuntimeWarning,
+    )
+    return ComponentOutcome(
+        value=fd,
+        mode="finite_difference",
+        x_used=last["x"],
+        y_used=last["y"],
+        y_fit=last["yfit"],
+        residuals=last["resid"],
+        status={
+            "mode": "finite_difference",
+            "accepted": True,
+            "reason": "fit_not_within_tolerance_or_insufficient_points",
+        },
+    )
