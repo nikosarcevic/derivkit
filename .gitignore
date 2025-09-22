@@ -9,6 +9,16 @@ build
 dist
 .tox
 .cache
+docs/_build
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints/
+notebooks/
 notebooks/plots/*.png
 notebooks/plots/*.pdf
-docs/_build
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints/
+notebooks/
