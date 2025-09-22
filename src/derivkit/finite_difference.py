@@ -11,7 +11,7 @@ Typical usage example:
 >>>    1
 >>>  ).differentiate(order=2)
 
-derivative is the second order derivative of function_to_differerentiate at value 1.
+derivative is the second order derivative of function at value 1.
 """
 
 import numpy as np
