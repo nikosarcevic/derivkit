@@ -15,12 +15,23 @@ import warnings
 from typing import Optional
 
 import numpy as np
-from multiprocess import Pool
 
 from derivkit.finite_difference import FiniteDifferenceDerivative
 
 warnings.simplefilter("once", category=RuntimeWarning)
 
+from derivkit.utils import (
+    eval_function_batch,
+    normalize_coords,
+    inverse_distance_weights,
+    polyfit_u,
+    residuals_relative,
+    extend_offsets_to_required,
+    prune_by_residuals as utils_prune_by_residuals,
+)
+
+
+# noinspection PyCompatibility
 class AdaptiveFitDerivative:
     """Computes derivatives using an adaptive polynomial fitting approach.
 
@@ -150,19 +161,10 @@ class AdaptiveFitDerivative:
         )
         x_values = self.x0 + x_offsets
 
-        # Evaluate the function at those points
-        if n_workers > 1:
-            n_workers = np.min((n_workers, len(x_values)))
-            with Pool(n_workers) as pool:
-                y_values = pool.map(self.function, x_values)
-        else:
-            y_values = np.vstack(
-                [np.atleast_1d(self.function(x)) for x in x_values]
-            )
-
-        y_values = np.vstack([np.atleast_1d(y) for y in y_values])
-        _, n_components = y_values.shape
-        derivatives = np.zeros(n_components)
+        # Evaluate the function at those points (shape → (n_points, n_components))
+        y_values = eval_function_batch(self.function, x_values, n_workers)
+        n_components = y_values.shape[1]
+        derivatives = np.zeros(n_components, dtype=float)
 
         # Init diagnostics container
         if diagnostics:
@@ -229,16 +231,11 @@ class AdaptiveFitDerivative:
                     break
 
                 # Prune worst residuals and refit
-                x_vals, y_vals, removed = self._prune_by_residuals(
-                    x_vals,
-                    y_vals,
-                    fit["residuals"],
-                    fit_tolerance,
-                    required_points,
-                    max_remove=2,
-                    keep_center=True,
-                    keep_symmetric=True,
+                x_vals, y_vals, removed = utils_prune_by_residuals(
+                    self.x0, x_vals, y_vals, fit["residuals"], fit_tolerance, required_points,
+                    max_remove=2, keep_center=True, keep_symmetric=True
                 )
+
                 if removed:
                     continue  # loop back with smaller set
 
@@ -446,75 +443,32 @@ class AdaptiveFitDerivative:
         )
 
         offsets = self.get_adaptive_offsets(x0=x0)
-        growth_limit = offsets[-1] * (1.5**3)
-
-        while True:
-            steps = np.insert(offsets, 0, 0.0) if include_zero else offsets
-            x_offsets = np.unique(np.concatenate([steps, -steps]))
-            if len(x_offsets) >= required_points:
-                break
-            next_offset = offsets[-1] * 1.5
-            if next_offset > growth_limit:
-                break
-            offsets = np.append(offsets, next_offset)
-
+        growth_limit = offsets[-1] * (1.5 ** 3)
+        x_offsets = extend_offsets_to_required(
+            offsets=offsets,
+            include_zero=include_zero,
+            factor=1.5,
+            growth_limit=growth_limit,
+            required_points=required_points,
+        )
         return x_offsets, required_points
 
-    def _fit_once(
-        self, x_vals: np.ndarray, y_vals: np.ndarray, order: int
-    ):
-        """Perform one normalized weighted polynomial fit on (x_vals, y_vals).
+    def _fit_once(self, x_vals: np.ndarray, y_vals: np.ndarray, order: int):
+        u_vals, h = normalize_coords(x_vals, self.x0)
+        weights = self._compute_weights(x_vals)  # keep your policy
+        poly_u = polyfit_u(u_vals, y_vals, order, weights)
+        if poly_u is None:
+            return {"ok": False, "reason": "singular_normal_equations"}
 
-        Args:
-            x_vals: Sample x values used in the fit.
-            y_vals: function values corresponding to `x_vals`.
-            order: Order of the derivative to fit.
-
-        Returns:
-            dict: Dictionary containing fit result, polynomial object,
-                residuals, and metadata.
-        """
-        # Normalize coordinates around the center for conditioning
-        t_vals = x_vals - self.x0
-        h = np.max(np.abs(t_vals))
-        h = max(h, 1e-12)  # avoid divide-by-zero
-        u_vals = t_vals / h
-
-        # Scale-aware inverse-distance weights
-        weights = self._compute_weights(x_vals)
-
-        # Weighted polynomial fit in u-space
-        try:
-            coeffs = np.polyfit(
-                u_vals, y_vals, deg=order, w=weights
-            )
-            poly_u = np.poly1d(coeffs)
-        except np.linalg.LinAlgError:
-            return {
-                "ok": False,
-                "reason": "singular_normal_equations",
-                "h": h,
-                "u_vals": u_vals,
-                "poly_u": None,
-                "y_fit": None,
-                "residuals": None,
-                "rel_error": np.inf,
-            }
-
-        # Residuals (relative, guarded near zero)
         y_fit = poly_u(u_vals)
-        safe_y = np.maximum(np.abs(y_vals), 1e-8)
-        residuals = np.abs(y_fit - y_vals) / safe_y
-        rel_error = float(np.max(residuals))
-
+        resid, rel_error = residuals_relative(y_fit, y_vals, floor=1e-8)
         return {
             "ok": True,
             "reason": None,
             "h": h,
-            "u_vals": u_vals,
             "poly_u": poly_u,
             "y_fit": y_fit,
-            "residuals": residuals,
+            "residuals": resid,
             "rel_error": rel_error,
         }
 
@@ -676,164 +630,8 @@ class AdaptiveFitDerivative:
             return 0.05
 
     def _compute_weights(self, x_vals):
-        """Compute scale-aware inverse-distance weights around ``x0``.
-
-        This weighting emphasizes samples closest to the expansion point
-        ``x0 = self.x0`` while remaining numerically stable across
-        *very small* and *very large* parameter scales.
-
-        **Formulation**
-        ----------------
-        Let ``d_i = |x_i - x0|`` and ``D = max_i d_i`` (the current sampling span).
-        We use
-            ``eps = max(1e-3 * D, 1e-9)``,
-        and define the weights
-            ``w_i = 1 / (d_i + eps)``.
-
-        - The additive softening ``eps`` prevents a singular weight at the
-          center (where ``d_i = 0``).
-        - Tying ``eps`` to the span ``D`` makes the weighting *scale-invariant*:
-          the relative emphasis near the center is similar whether ``x0``
-          is ~1e-4 or ~1e4.
-
-        **Intuition**
-        --------------
-        With ``eps = 1e-3 * D``, the center-to-edge weight ratio is roughly:
-            ``w(0) / w(D) ≈ (D + eps) / eps ≈ D / eps ≈ 10^3``.
-        So points near ``x0`` can carry ~1000× more weight than the farthest
-        points—strong, but not overwhelming. You can tune this by changing the
-        1e-3 factor:
-        - Larger factor (e.g., ``1e-2``) → milder emphasis (~100×).
-        - Smaller factor (e.g., ``1e-4``) → sharper emphasis (~10,000×).
-
-        **Why not a fixed epsilon?**
-        -----------------------------
-        A constant (e.g., ``1e-4``) behaves poorly across scales:
-        - If the step span is tiny (<< 1e-4), the constant dominates and
-          flattens the weights (little central emphasis).
-        - If the span is large (>> 1e-4), the center weight becomes excessively
-          dominant.
-
-        By scaling ``eps`` with the current span, the weighting profile adapts
-        automatically.
-
-        Notes:
-        ------
-        - Complexity is O(n).
-        - The absolute floor ``1e-9`` guards degenerate cases (e.g., ``D ≈ 0``)
-          and prevents overflow even if multiple samples coincide with ``x0``.
-
-        Args:
-            x_vals (:class:`np.ndarray`): Sample locations used in fitting.
-                Shape ``(n_points,)``.
-
-        Returns:
-            :class:`np.ndarray`: Weights of shape ``(n_points,)``. These are
-                **not normalized**; downstream code (e.g.,
-                ``np.polyfit(..., w=weights)``) uses them as relative weights.
-                If a normalized weight vector is required, divide by
-                ``weights.sum()``.
-        """
-        d = np.abs(x_vals - self.x0)
-        eps = max(np.max(d) * 1e-3, 1e-9)  # 0.1% of span with tiny floor
-        return 1.0 / (d + eps)
-
-    def _prune_by_residuals(
-        self,
-        x_vals: np.ndarray,
-        y_vals: np.ndarray,
-        residuals: np.ndarray,
-        fit_tolerance: float,
-        required_points: int,
-        *,
-        max_remove: int = 2,
-        keep_center: bool = True,
-        keep_symmetric: bool = True,
-    ):
-        """Removes points whose relative residual exceeds tolerance.
-
-        The function refits after the residuals have been removed.
-
-        Strategy
-        --------
-        - Sort points by residual (worst-first) and remove up to ``max_remove``
-          per call.
-        - Never drop the center sample (closest to ``x0``) if
-          ``keep_center`` is True.
-        - If ``keep_symmetric`` is True, also remove the mirror of the removed
-          point about ``x0`` when possible (to keep sampling
-          balanced).
-        - Never reduce the number of points below ``required_points``.
-
-        Args:
-            x_vals: Current sample abscissae.
-            y_vals: Current sample ordinates (must be the same length as
-                ``x_vals``).
-            residuals: Relative residuals for the *current* fit at ``x_vals``.
-            fit_tolerance : Acceptable residual threshold (e.g., 0.05 for 5%).
-            required_points: Minimum number of points allowed after pruning.
-            max_remove: Maximum number of points to remove in this call (default 2).
-            keep_center: If True, never remove the point closest to
-                ``x0``. Default is `True`.
-            keep_symmetric: If True, attempt to remove a mirror point along with
-                the worst point.
-
-        Returns:
-            (:class:`np.ndarray`, :class:`np.ndarray`, bool): A tuple containing
-
-                - Pruned arrays x_vals and y_vals (may be unchanged).
-                - A boolean which is `True` if at least one point was removed.
-        """
-        assert len(x_vals) == len(y_vals) == len(residuals)
-
-        # Indices sorted by residual (descending): worst offenders first
-        order = np.argsort(residuals)[::-1]
-
-        # Identify the sample closest to the expansion point
-        center_idx = (
-            int(np.argmin(np.abs(x_vals - self.x0)))
-            if len(x_vals)
-            else -1
-        )
-
-        keep = np.ones(len(x_vals), dtype=bool)
-        removed = 0
-
-        for j in order:
-            if removed >= max_remove:
-                break
-            if residuals[j] <= fit_tolerance:
-                break  # remaining points are within tolerance
-
-            if keep_center and j == center_idx:
-                continue  # don't drop the center point
-
-            # Ensure we don't go under the minimum count
-            if keep.sum() - 1 < required_points:
-                break
-
-            # Drop the worst point
-            keep[j] = False
-            removed += 1
-
-            # Try to drop a symmetric mate about x0 to keep balance
-            if (
-                keep_symmetric
-                and removed < max_remove
-                and keep.sum() - 1 >= required_points
-            ):
-                target = (
-                    2.0 * self.x0 - x_vals[j]
-                )  # mirror of x_j about x0
-                k = int(np.argmin(np.abs(x_vals - target)))
-                if k != j and (not keep_center or k != center_idx) and keep[k]:
-                    keep[k] = False
-                    removed += 1
-
-        if removed == 0:
-            return x_vals, y_vals, False
-
-        return x_vals[keep], y_vals[keep], True
+        """Weights for polynomial fit (delegates to :func:`derivkit.utils.inverse_distance_weights`)."""
+        return inverse_distance_weights(x_vals, self.x0, eps_frac=1e-3)
 
     def _store_diagnostics_entry(
         self, x_all, x_used, y_used, y_fit, residuals

@@ -22,3 +22,7 @@ notebooks/plots/*.pdf
 *.ipynb
 .ipynb_checkpoints/
 notebooks/
+
+# Ignore legacy util files
+src/derivkit/utils_old.py
+**/utils_old.py
