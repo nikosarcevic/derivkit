@@ -118,12 +118,10 @@ def test_fallback_used(monkeypatch):
             "rel_error": np.inf,
         }
 
-    # Patch the class behind your `adaptive` instance — no extra import needed
-    monkeypatch.setattr(type(calc), "_fit_once", fail_fit, raising=True)
+    # Patch the instance so the stub is used as-is (3 args, no bound self)
+    monkeypatch.setattr(calc, "_fit_once", fail_fit, raising=True)
 
-    with pytest.warns(
-        RuntimeWarning, match="Falling back to finite difference derivative"
-    ):
+    with pytest.warns(RuntimeWarning, match=r"Falling back to finite difference"):
         val = calc.differentiate()
 
     assert np.isfinite(val)
@@ -186,12 +184,11 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
             "rel_error": np.inf,
         }
 
-    monkeypatch.setattr(type(calc), "_fit_once", fail_fit, raising=True)
+    # Patch the instance so the 3-arg stub is called (no bound self)
+    monkeypatch.setattr(calc, "_fit_once", fail_fit, raising=True)
 
     # Expect a runtime warning about FD fallback and a correct derivative near e^0 = 1
-    with pytest.warns(
-        RuntimeWarning, match="Falling back to finite difference derivative"
-    ):
+    with pytest.warns(RuntimeWarning, match=r"Falling back to finite difference"):
         val = calc.differentiate()
     assert np.isfinite(val)
     assert np.isclose(val, 1.0, rtol=1e-4, atol=1e-8)
