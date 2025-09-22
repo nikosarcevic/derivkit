@@ -1,3 +1,8 @@
+"""Unit tests for derivative/forecast utilities.
+
+Covers finite differences, adaptive fitting, fallbacks, and edge cases.
+"""
+
 import numpy as np
 import pytest
 
@@ -7,31 +12,37 @@ from derivkit.derivative_kit import DerivativeKit
 # Example fixture definitions if missing
 @pytest.fixture
 def linear_func():
+    """Return f(x)=2x+1 for linear tests."""
     return lambda x: 2.0 * x + 1.0
 
 
 @pytest.fixture
 def quadratic_func():
+    """Return f(x)=3x^2+2x+1 for quadratic tests."""
     return lambda x: 3.0 * x**2 + 2.0 * x + 1.0
 
 
 @pytest.fixture
 def cubic_func():
+    """Return f(x)=4x^3+3x^2+2x+1 for cubic tests."""
     return lambda x: 4.0 * x**3 + 3.0 * x**2 + 2.0 * x + 1.0
 
 
 @pytest.fixture
 def quartic_func():
+    """Return f(x)=5x^4+4x^3+3x^2+2x+1 for quartic tests."""
     return lambda x: 5.0 * x**4 + 4.0 * x**3 + 3.0 * x**2 + 2.0 * x + 1.0
 
 
 @pytest.fixture
 def log_func():
+    """Return f(x)=log(x) for domain-sensitive tests."""
     return lambda x: np.log(x)
 
 
 @pytest.fixture
 def vector_func():
+    """Return vector output f(x)=[x, 2x] for multi-component tests."""
     return lambda x: np.array([x, 2 * x])
 
 
@@ -93,7 +104,6 @@ def test_vector_function(vector_func):
 
 def test_fallback_used(monkeypatch):
     """Test that fallback to finite differences is used when adaptive fit fails."""
-
     calc = DerivativeKit(lambda x: np.exp(x), x0=0.2).adaptive
 
     def fail_fit(x_vals, y_vals, order):
@@ -122,7 +132,6 @@ def test_fallback_used(monkeypatch):
 
 def test_stencil_matches_analytic():
     """Test that the finite difference result approximates the analytic derivative of sin(x)."""
-
     x0 = np.pi / 4
     exact = np.cos(x0)
     result = DerivativeKit(lambda x: np.sin(x), x0).finite.differentiate(
@@ -133,7 +142,6 @@ def test_stencil_matches_analytic():
 
 def test_derivative_noise_test_runs():
     """Test stability and reproducibility of repeated noisy derivative estimates."""
-
     adaptive = DerivativeKit(lambda x: x**2, 1.0).adaptive
     results = [
         adaptive.differentiate(order=1) + np.random.normal(0, 0.001)
@@ -145,7 +153,6 @@ def test_derivative_noise_test_runs():
 
 def test_zero_x0():
     """Test that derivative at x=0 is computed correctly for a cubic function."""
-
     result = DerivativeKit(lambda x: x**3, x0=0.0).adaptive.differentiate(
         order=1
     )
@@ -155,7 +162,6 @@ def test_zero_x0():
 
 def test_constant_function():
     """Test that derivatives of a constant function are zero for all orders."""
-
     for order in range(1, 5):
         result = DerivativeKit(lambda x: 42.0, 1.0).adaptive.differentiate(
             order=1
@@ -166,7 +172,6 @@ def test_constant_function():
 
 def test_fallback_triggers_when_fit_unavailable(monkeypatch):
     """If the internal fit cannot be performed, code must fall back to FD (no flags needed)."""
-
     calc = DerivativeKit(lambda x: np.exp(x), x0=0.0).adaptive
 
     def fail_fit(x_vals, y_vals, order):
@@ -193,8 +198,7 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
 
 
 def test_fallback_returns_finite_value_when_fit_fails(monkeypatch):
-    """When the fit cannot meet tolerance/structure,
-    the implementation should still return a finite FD value."""
+    """Return finite FD value when the fit cannot meet tolerance."""
     calc = DerivativeKit(lambda x: 1e-10 * x**3, x0=1.0).adaptive
 
     def fail_fit(self, x_vals, y_vals, order):
@@ -244,7 +248,6 @@ def test_diagnostics_structure_is_present():
 
 def test_vector_fallback_used():
     """Test fallback on vector-valued function returns valid, finite results."""
-
     calc = DerivativeKit(
         lambda x: np.array([1e-10 * x**3, 1e-10 * x**2]), x0=1.0
     ).adaptive

@@ -17,18 +17,19 @@ from typing import Optional
 import numpy as np
 
 from derivkit.finite_difference import FiniteDifferenceDerivative
-
-warnings.simplefilter("once", category=RuntimeWarning)
-
 from derivkit.utils import (
     eval_function_batch,
-    normalize_coords,
+    extend_offsets_to_required,
     inverse_distance_weights,
+    normalize_coords,
     polyfit_u,
     residuals_relative,
-    extend_offsets_to_required,
+)
+from derivkit.utils import (
     prune_by_residuals as utils_prune_by_residuals,
 )
+
+warnings.simplefilter("once", category=RuntimeWarning)
 
 
 # noinspection PyCompatibility
@@ -74,12 +75,12 @@ class AdaptiveFitDerivative:
 
     def differentiate(
         self,
-        include_zero=True,
         order=1,
         min_samples=7,
         diagnostics=False,
         fallback_mode: str = "finite_difference",
         fit_tolerance=0.05,
+        include_zero=True,
         floor_accept_multiplier: float = 2.0,
         n_workers: int = 1,
     ):
@@ -152,7 +153,7 @@ class AdaptiveFitDerivative:
                 RuntimeWarning,
             )
 
-        # Sampling grid
+        # Define the sampling grid
         x_offsets, required_points = self._build_x_offsets(
             x0=self.x0,
             order=order,
