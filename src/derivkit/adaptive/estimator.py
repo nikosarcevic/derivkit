@@ -127,7 +127,20 @@ def prune_by_residuals(
     x_vals = np.asarray(x_vals, float)
     y_vals = np.asarray(y_vals, float)
     residuals = np.asarray(residuals, float)
-    assert x_vals.size == y_vals.size == residuals.size
+
+    # Hard validation → exceptions (not asserts)
+    if x_vals.ndim != 1 or y_vals.ndim != 1 or residuals.ndim != 1:
+        raise ValueError("x_vals, y_vals, residuals must be 1-D.")
+    if x_vals.size != y_vals.size or x_vals.size != residuals.size:
+        raise ValueError("x_vals, y_vals, residuals must have equal length.")
+    if not np.isfinite(x_vals).all() or not np.isfinite(y_vals).all() or not np.isfinite(residuals).all():
+        raise ValueError("Inputs must be finite (no NaN/Inf).")
+    if required_points < 1:
+        raise ValueError("required_points must be ≥ 1.")
+    if required_points > x_vals.size:
+        raise ValueError("required_points exceeds number of samples.")
+    if max_remove < 0:
+        raise ValueError("max_remove must be ≥ 0.")
 
     order_idx = np.argsort(residuals)[::-1]
     center_idx = int(np.argmin(np.abs(x_vals - float(x0)))) if x_vals.size else -1
