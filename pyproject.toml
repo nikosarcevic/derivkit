@@ -67,6 +67,7 @@ convention = "google"
 
 [tool.tox]
 requires = ["tox>=4.22"]
+labels = { test = ["py310", "py311", "py312", "py313"] }
 envlist = [
   "docs",
   "lint",
@@ -114,5 +115,6 @@ commands = [
     "ruff",
     "check",
     "--fix",
+    {replace = "posargs", extend = true},
   ],
 ]
