@@ -56,7 +56,7 @@ def test_pseudoinverse_path_no_nan():
         "expected_dali_h"
     ),
     [
-        pytest.param( 
+        pytest.param(
             lambda x: 0.4 * x**2,
             numpy.array([2.11]),
             numpy.array([[2.75]]),
@@ -64,7 +64,7 @@ def test_pseudoinverse_path_no_nan():
             numpy.array([[[0.49105455]]]),
             numpy.array([[[[0.23272727]]]])
         ),
-        pytest.param( 
+        pytest.param(
             lambda x: 0.4 * x**2,
             numpy.array([1.1, 0.4]),
             numpy.array([
@@ -108,7 +108,7 @@ def test_pseudoinverse_path_no_nan():
                 ]
             ])
         ),
-        pytest.param( 
+        pytest.param(
             lambda x: numpy.exp(-0.5 * x**2),
             numpy.array([2.11]),
             numpy.array([[2.75]]),
@@ -116,7 +116,7 @@ def test_pseudoinverse_path_no_nan():
             numpy.array([[[-0.03087509]]]),
             numpy.array([[[[0.05042786]]]])
         ),
-        pytest.param( 
+        pytest.param(
             lambda x: numpy.exp(-0.5 * x**2),
             numpy.array([1.1, 0.4]),
             numpy.array([
