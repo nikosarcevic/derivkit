@@ -19,7 +19,7 @@ authors = [
 ]
 description = "A robust toolkit for stable numerical derivatives"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">3.9"
 classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
