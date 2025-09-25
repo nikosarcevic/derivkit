@@ -1,4 +1,12 @@
-"""Offset grid builders for adaptive sampling around ``x0``."""
+"""Offset grid builders for adaptive sampling around ``x0``.
+
+This module works with *relative* offsets (around 0). You typically:
+1) Start from a small set of strictly positive seed offsets near zero;
+2) Mirror them to obtain a symmetric grid about 0 (optionally including 0);
+3) If that symmetric grid is too small for a stable fit, extend the positive
+   side geometrically until the mirrored grid meets a size target
+   (the "required point count").
+"""
 
 from __future__ import annotations
 
@@ -12,25 +20,26 @@ __all__ = [
     "build_x_offsets",
     "symmetric_offsets",
     "extend_offsets_to_required",
-    "get_adaptive_offsets_impl",
+    "get_adaptive_offsets",
 ]
 
 
 def symmetric_offsets(offsets: np.ndarray, include_zero: bool) -> np.ndarray:
-    """Create a symmetric set of offsets around zero.
+    """Make a symmetric set around 0 from strictly positive seeds.
 
-    Turns strictly positive offsets into a symmetric grid about 0. Optionally
-    includes 0 itself.
+    You pass *positive* offsets (e.g., [a, b, c]) and choose whether to include
+    0 itself. The function returns the sorted union of {±a, ±b, ±c} and
+    optionally {0}. It does *not* invent new step sizes; it only mirrors.
 
     Args:
-        offsets: Strictly positive offsets (1D).
-        include_zero: If True, include 0 in the final grid.
+      offsets: Strictly positive offsets (1D).
+      include_zero: If True, also include 0 in the final grid.
 
     Returns:
-        A sorted 1D array of symmetric offsets about 0.
+      np.ndarray: A sorted 1D array symmetric about 0.
 
     Raises:
-        ValueError: If any input offset is non-positive.
+      ValueError: If any input offset is non-positive.
     """
     pos = np.asarray(offsets, float)
     if np.any(pos <= 0):
@@ -47,21 +56,25 @@ def extend_offsets_to_required(
     growth_limit: float,
     required_points: int,
 ) -> np.ndarray:
-    """Grow offsets geometrically until the symmetric grid meets a size target.
+    """Extend seeds until the *symmetric* grid reaches a target size.
 
-    Offsets are extended by multiplying the last element by ``factor`` until the
-    symmetric grid size (after mirroring and optional zero) reaches
-    ``required_points`` or the next candidate would exceed ``growth_limit``.
+    You provide initial strictly positive seeds. If, after mirroring (and
+    optionally adding 0), the symmetric grid has fewer than ``required_points``
+    samples, we *extend the positive seeds* by multiplying the last seed by
+    ``factor`` (geometric growth), then mirror again. We stop when the size
+    target is met or when the next candidate would exceed ``growth_limit``.
 
     Args:
-        offsets: Initial strictly positive offsets (1D).
-        include_zero: Whether to include zero in the symmetric grid.
-        factor: Geometric growth factor for the last offset.
-        growth_limit: Maximum allowed offset value.
-        required_points: Target size for the final symmetric grid.
+      offsets: Initial strictly positive offsets (1D).
+      include_zero: Whether to include 0 when forming the symmetric grid.
+      factor: Geometric growth factor applied to the last positive seed.
+      growth_limit: Maximum allowed positive offset value.
+      required_points: Target number of samples in the final symmetric grid.
+        This is the “required point count” used by the fit loop (see
+        ``build_x_offsets``).
 
     Returns:
-        The final symmetric grid (1D) meeting the size/limit criteria.
+      np.ndarray: The final symmetric 1D grid meeting size/limit criteria.
     """
     cur = np.array(offsets, float)
     while True:
@@ -83,20 +96,35 @@ def build_x_offsets(
     min_used_points: int,
     get_adaptive_offsets: Callable[..., np.ndarray] = _default_get_adaptive_offsets,
 ) -> Tuple[np.ndarray, int]:
-    """Construct the symmetric evaluation grid and the required point count.
+    """Build the symmetric *relative* grid and compute the required point count.
+
+    What “required point count” means
+    ---------------------------------
+    It is the effective minimum number of *total samples in the symmetric grid*
+    that the adaptive fit loop is allowed to use. We choose it conservatively:
+    ``required = max(min_samples, min_used_points, order + 2)``.
+    - ``order + 2``: ensures enough degrees of freedom for a stable degree-
+      ``order`` polynomial fit plus a small safety margin.
+    - ``min_used_points``: a hard floor imposed by the caller/policy.
+    - ``min_samples``: a user preference for initial grid richness.
+
+    The returned offsets are *relative* around 0; callers usually shift them by
+    ``x0`` to form actual evaluation points (i.e., ``x = x0 + offsets``).
 
     Args:
-        x0: Expansion point (passed to ``get_adaptive_offsets``).
-        order: Derivative order (controls the minimum floor).
-        include_zero: Whether to include zero in the symmetric grid.
-        min_samples: Requested minimum number of samples.
-        min_used_points: Hard floor on usable sample count in the fit loop.
-        get_adaptive_offsets: Factory returning strictly positive offsets near ``x0``.
+      x0: Expansion point (forwarded to ``get_adaptive_offsets`` if needed).
+      order: Derivative order (informs the stability floor).
+      include_zero: Whether to include 0 in the symmetric grid (i.e., evaluate
+        at the expansion point itself).
+      min_samples: Requested minimum total number of samples.
+      min_used_points: Hard minimum the fit loop must not go below.
+      get_adaptive_offsets: Factory returning strictly positive seed offsets
+        tailored to the local scale near ``x0``.
 
     Returns:
-        Tuple ``(x_offsets, required_points)`` where ``x_offsets`` are symmetric
-        relative offsets around 0 (to be shifted by ``x0``), and
-        ``required_points`` is the effective minimum sample count.
+      tuple[np.ndarray, int]: ``(x_offsets, required_points)`` where
+      ``x_offsets`` is a symmetric 1D array about 0, and ``required_points`` is
+      the effective minimum sample count for the fit loop.
     """
     order_floor = order + 2
     required = max(min_samples, max(min_used_points, order_floor))
@@ -112,7 +140,7 @@ def build_x_offsets(
     return x_offsets, required
 
 
-def get_adaptive_offsets_impl(*args, **kwargs):
+def get_adaptive_offsets(*args, **kwargs):
     """Back-compat alias to ``get_adaptive_offsets`` (thin pass-through)."""
     from .offsets import get_adaptive_offsets
 

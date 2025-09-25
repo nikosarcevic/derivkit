@@ -11,7 +11,7 @@ from .adaptive.batch_eval import eval_function_batch
 from .adaptive.diagnostics import DiagnosticsRecorder
 from .adaptive.estimator import estimate_component
 from .adaptive.fallback import fallback_fd as _default_fallback_fn
-from .adaptive.fit_core import fit_once_impl as _default_fit_once_fn
+from .adaptive.fit_core import fit_once as _default_fit_once_fn
 from .adaptive.grid import build_x_offsets
 from .adaptive.validate import validate_inputs
 from .adaptive.weights import inverse_distance_weights as _default_weight_fn

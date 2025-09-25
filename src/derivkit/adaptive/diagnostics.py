@@ -1,4 +1,9 @@
-"""Diagnostics helpers for the adaptive-fit derivative estimator."""
+"""Diagnostics helpers for the adaptive-fit derivative estimator.
+
+This module records per-component information (points used, fitted values,
+residuals, and status) during adaptive polynomial fitting so tests and
+downstream tools can inspect the fitting process.
+"""
 
 from __future__ import annotations
 
@@ -6,15 +11,19 @@ import numpy as np
 
 
 class DiagnosticsRecorder:
-    """Collects per-component diagnostics and builds the dict tests expect."""
+    """Record per-component diagnostics and build a test-friendly dict.
+
+    When disabled, the recorder is inert and cheap to call.
+    """
 
     def __init__(self, *, enabled: bool, x_all: np.ndarray, y_all: np.ndarray):
         """Initialize the recorder.
 
         Args:
-            enabled (bool): If False, this recorder is inert.
-            x_all (np.ndarray): All abscissae used for evaluation.
-            y_all (np.ndarray): All function values evaluated at ``x_all``.
+          enabled: If False, this recorder is inert.
+          x_all: All abscissae used for evaluation (1D array).
+          y_all: All function values evaluated at ``x_all``. Shape is
+            ``(n_points,)`` or ``(n_points, n_components)``.
         """
         self.enabled = bool(enabled)
         if not self.enabled:
@@ -30,7 +39,16 @@ class DiagnosticsRecorder:
         self._status = []
 
     def add(self, outcome) -> None:
-        """Append diagnostics for one component outcome."""
+        """Append diagnostics for one component outcome.
+
+        The ``outcome`` object is expected to expose attributes:
+        ``x_used``, ``y_used``, ``y_fit``, ``residuals``, and ``status``.
+        Missing attributes or ``None`` values are handled gracefully.
+
+        Args:
+          outcome: Per-component fitting result with the attributes listed
+            above.
+        """
         if not self.enabled:
             return
         xu = None if outcome.x_used is None else np.asarray(outcome.x_used).copy()
@@ -52,7 +70,14 @@ class DiagnosticsRecorder:
         self._status.append(dict(outcome.status))
 
     def build(self) -> dict:
-        """Return the diagnostics dictionary in the structure expected by tests."""
+        """Build the diagnostics dictionary in the structure tests expect.
+
+        Returns:
+          A dictionary with keys:
+          ``x_all``, ``y_all``, ``x_used``, ``y_used``, ``y_fit``,
+          ``residuals``, ``used_mask``, and ``status``. Returns ``{}`` if the
+          recorder is disabled.
+        """
         if not self.enabled:
             return {}
         return {

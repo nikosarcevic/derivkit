@@ -7,7 +7,7 @@ from typing import Any, Callable
 
 import numpy as np
 
-from ..finite_difference import FiniteDifferenceDerivative
+from derivkit.finite_difference import FiniteDifferenceDerivative
 
 __all__ = ["fallback_fd"]
 

@@ -116,7 +116,6 @@ def test_fallback_used(monkeypatch):
             "rel_error": np.inf,
         }
 
-    # was: monkeypatch.setattr(calc, "_fit_once", fail_fit, raising=True)
     monkeypatch.setattr(calc, "_fit_once_fn", fail_fit, raising=True)
 
     with pytest.warns(RuntimeWarning, match=r"Falling back to finite difference"):
@@ -178,7 +177,6 @@ def test_fallback_triggers_when_fit_unavailable(monkeypatch):
             "rel_error": np.inf,
         }
 
-    # was: monkeypatch.setattr(calc, "_fit_once", fail_fit, raising=True)
     monkeypatch.setattr(calc, "_fit_once_fn", fail_fit, raising=True)
 
     with pytest.warns(RuntimeWarning, match=r"Falling back to finite difference"):

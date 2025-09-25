@@ -50,7 +50,7 @@ pythonpath = [
 
 [tool.ruff]
 line-length = 79
-include = ["src/**/*.py", "tests/**/*.py"]
+
 
 [tool.ruff.lint]
 # Here we list the styling/formatting rules that Ruff should use.

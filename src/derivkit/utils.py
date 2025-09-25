@@ -1,6 +1,15 @@
-"""Generic, non-adaptive utilities (safe to import anywhere)."""
+"""Lightweight utility functions used across DerivKit.
 
-from __future__ import annotations  # (harmless) keeps import groups tidy
+These helpers have no heavy dependencies or side effects and are safe to import
+from anywhere (library code, tests, notebooks). They cover small conveniences
+for logging, quick sanity checks, simple finite-difference heuristics, grid
+symmetry checks, and example/test function generators.
+"""
+
+from __future__ import annotations
+
+import warnings
+from typing import Any, Callable
 
 import numpy as np
 
@@ -40,21 +49,32 @@ def log_debug_message(
             print(f"[log_debug_message] Failed to write to log file: {e}")
 
 
-def is_finite_and_differentiable(function, x, delta: float = 1e-5, tol: float = 1e-2):
-    """Quick check that ``function`` is finite near ``x`` and well-behaved.
+def is_finite_and_differentiable(
+    function: Callable[[float], Any],
+    x: float,
+    delta: float = 1e-5,
+    *,
+    tol: float | None = None,  # deprecated; unused
+) -> bool:
+    """Check that ``function`` is finite at ``x`` and ``x + delta``.
 
-    Evaluates at ``x`` and ``x + delta`` and ensures finite values; returns
-    False on exceptions or non-finite results.
+    Evaluates without exceptions and returns finite values at both points.
 
     Args:
-        function: Callable f(x).
-        x: Point at which to probe.
-        delta: Small step for a forward check.
-        tol: Unused (kept for back-compat).
+      function: Callable ``f(x)`` returning a scalar or array-like.
+      x: Probe point.
+      delta: Small forward step.
+      tol: Deprecated; ignored.
 
     Returns:
-        bool: True if finite at both points, else False.
+      True if finite at both points; otherwise False.
     """
+    if tol is not None:
+        warnings.warn(
+            "Parameter 'tol' is deprecated and ignored.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     try:
         f0 = np.asarray(function(x))
         f1 = np.asarray(function(x + delta))
@@ -63,31 +83,46 @@ def is_finite_and_differentiable(function, x, delta: float = 1e-5, tol: float = 
         return False
 
 
-def normalize_derivative(derivative, reference):
-    """Normalize a derivative against a reference scale.
+def normalize_derivative(
+    derivative: float | np.ndarray,
+    reference: float | np.ndarray,
+) -> np.ndarray:
+    """Convert a derivative to a dimensionless relative deviation.
+
+    Computes the signed relative difference with respect to a reference scale:
+    ``(derivative - reference) / (abs(reference) + 1e-12)``. This centers the
+    result at zero (when ``derivative == reference``) and expresses deviations
+    in units of the reference magnitude. The small epsilon prevents blow-ups
+    when ``reference`` is near zero.
 
     Args:
-        derivative: Value to normalize.
-        reference: Reference scale.
+      derivative: Value(s) to normalize.
+      reference: Reference scale (same broadcastable shape as ``derivative``).
 
     Returns:
-        Normalized value using ``|reference| + 1e-12`` as denominator.
+      Normalized value(s) as a NumPy array.
     """
-    return (derivative - reference) / (np.abs(reference) + 1e-12)
+    return (np.asarray(derivative) - np.asarray(reference)) / (
+        np.abs(reference) + 1e-12
+    )
 
 
 def central_difference_error_estimate(step_size, order: int = 1):
-    """Heuristic truncation error estimate for central differences.
+    """Rule-of-thumb truncation error for central differences.
+
+    This estimate comes from the leading term in the Taylor expansion of
+    central-difference formulas. It gives the expected order of magnitude of
+    the truncation error but is not an exact bound—hence “heuristic.”
 
     Args:
-        step_size: Grid spacing.
-        order: Derivative order (1–4 supported).
+      step_size: Grid spacing.
+      order: Derivative order (1–4 supported).
 
     Returns:
-        Estimated truncation error scale.
+      Estimated truncation error scale.
 
     Raises:
-        ValueError: If ``order`` is not supported.
+      ValueError: If ``order`` is not in {1, 2, 3, 4}.
     """
     if order == 1:
         return step_size**2 / 6

@@ -1,4 +1,11 @@
-"""Core polynomial-fitting utilities used by the adaptive estimator."""
+"""Core polynomial-fitting utilities used by the adaptive estimator.
+
+All fits are performed in normalized coordinates u, defined by shifting the
+abscissae by the expansion point x0 and scaling by the maximum absolute
+deviation h so that u ≈ (x − x0) / h ∈ [−1, 1]. Derivatives in x are
+recovered from the polynomial in u via the chain rule:
+d^m/dx^m = (1 / h^m) * d^m/du^m evaluated at u = 0.
+"""
 
 from __future__ import annotations
 
@@ -12,22 +19,29 @@ __all__ = [
     "normalize_coords",
     "polyfit_u",
     "residuals_relative",
-    "fit_once_impl",
+    "fit_once",
 ]
 
 
 def normalize_coords(x_vals: np.ndarray, x0: float) -> Tuple[np.ndarray, float]:
-    """Normalize coordinates around ``x0`` to the range [-1, 1] approximately.
+    """Normalize coordinates around ``x0`` to roughly ``[-1, 1]``.
 
-    The routine shifts by ``x0`` and scales by the maximum absolute deviation.
+    Shifts samples by ``x0`` and scales by the maximum absolute deviation
+    ``h = max(|x − x0|)``. Returns normalized coordinates
+    ``u = (x − x0) / h`` and the scale ``h`` (clamped to ``>= 1e-12``).
+
+    The normalization improves numerical stability of polynomial fits and
+    provides a simple derivative conversion: if ``p(u)`` fits the data in
+    normalized space, then the m-th derivative in the original variable is
+    ``p^(m)(0) / h**m``.
 
     Args:
-        x_vals: Sample abscissae.
-        x0: Expansion point.
+      x_vals: Sample abscissae.
+      x0: Expansion point.
 
     Returns:
-        Tuple of ``(u_vals, h)`` where ``u_vals`` are normalized coordinates and
-        ``h`` is the scaling factor (>= 1e-12).
+      Tuple[np.ndarray, float]: ``(u_vals, h)`` where ``u_vals`` are the
+      normalized coordinates and ``h`` is the scaling factor.
     """
     t = np.asarray(x_vals, dtype=float) - float(x0)
     h = float(np.max(np.abs(t))) if t.size else 0.0
@@ -41,17 +55,22 @@ def polyfit_u(
     order: int,
     weights: np.ndarray,
 ) -> Optional[np.poly1d]:
-    """Weighted polynomial fit in normalized coordinates.
+    """Fit a weighted polynomial in normalized coordinates.
+
+    Fits ``y ≈ p(u)`` with degree ``order`` using ``np.polyfit`` and weights.
+    The resulting polynomial ``p(u)`` is defined in normalized space; to
+    obtain derivatives with respect to ``x`` at ``x0``, use the relation
+    ``d^m y/dx^m = p^(m)(0) / h**m``, where ``h`` is from ``normalize_coords``.
 
     Args:
-        u_vals: Normalized abscissae.
-        y_vals: Ordinates.
-        order: Polynomial degree.
-        weights: Per-sample weights.
+      u_vals: Normalized abscissae (typically in ``[-1, 1]``).
+      y_vals: Ordinates.
+      order: Polynomial degree.
+      weights: Per-sample weights.
 
     Returns:
-        A ``np.poly1d`` object on success, otherwise ``None`` if the system is
-        singular or the fit fails.
+      np.poly1d | None: Polynomial model on success, else ``None`` if the
+      system is singular or the fit fails.
     """
     try:
         coeffs = np.polyfit(
@@ -70,18 +89,19 @@ def residuals_relative(
     y_true: np.ndarray,
     floor: float = 1e-8,
 ) -> Tuple[np.ndarray, float]:
-    """Compute per-sample relative residuals and their maximum.
+    """Compute elementwise relative residuals and their maximum.
+
+    Uses ``|y_fit − y_true| / max(|y_true|, floor)`` to avoid division by very
+    small values.
 
     Args:
-        y_fit: Model predictions at the sample points.
-        y_true: True observed values at the sample points.
-        floor: Small positive floor for the denominator to avoid division by
-            small/zero values.
+      y_fit: Model predictions at the sample points.
+      y_true: Observed values at the sample points.
+      floor: Denominator floor to prevent blow-ups near zero.
 
     Returns:
-        Tuple of ``(residuals, rel_error)`` where ``residuals`` are the
-        elementwise relative residuals, and ``rel_error`` is their maximum
-        (or 0.0 if empty).
+      Tuple[np.ndarray, float]: ``(residuals, rel_error)`` where
+      ``rel_error`` is ``residuals.max()`` (or ``0.0`` if empty).
     """
     y_true = np.asarray(y_true, float)
     y_fit = np.asarray(y_fit, float)
@@ -91,7 +111,7 @@ def residuals_relative(
     return resid, rel_error
 
 
-def fit_once_impl(
+def fit_once(
     x0: float,
     x_vals: np.ndarray,
     y_vals: np.ndarray,
@@ -101,22 +121,32 @@ def fit_once_impl(
 ) -> Dict[str, Any]:
     """Perform one weighted polynomial fit in normalized coordinates.
 
+    Steps:
+      1) Normalize: compute ``u = (x − x0) / h`` and record the scale ``h``.
+      2) Weight: build inverse-distance weights around ``x0``.
+      3) Fit: obtain ``poly_u(u)`` with ``np.polyfit`` in normalized space.
+      4) Diagnose: compute fitted values and relative residuals.
+
+    Note:
+      Derivatives in the original variable are obtained via
+      ``d^m y/dx^m = poly_u^(m)(0) / h**m``.
+
     Args:
-        x0: Expansion point used for normalization.
-        x_vals: Sample abscissae.
-        y_vals: Sample ordinates.
-        order: Polynomial degree (and derivative order to be extracted later).
-        weight_eps_frac: Epsilon fraction used by the inverse-distance weights.
+      x0: Expansion point used for normalization.
+      x_vals: Sample abscissae.
+      y_vals: Sample ordinates.
+      order: Polynomial degree (also the derivative order extracted later).
+      weight_eps_frac: Epsilon fraction for inverse-distance weights.
 
     Returns:
-        A dictionary with keys:
-            - ``ok`` (bool): Fit succeeded.
-            - ``reason`` (str | None): Failure reason if any.
-            - ``h`` (float): Normalization scale.
-            - ``poly_u`` (np.poly1d | None): Polynomial model in normalized coords.
-            - ``y_fit`` (np.ndarray | None): Fitted values.
-            - ``residuals`` (np.ndarray | None): Per-point relative residuals.
-            - ``rel_error`` (float): Maximum relative residual.
+      Dict[str, Any]: Keys include:
+        - ``ok`` (bool): Fit succeeded.
+        - ``reason`` (str | None): Failure reason if any.
+        - ``h`` (float): Normalization scale.
+        - ``poly_u`` (np.poly1d | None): Polynomial in normalized coords.
+        - ``y_fit`` (np.ndarray | None): Fitted values at ``u_vals``.
+        - ``residuals`` (np.ndarray | None): Relative residuals.
+        - ``rel_error`` (float): Maximum relative residual.
     """
     u_vals, h = normalize_coords(x_vals, x0)
     weights = inverse_distance_weights(x_vals, x0, eps_frac=weight_eps_frac)
