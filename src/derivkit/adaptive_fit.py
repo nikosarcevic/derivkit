@@ -138,11 +138,8 @@ class AdaptiveFitDerivative:
                 fit_tolerance=fit_tolerance,
                 fallback_mode=fallback_mode,
                 floor_accept_multiplier=floor_accept_multiplier,
-                n_workers=n_workers,
-                weight_fn=wfn,
                 fit_once_fn=ffit,
                 fallback_fn=ffallback,
-                store_diag=store,
             )
             derivs[i] = outcome.value
             rec.add(outcome)
