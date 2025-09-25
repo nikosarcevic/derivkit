@@ -68,7 +68,6 @@ convention = "google"
 [tool.tox]
 requires = ["tox>=4.22"]
 envlist = [
-  "py39",
   "py310",
   "py311",
   "py312",
