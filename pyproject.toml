@@ -19,7 +19,7 @@ authors = [
 ]
 description = "A robust toolkit for stable numerical derivatives"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">3.9"
 classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -68,7 +68,6 @@ convention = "google"
 [tool.tox]
 requires = ["tox>=4.22"]
 envlist = [
-  "py39",
   "py310",
   "py311",
   "py312",
