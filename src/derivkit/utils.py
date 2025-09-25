@@ -1,144 +1,144 @@
-"""Provides assorted utility functions."""
+"""Lightweight utility functions used across DerivKit.
+
+These helpers have no heavy dependencies or side effects and are safe to import
+from anywhere (library code, tests, notebooks). They cover small conveniences
+for logging, quick sanity checks, simple finite-difference heuristics, grid
+symmetry checks, and example/test function generators.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import numpy as np
 
+__all__ = [
+    "log_debug_message",
+    "is_finite_and_differentiable",
+    "normalize_derivative",
+    "central_difference_error_estimate",
+    "is_symmetric_grid",
+    "generate_test_function",
+]
 
-def log_debug_message(message, debug=False, log_file=None, log_to_file=None):
-    """Logs a debug message to stdout and optionally to a file.
+
+def log_debug_message(
+    message: str,
+    debug: bool = False,
+    log_file: str | None = None,
+    log_to_file: bool | None = None,
+) -> None:
+    """Optionally print and/or append a debug message.
 
     Args:
-        message (str): The debug message to print/log.
-        debug (bool): Whether to print the message.
-        log_file (str or None): Path to the log file.
-        log_to_file (bool or None): Whether to write the message to the file.
+        message: Text to log.
+        debug: If True, print to stdout.
+        log_file: Path to a log file (used if ``log_to_file`` is True).
+        log_to_file: If True, append to ``log_file`` when provided.
     """
-    if not debug:
+    if not debug and not log_to_file:
         return
-
-    print(message)
-
+    if debug:
+        print(message)
     if log_to_file and log_file:
         try:
-            with open(log_file, "a") as f:
-                f.write(message + "\n")
-        except (IOError, OSError) as e:
+            with open(log_file, "a", encoding="utf-8") as fh:
+                fh.write(message + "\n")
+        except Exception as e:  # pragma: no cover - defensive
             print(f"[log_debug_message] Failed to write to log file: {e}")
 
 
-def is_finite_and_differentiable(function, x, delta=1e-5, tol=1e-2):
-    """Checks if a function is finite and numerically differentiable at a point.
+def is_finite_and_differentiable(
+    function: Callable[[float], Any],
+    x: float,
+    delta: float = 1e-5,
+) -> bool:
+    """Check that ``function`` is finite at ``x`` and ``x + delta``.
+
+    Evaluates without exceptions and returns finite values at both points.
 
     Args:
-        function (callable): The function to test.
-        x (float or np.ndarray): The input value(s).
-        delta (float): Step size for finite difference.
-        tol (float): Tolerance for differentiability check.
+      function: Callable ``f(x)`` returning a scalar or array-like.
+      x: Probe point.
+      delta: Small forward step.
 
     Returns:
-        bool: True if function is finite and differentiable at x, False
-            otherwise.
+      True if finite at both points; otherwise False.
     """
-    try:
-        f0 = np.asarray(function(x))
-        f_minus = np.asarray(function(x - delta))
-        f_plus = np.asarray(function(x + delta))
-
-        # Check for finiteness
-        if (
-            not np.isfinite(f0).all()
-            or not np.isfinite(f_minus).all()
-            or not np.isfinite(f_plus).all()
-        ):
-            return False
-
-        # Numerical derivative comparison (left and right)
-        left = (f0 - f_minus) / delta
-        right = (f_plus - f0) / delta
-
-        return np.all(np.abs(left - right) < tol)
-
-    except (ValueError, TypeError, ArithmeticError):
-        return False
+    f0 = np.asarray(function(x))
+    f1 = np.asarray(function(x + delta))
+    return np.isfinite(f0).all() and np.isfinite(f1).all()
 
 
-def normalize_derivative(derivative, reference):
-    """Computes the relative error between estimated and reference derivative.
+def normalize_derivative(
+    derivative: float | np.ndarray,
+    reference: float | np.ndarray,
+) -> np.ndarray:
+    """Convert a derivative to a dimensionless relative deviation.
+
+    Computes the signed relative difference with respect to a reference scale:
+    ``(derivative - reference) / (abs(reference) + 1e-12)``. This centers the
+    result at zero (when ``derivative == reference``) and expresses deviations
+    in units of the reference magnitude. The small epsilon prevents blow-ups
+    when ``reference`` is near zero.
 
     Args:
-        derivative (float or np.ndarray): Estimated derivative.
-        reference (float or np.ndarray): True/reference derivative.
+      derivative: Value(s) to normalize.
+      reference: Reference scale (same broadcastable shape as ``derivative``).
 
     Returns:
-        float or np.ndarray: Normalized relative error.
+      Normalized value(s) as a NumPy array.
     """
-    return (derivative - reference) / (np.abs(reference) + 1e-12)
+    return (np.asarray(derivative) - np.asarray(reference)) / (
+        np.abs(reference) + 1e-12
+    )
 
 
-def central_difference_error_estimate(step_size, order=1):
-    """Provides a rough truncation error estimate for central differences.
+def central_difference_error_estimate(step_size, order: int = 1):
+    """Rule-of-thumb truncation error for central differences.
+
+    This estimate comes from the leading term in the Taylor expansion of
+    central-difference formulas. It gives the expected order of magnitude of
+    the truncation error but is not an exact bound—hence “heuristic.”
 
     Args:
-        step_size (float): Finite difference step size.
-        order (int): Order of the derivative (1 to 4).
+      step_size: Grid spacing.
+      order: Derivative order (1–4 supported).
 
     Returns:
-        float: Estimated error magnitude.
+      Estimated truncation error scale.
+
+    Raises:
+      ValueError: If ``order`` is not in {1, 2, 3, 4}.
     """
     if order == 1:
         return step_size**2 / 6
-    elif order == 2:
+    if order == 2:
         return step_size**2 / 12
-    elif order == 3:
-        return step_size**2 / 8
-    elif order == 4:
-        return step_size**2 / 6
-    else:
-        raise ValueError("Only derivative orders 1–4 are supported.")
+    if order == 3:
+        return step_size**2 / 20
+    if order == 4:
+        return step_size**2 / 30
+    raise ValueError("Only derivative orders 1–4 are supported.")
 
 
 def is_symmetric_grid(x_vals):
-    """Checks if evaluation grid is symmetric around 0.
-
-    Args:
-        x_vals (:class:`np.ndarray`): Evaluation points (1D).
-
-    Returns:
-        bool: True if grid is symmetric, False otherwise.
-    """
+    """Return True if ``x_vals`` are symmetric about zero (within tolerance)."""
     x_vals = np.sort(np.asarray(x_vals))
     n = len(x_vals)
-    if n % 2 == 0:
-        return False
     mid = n // 2
-    return np.allclose(x_vals[:mid], -x_vals[:mid:-1])
+    return np.allclose(x_vals[:mid], -x_vals[: mid : -1])
 
 
-def generate_test_function(name="sin"):
-    """Returns a known test function and its first/second derivatives.
+def generate_test_function(name: str = "sin"):
+    """Return (f, f', f'') tuple for a named test function.
 
     Args:
-        name (str): One of 'sin', 'exp', 'polynomial', 'gaussian'.
+        name: One of {"sin"}; more may be added.
 
     Returns:
-        tuple: (f(x), df/dx, d2f/dx2)
+        Tuple of callables (f, df, d2f) for testing.
     """
     if name == "sin":
-        return (lambda x: np.sin(x), lambda x: np.cos(x), lambda x: -np.sin(x))
-    elif name == "exp":
-        return (lambda x: np.exp(x), lambda x: np.exp(x), lambda x: np.exp(x))
-    elif name == "polynomial":
-        return (
-            lambda x: x**3 + 2 * x**2 - x + 5,
-            lambda x: 3 * x**2 + 4 * x - 1,
-            lambda x: 6 * x + 4,
-        )
-    elif name == "gaussian":
-        return (
-            lambda x: np.exp(-(x**2)),
-            lambda x: -2 * x * np.exp(-(x**2)),
-            lambda x: (4 * x**2 - 2) * np.exp(-(x**2)),
-        )
-    else:
-        raise ValueError(
-            "Supported names: 'sin', 'exp', 'polynomial', 'gaussian'"
-        )
+        return lambda x: np.sin(x), lambda x: np.cos(x), lambda x: -np.sin(x)
+    raise ValueError(f"Unknown test function: {name!r}")

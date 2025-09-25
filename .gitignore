@@ -2,13 +2,18 @@
 *__pycache__
 logs/
 plots_tests/
-notebooks/logs/
 *.egg-info
 venv
 build
 dist
 .tox
 .cache
+docs/_build
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints/
+notebooks/
 notebooks/plots/*.png
 notebooks/plots/*.pdf
-docs/_build
+notebooks/logs/

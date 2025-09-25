@@ -9,9 +9,9 @@ Typical usage example:
 >>>  derivative = FiniteDifferenceDerivative(
 >>>    function,
 >>>    1
->>>  ).differentiate()
+>>>  ).differentiate(order=2)
 
-derivative is the derivative of function_to_differerentiate at value 1.
+derivative is the second order derivative of function at value 1.
 """
 
 import numpy as np
