@@ -2,7 +2,7 @@
 
 Evaluate a user function over a 1D grid with optional parallelism and return
 a 2D array with consistent shape suitable for downstream polynomial fitting
-and diagnostics (e.g., in AdaptiveFitDerivative).
+and diagnostics (e.g., in `AdaptiveFitDerivative`).
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Callable
 
 import numpy as np
+from multiprocess import Pool
 
 __all__ = ["eval_function_batch"]
 
@@ -22,7 +23,7 @@ def _eval_serial(function: Callable[[float], Any], xs: np.ndarray) -> list[np.nd
       xs: 1D array of abscissae.
 
     Returns:
-      List[np.ndarray]: One array per input x, each at least 1D.
+      list[np.ndarray]: One array per input x, each at least 1D.
     """
     return [np.atleast_1d(function(float(x))) for x in xs]
 
@@ -32,33 +33,35 @@ def _eval_parallel(
     xs: np.ndarray,
     n_workers: int,
 ) -> list[np.ndarray]:
-    """Evaluate a function over points using a worker pool when available.
+    """Evaluate a function over points in parallel.
 
-    Tries to use the optional ``multiprocess`` package. If unavailable, falls
-    back to serial evaluation.
+    Uses ``multiprocess.Pool`` with ``n_workers`` processes. Falls back to the
+    serial path if the workload is too small or if pool creation/execution fails.
 
     Args:
-      function: Callable mapping a float to a scalar or 1D array-like. Must be
-        picklable for process-based parallelism.
-      xs: 1D array of abscissae.
-      n_workers: Desired number of worker processes; clipped to [1, len(xs)].
+      function: Maps a float to a scalar or 1D array-like.
+      xs: 1D abscissae to evaluate.
+      n_workers: Desired number of processes.
 
     Returns:
-      List[np.ndarray]: One array per input x, each at least 1D.
-
-    Notes:
-      Input order is preserved. Errors raised by ``function`` propagate.
+      list[np.ndarray]: One 1D array per input, order-preserving.
     """
-    # import inside to avoid hard dependency
-    try:
-        from multiprocess import Pool  # type: ignore
-    except Exception:
-        # graceful fallback
+    if n_workers <= 1:
         return _eval_serial(function, xs)
 
-    n_workers = max(1, min(int(n_workers), int(xs.size)))
-    with Pool(n_workers) as pool:
-        return [np.atleast_1d(y) for y in pool.map(function, xs.tolist())]
+    # Light heuristic: avoid pool overhead for tiny workloads.
+    n = max(1, min(int(n_workers), int(xs.size)))
+    if xs.size < max(8, 2 * n):
+        return _eval_serial(function, xs)
+
+    try:
+        with Pool(n) as pool:
+            ys = pool.map(function, xs.tolist())
+    except Exception:
+        # Spawn/pickle/start-method issues → graceful serial fallback.
+        return _eval_serial(function, xs)
+
+    return [np.atleast_1d(y) for y in ys]
 
 
 def eval_function_batch(
@@ -68,15 +71,15 @@ def eval_function_batch(
 ) -> np.ndarray:
     """Evaluate a function over 1D inputs and return a 2D array.
 
-    Evaluates ``function(x)`` for each ``x`` in ``xs``. If ``n_workers > 1``
-    and the optional ``multiprocess`` package is available, uses a process
-    pool; otherwise runs serially. Scalar outputs are promoted to shape
-    ``(n_points, 1)``. 1D outputs must have constant length across ``xs``.
+    Evaluates ``function(x)`` for each ``x`` in ``xs``. If ``n_workers > 1``,
+    uses a ``multiprocess.Pool``; otherwise runs serially. Scalar outputs are
+    promoted to shape ``(n_points, 1)``. 1D outputs must have constant length
+    across ``xs``.
 
     Args:
       function: Callable mapping a float to a scalar or 1D array-like.
       xs: 1D array of abscissae.
-      n_workers: If > 1, attempt parallel evaluation with ``multiprocess``.
+      n_workers: If > 1, evaluate in parallel using ``multiprocess``.
 
     Returns:
       np.ndarray: Array of shape ``(n_points, n_components)``.
@@ -96,12 +99,10 @@ def eval_function_batch(
     if xs.ndim != 1:
         raise ValueError("eval_function_batch: xs must be 1D.")
 
-    if n_workers and n_workers > 1:
-        ys = _eval_parallel(function, xs, n_workers)
-    else:
-        ys = _eval_serial(function, xs)
+    ys = _eval_parallel(function, xs, n_workers) if n_workers > 1 else _eval_serial(
+        function, xs
+    )
 
-    # Check output consistency
     lengths = [np.asarray(y).size for y in ys]
     if len(set(lengths)) != 1:
         raise ValueError(
