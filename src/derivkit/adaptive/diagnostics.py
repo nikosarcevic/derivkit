@@ -13,7 +13,7 @@ import numpy as np
 class DiagnosticsRecorder:
     """Record per-component diagnostics and build a test-friendly dict.
 
-    When disabled, the recorder is inert and cheap to call.
+    When disabled, the recorder is not populated and ``build()`` returns an empty dict.
     """
 
     def __init__(self, *, enabled: bool, x_all: np.ndarray, y_all: np.ndarray):
