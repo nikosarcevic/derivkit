@@ -14,13 +14,14 @@ from typing import Callable, Tuple
 
 import numpy as np
 
-from .offsets import get_adaptive_offsets as _default_get_adaptive_offsets
+from derivkit.adaptive.offsets import (
+    get_adaptive_offsets as _default_get_adaptive_offsets,
+)
 
 __all__ = [
     "build_x_offsets",
     "symmetric_offsets",
     "extend_offsets_to_required",
-    "get_adaptive_offsets",
 ]
 
 
@@ -126,10 +127,3 @@ def build_x_offsets(
         required_points=required,
     )
     return x_offsets, required
-
-
-def get_adaptive_offsets(*args, **kwargs):
-    """Back-compat alias to ``get_adaptive_offsets`` (thin pass-through)."""
-    from .offsets import get_adaptive_offsets
-
-    return get_adaptive_offsets(*args, **kwargs)
