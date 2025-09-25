@@ -1,6 +1,7 @@
 """Offset grid builders for adaptive sampling around ``x0``.
 
 This module works with *relative* offsets (around 0). You typically:
+
 1) Start from a small set of strictly positive seed offsets near zero;
 2) Mirror them to obtain a symmetric grid about 0 (optionally including 0);
 3) If that symmetric grid is too small for a stable fit, extend the positive
