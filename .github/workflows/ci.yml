@@ -49,10 +49,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel
-          python -m pip install --upgrade .[lint]
+          python -m pip install .
 
       - name: Run ruff
-        run: ruff check --output-format github
+        run: tox -e lint -- --output-format github
 
   finalise:
     runs-on: ubuntu-latest
