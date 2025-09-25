@@ -20,7 +20,7 @@ class DiagnosticsRecorder:
         """Initialize the recorder.
 
         Args:
-          enabled: If False, this recorder is inert.
+          enabled: If False, this recorder is not populated.
           x_all: All abscissae used for evaluation (1D array).
           y_all: All function values evaluated at ``x_all``. Shape is
             ``(n_points,)`` or ``(n_points, n_components)``.
