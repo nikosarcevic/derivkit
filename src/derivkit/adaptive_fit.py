@@ -118,14 +118,12 @@ class AdaptiveFitDerivative:
         fallback_fn = fallback_fn or self._fallback_fn
 
         # Prepare closures with your existing default parameters
-        wfn = lambda xs: weight_fn(xs, self.x0, eps_frac=1e-3)  # noqa: E731
         ffit = (  # noqa: E731
             lambda xv, yv: fit_once_fn(self.x0, xv, yv, order, weight_eps_frac=1e-3)
         )
         ffallback = lambda: fallback_fn(  # noqa: E731
             self.function, self.x0, order, n_workers
         )
-        store = lambda *args, **kw: None  # estimator accepts it; no-op here  # noqa: E731
 
         # 4) Per-component estimation (accept / prune / fallback handled internally)
         for i in range(n_components):
