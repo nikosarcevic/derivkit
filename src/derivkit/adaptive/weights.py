@@ -15,11 +15,13 @@ def inverse_distance_weights(
     eps_frac: float = 1e-3,
     eps_floor: float = 1e-9,
 ) -> np.ndarray:
-    r"""Scale-aware inverse-distance weights centered at ``x0``.
+    """Scale-aware inverse-distance weights centered at ``x0``.
 
-    Let :math:`d_i = |x_i - x0|` and :math:`D = \max_i d_i` (span). Define
-    :math:`\epsilon = \max(\text{eps\_frac} \cdot D, \text{eps\_floor})`
-    and compute :math:`w_i = 1 / (d_i + \epsilon)`.
+    Each sample gets a weight based on how far it is from the center point ``x0``.
+    To avoid division by zero or overly large weights, we add a small distance
+    floor. This floor is chosen as either a fraction of the total spread of points
+    or a fixed minimum, whichever is larger. The result is that points closer to
+    ``x0`` have larger weights, while those farther away have smaller weights.
 
     Args:
         x_vals: Sample locations.
