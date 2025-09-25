@@ -76,7 +76,7 @@ def _maybe_accept_at_floor(
         return False, "not_at_floor"
     if fallback_mode == "poly_at_floor":
         return True, "poly_at_floor"
-    if fallback_mode == "auto":
+    elif fallback_mode == "auto":
         if last_residuals is None:
             return False, "auto_no_residuals"
         max_r = float(np.max(last_residuals))
@@ -173,11 +173,8 @@ def estimate_component(
     fit_tolerance: float,
     fallback_mode: str,
     floor_accept_multiplier: float,
-    n_workers: int,
-    weight_fn: Callable[[np.ndarray], np.ndarray],
     fit_once_fn: Callable[[np.ndarray, np.ndarray], dict],
     fallback_fn: Callable[[], np.ndarray],
-    store_diag: Callable[..., None],
 ) -> ComponentOutcome:
     """Run the adaptive fit/prune/fallback loop for a single component.
 
@@ -197,14 +194,11 @@ def estimate_component(
         "poly_at_floor", etc.); non-accepting values trigger fallback.
       floor_accept_multiplier: Extra headroom for the maximum residual when
         deciding floor acceptance in "auto" mode.
-      n_workers: Unused here (reserved for signature parity/injection).
-      weight_fn: Unused here; weights are handled by the injected fit function.
       fit_once_fn: Callable performing one weighted fit over the provided
         samples; must return a dict with keys:
         ``ok``, ``h``, ``poly_u``, ``y_fit``, ``residuals``, ``rel_error``.
       fallback_fn: Callable returning a 1D array-like with a finite-diff
         estimate in position 0; used when the poly path is rejected.
-      store_diag: Callback to receive diagnostics (no-op by default).
 
     Returns:
       ComponentOutcome: Final value, path used, and diagnostics.
