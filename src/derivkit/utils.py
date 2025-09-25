@@ -8,7 +8,6 @@ symmetry checks, and example/test function generators.
 
 from __future__ import annotations
 
-import warnings
 from typing import Any, Callable
 
 import numpy as np
@@ -53,8 +52,6 @@ def is_finite_and_differentiable(
     function: Callable[[float], Any],
     x: float,
     delta: float = 1e-5,
-    *,
-    tol: float | None = None,  # deprecated; unused
 ) -> bool:
     """Check that ``function`` is finite at ``x`` and ``x + delta``.
 
@@ -64,23 +61,13 @@ def is_finite_and_differentiable(
       function: Callable ``f(x)`` returning a scalar or array-like.
       x: Probe point.
       delta: Small forward step.
-      tol: Deprecated; ignored.
 
     Returns:
       True if finite at both points; otherwise False.
     """
-    if tol is not None:
-        warnings.warn(
-            "Parameter 'tol' is deprecated and ignored.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-    try:
-        f0 = np.asarray(function(x))
-        f1 = np.asarray(function(x + delta))
-        return np.isfinite(f0).all() and np.isfinite(f1).all()
-    except Exception:
-        return False
+    f0 = np.asarray(function(x))
+    f1 = np.asarray(function(x + delta))
+    return np.isfinite(f0).all() and np.isfinite(f1).all()
 
 
 def normalize_derivative(
@@ -153,5 +140,5 @@ def generate_test_function(name: str = "sin"):
         Tuple of callables (f, df, d2f) for testing.
     """
     if name == "sin":
-        return (lambda x: np.sin(x), lambda x: np.cos(x), lambda x: -np.sin(x))
+        return lambda x: np.sin(x), lambda x: np.cos(x), lambda x: -np.sin(x)
     raise ValueError(f"Unknown test function: {name!r}")

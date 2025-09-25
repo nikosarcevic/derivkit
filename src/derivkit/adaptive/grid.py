@@ -96,35 +96,23 @@ def build_x_offsets(
     min_used_points: int,
     get_adaptive_offsets: Callable[..., np.ndarray] = _default_get_adaptive_offsets,
 ) -> Tuple[np.ndarray, int]:
-    """Build the symmetric *relative* grid and compute the required point count.
+    """Build the symmetric relative grid and compute ``required_points``.
 
-    What “required point count” means
-    ---------------------------------
-    It is the effective minimum number of *total samples in the symmetric grid*
-    that the adaptive fit loop is allowed to use. We choose it conservatively:
-    ``required = max(min_samples, min_used_points, order + 2)``.
-    - ``order + 2``: ensures enough degrees of freedom for a stable degree-
-      ``order`` polynomial fit plus a small safety margin.
-    - ``min_used_points``: a hard floor imposed by the caller/policy.
-    - ``min_samples``: a user preference for initial grid richness.
-
-    The returned offsets are *relative* around 0; callers usually shift them by
-    ``x0`` to form actual evaluation points (i.e., ``x = x0 + offsets``).
+    ``required_points`` is the minimum total samples the fit loop may use:
+    ``max(min_samples, min_used_points, order + 2)``. Offsets are relative
+    to 0; callers typically evaluate at ``x0 + offsets``.
 
     Args:
-      x0: Expansion point (forwarded to ``get_adaptive_offsets`` if needed).
-      order: Derivative order (informs the stability floor).
-      include_zero: Whether to include 0 in the symmetric grid (i.e., evaluate
-        at the expansion point itself).
-      min_samples: Requested minimum total number of samples.
-      min_used_points: Hard minimum the fit loop must not go below.
-      get_adaptive_offsets: Factory returning strictly positive seed offsets
-        tailored to the local scale near ``x0``.
+      x0: Expansion point (forwarded to ``get_adaptive_offsets``).
+      order: Derivative order (sets a stability floor).
+      include_zero: Include 0 in the symmetric grid.
+      min_samples: Requested minimum total samples.
+      min_used_points: Hard floor for usable samples.
+      get_adaptive_offsets: Factory for strictly positive seed offsets.
 
     Returns:
-      tuple[np.ndarray, int]: ``(x_offsets, required_points)`` where
-      ``x_offsets`` is a symmetric 1D array about 0, and ``required_points`` is
-      the effective minimum sample count for the fit loop.
+      (x_offsets, required_points): symmetric 1D offsets and the effective
+      minimum sample count.
     """
     order_floor = order + 2
     required = max(min_samples, max(min_used_points, order_floor))

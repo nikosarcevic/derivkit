@@ -1,23 +1,16 @@
 """Adaptive component estimation utilities (fit/prune/fallback loop).
 
-Implements the inner loop for per-component derivative estimation used by
-adaptive polynomial fitting. The loop repeatedly fits, prunes the worst
-residuals, and either accepts at tolerance, accepts at the floor under a
-policy, or falls back to finite differences.
+Runs the per-component loop: fit → optionally prune → accept or fall back.
+The outcome is recorded as a *path* in ``ComponentOutcome.mode``. Supported
+paths are:
+- "poly": fit accepted within tolerance
+- "poly_at_floor": forced accept at minimum points by policy
+- "auto_accept_at_floor": auto policy accepted at the floor
+- "finite_difference": polynomial path rejected; finite-difference fallback
 
-Terminology:
-This module records how a component was resolved via a *path* string. The
-path is identical to the ``mode`` field on ``ComponentOutcome`` and indicates
-which resolution route produced the value.
-
-Supported paths (i.e., values that may appear in ``ComponentOutcome.mode``):
-- "poly": Accepted polynomial fit within tolerance.
-- "poly_at_floor": Forced accept at minimum points by policy.
-- "auto_accept_at_floor": Auto policy accepted at floor.
-- "finite_difference": Polynomial path rejected; finite-difference fallback.
-
-Internal decision tags (diagnostics/messages only; never stored as the path):
-- "not_at_floor", "auto_no_residuals", "auto_reject".
+Note: internal decision tags ("not_at_floor", "auto_no_residuals",
+"auto_reject") are only for diagnostics/messages and are never stored as the
+path.
 """
 
 from __future__ import annotations
