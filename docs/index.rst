@@ -41,8 +41,8 @@ Quick Start
 
   dk = DerivativeKit(
     function=simple_function,
-    central_value=1.0,
-    derivative_order=1
+    x0=1.0,
+    order=1
   )
   print("Adaptive:", dk.adaptive.compute())
   print("Finite Difference:", dk.finite.compute())
