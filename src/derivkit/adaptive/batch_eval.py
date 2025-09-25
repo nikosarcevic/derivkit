@@ -91,13 +91,13 @@ def eval_function_batch(
       >>> import numpy as np
       >>> f = lambda x: np.array([x, x**2])
       >>> xs = np.linspace(-1.0, 1.0, 5)
-      >>> Y = eval_function_batch(f, xs)
-      >>> Y.shape
+      >>> y = eval_function_batch(f, xs)
+      >>> y.shape
       (5, 2)
     """
     xs = np.asarray(xs, dtype=float)
     if xs.ndim != 1:
-        raise ValueError("eval_function_batch: xs must be 1D.")
+        raise ValueError(f"eval_function_batch: xs.ndim must be 1 but is {xs.ndim}.")
 
     ys = _eval_parallel(function, xs, n_workers) if n_workers > 1 else _eval_serial(
         function, xs
