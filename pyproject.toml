@@ -9,7 +9,8 @@ dependencies = [
   "matplotlib",
   "numdifftools",
   "numpy",
-  "multiprocess"
+  "multiprocess",
+  "tox",
 ]
 authors = [
   { name="Nikolina Šarčević", email="nikolina.sarcevic@gmail.com" },
@@ -33,7 +34,6 @@ license-files = ["LICENSE*"]
 [project.optional-dependencies]
 "test" = [
     "pytest",
-    "tox"
 ]
 "docs" = [
     "sphinx",
@@ -68,6 +68,8 @@ convention = "google"
 [tool.tox]
 requires = ["tox>=4.22"]
 envlist = [
+  "docs",
+  "lint",
   "py310",
   "py311",
   "py312",
@@ -76,6 +78,8 @@ envlist = [
 
 [tool.tox.env_run_base]
 change_dir = "{tox_root}/tests"
+description = "Run tests under {base_python}"
+extras = ["test"]
 allowlist_externals = ["pytest"]
 commands = [
     ["pytest"],
@@ -83,3 +87,32 @@ commands = [
 
 [tool.tox.env_run_base.setenv]
 PIP_CACHE_DIR = "{tox_root}/.cache/pip"
+
+[tool.tox.env.docs]
+description = "Build the HTML files using Sphinx"
+extras = ["docs"]
+commands = [
+  [
+    "sphinx-apidoc",
+    "-o", "{tox_root}/docs",
+    "{tox_root}/src/derivkit",
+    "--separate",
+  ],
+  [
+    "sphinx-build",
+    "{tox_root}/docs",
+    "{tox_root}/docs/_build/html",
+    "--fail-on-warning",
+  ],
+]
+
+[tool.tox.env.lint]
+description = "Lint derivkit using Ruff"
+extras = ["lint"]
+commands = [
+  [
+    "ruff",
+    "check",
+    "--fix",
+  ],
+]
