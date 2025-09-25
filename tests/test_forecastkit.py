@@ -2,7 +2,6 @@
 
 Note: long numeric arrays are kept inline for readability.
 """
-# ruff: noqa: E501
 
 import numpy as np
 import pytest
