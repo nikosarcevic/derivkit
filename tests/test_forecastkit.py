@@ -3,7 +3,7 @@ import numpy
 import pytest
 
 from derivkit.forecast_kit import ForecastKit
-from derivkit.likelihood_expansion import LikelihoodExpansion
+from derivkit.forecasting.expansions import LikelihoodExpansion
 
 
 def test_order():
