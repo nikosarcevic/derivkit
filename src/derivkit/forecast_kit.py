@@ -14,7 +14,7 @@ from typing import Callable, Sequence
 
 import numpy as np
 
-from derivkit.likelihood_expansion import LikelihoodExpansion
+from derivkit.forecasting.expansions import LikelihoodExpansion
 
 
 class ForecastKit:
