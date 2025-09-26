@@ -1,0 +1,9 @@
+"""Basic likelihood functions for forecasting."""
+def gaussian(*args, **kwargs): raise NotImplementedError
+def gaussianDiag(*args, **kwargs): raise NotImplementedError
+def gaussianParamCov(*args, **kwargs): raise NotImplementedError
+def poisson(*args, **kwargs): raise NotImplementedError
+def binomial(*args, **kwargs): raise NotImplementedError
+def multinomial(*args, **kwargs): raise NotImplementedError
+def student_t(*args, **kwargs): raise NotImplementedError
+def sellentin_heavens(*args, **kwargs): raise NotImplementedError
