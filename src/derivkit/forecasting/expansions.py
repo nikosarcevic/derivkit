@@ -273,14 +273,14 @@ class LikelihoodExpansion:
         # warn only; do not symmetrize, to match historical fixture values
         classname = f"[{self.__class__.__name__}] "
         if not np.allclose(cov, cov.T, rtol=1e-12, atol=1e-12):
-                        warnings.warn(f"{classname} `cov` is not symmetric; proceeding as-is (no symmetrization).",
+                        warnings.warn(f"[{classname}] `cov` is not symmetric; proceeding as-is (no symmetrization).",
                                       RuntimeWarning)
 
         # condition number warning (helps debug instability)
         try:
             cond = np.linalg.cond(cov)
             if cond > 1e12:
-                warnings.warn(f"{classname} `cov` is ill-conditioned (cond≈{cond:.2e}); "
+                warnings.warn(f"[{classname}] `cov` is ill-conditioned (cond≈{cond:.2e}); "
                               "results may be unstable.",
                               RuntimeWarning)
         except Exception:
@@ -290,7 +290,7 @@ class LikelihoodExpansion:
         try:
             return np.linalg.inv(cov)
         except np.linalg.LinAlgError:
-            warnings.warn(f"{classname} `cov` inversion failed; using pseudoinverse.",
+            warnings.warn(f"[{classname}] `cov` inversion failed; using pseudoinverse.",
                           RuntimeWarning)
             return np.linalg.pinv(cov)
 
