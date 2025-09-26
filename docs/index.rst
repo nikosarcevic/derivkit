@@ -10,6 +10,7 @@ Derivkit documentation
    :maxdepth: 2
    :caption: Contents:
 
+   contributing
    modules
 
 **DerivKit** is a robust Python toolkit for stable numerical derivatives, built for scientific computing, cosmology, and any domain requiring accurate gradients or higher-order expansions.
@@ -72,6 +73,11 @@ If you use ``derivkit`` in your research, please cite it as follows:
     howpublished = {\url{https://github.com/nikosarcevic/derivkit}},
     note         = {If you use this software, please cite this entry.}
 
+Contributing
+------------
+
+Interested in getting involved?
+Have a look at :ref:`contributing`!
 
 License
 -------
