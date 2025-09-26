@@ -4,7 +4,9 @@ from derivkit.adaptive_fit import AdaptiveFitDerivative
 from derivkit.derivative_kit import DerivativeKit
 from derivkit.finite_difference import FiniteDifferenceDerivative
 from derivkit.forecast_kit import ForecastKit as ForecastKit
-from derivkit.forecasting.expansions import LikelihoodExpansion as LikelihoodExpansion
+from derivkit.forecasting.expansions import (
+    LikelihoodExpansion as LikelihoodExpansion,
+)
 from derivkit.plotutils.plot_helpers import PlotHelpers
 from derivkit.plotutils.plot_kit import PlotKit
 from derivkit.utils import (
