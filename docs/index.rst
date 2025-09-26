@@ -10,6 +10,7 @@ Derivkit documentation
    :maxdepth: 2
    :caption: Contents:
 
+   contributing
    modules
 
 **DerivKit** is a robust Python toolkit for stable numerical derivatives, built for scientific computing, cosmology, and any domain requiring accurate gradients or higher-order expansions.
