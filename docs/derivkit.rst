@@ -13,7 +13,7 @@ Submodules
    derivkit.finite_difference
    derivkit.forecasting
    derivkit.forecast_kit
-   derivkit.likelihood_expansion
+   derivkit.forecasting.expansions
    derivkit.utils
 
 Module contents
