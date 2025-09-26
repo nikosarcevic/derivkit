@@ -11,6 +11,7 @@ Submodules
    derivkit.adaptive_fit
    derivkit.derivative_kit
    derivkit.finite_difference
+   derivkit.forecasting
    derivkit.forecast_kit
    derivkit.likelihood_expansion
    derivkit.utils
