@@ -14,7 +14,7 @@ Typical usage example:
 derivative is the derivative of function_to_differerentiate at value 1.
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from derivkit.adaptive_fit import AdaptiveFitDerivative
 from derivkit.finite_difference import FiniteDifferenceDerivative

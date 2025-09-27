@@ -16,8 +16,9 @@ path.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Literal, Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 import numpy as np
 

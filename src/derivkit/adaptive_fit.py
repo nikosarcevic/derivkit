@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 import numpy as np
 

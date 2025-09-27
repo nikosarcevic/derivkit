@@ -10,7 +10,8 @@ Typical usage example:
 >>> G, H = forecaster.dali()
 """
 
-from typing import Callable, Sequence
+from collections.abc import Callable
+from typing import Sequence
 
 import numpy as np
 

@@ -11,7 +11,8 @@ This module works with *relative* offsets (around 0). You typically:
 
 from __future__ import annotations
 
-from typing import Callable, Tuple
+from collections.abc import Callable
+from typing import Tuple
 
 import numpy as np
 
