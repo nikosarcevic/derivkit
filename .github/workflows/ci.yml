@@ -19,18 +19,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up uv with Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v6
         with:
+          version: "0.8.22" # Fix the version of uv
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip wheel
-          python -m pip install .
+        run: uv sync
 
       - name: Run tests
-        run: tox -m test
+        run: uv run tox -m test
 
   linting:
     runs-on: ${{ matrix.os }}
@@ -41,18 +40,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Set up uv with Python 3.12
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          version: "0.8.22" # Fix the version of uv
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip wheel
-          python -m pip install .
+        run: uv sync
 
       - name: Run ruff
-        run: tox -e lint -- --output-format github
+        run: uv run tox -e lint -- --output-format github
 
   finalise:
     runs-on: ubuntu-latest
