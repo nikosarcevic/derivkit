@@ -17,4 +17,3 @@ notebooks/
 notebooks/plots/*.png
 notebooks/plots/*.pdf
 notebooks/logs/
-.egg-info/
