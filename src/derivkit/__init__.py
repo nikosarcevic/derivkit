@@ -7,8 +7,6 @@ from derivkit.forecast_kit import ForecastKit as ForecastKit
 from derivkit.forecasting.expansions import (
     LikelihoodExpansion as LikelihoodExpansion,
 )
-from derivkit.plotutils.plot_helpers import PlotHelpers
-from derivkit.plotutils.plot_kit import PlotKit
 from derivkit.utils import (
     central_difference_error_estimate,
     generate_test_function,
