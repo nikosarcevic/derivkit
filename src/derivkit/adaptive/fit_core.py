@@ -9,7 +9,7 @@ d^m/dx^m = (1 / h^m) * d^m/du^m evaluated at u = 0.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import numpy as np
 
@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-def normalize_coords(x_vals: np.ndarray, x0: float) -> Tuple[np.ndarray, float]:
+def normalize_coords(x_vals: np.ndarray, x0: float) -> tuple[np.ndarray, float]:
     """Normalize coordinates around ``x0`` to roughly ``[-1, 1]``.
 
     Shifts samples by ``x0`` and scales by the maximum absolute deviation
@@ -40,7 +40,7 @@ def normalize_coords(x_vals: np.ndarray, x0: float) -> Tuple[np.ndarray, float]:
       x0: Expansion point.
 
     Returns:
-      Tuple[np.ndarray, float]: ``(u_vals, h)`` where ``u_vals`` are the
+      tuple[np.ndarray, float]: ``(u_vals, h)`` where ``u_vals`` are the
       normalized coordinates and ``h`` is the scaling factor.
     """
     t = np.asarray(x_vals, dtype=float) - float(x0)
@@ -88,7 +88,7 @@ def residuals_relative(
     y_fit: np.ndarray,
     y_true: np.ndarray,
     floor: float = 1e-8,
-) -> Tuple[np.ndarray, float]:
+) -> tuple[np.ndarray, float]:
     """Compute elementwise relative residuals and their maximum.
 
     Uses ``|y_fit − y_true| / max(|y_true|, floor)`` to avoid division by very
@@ -100,7 +100,7 @@ def residuals_relative(
       floor: Denominator floor to prevent blow-ups near zero.
 
     Returns:
-      Tuple[np.ndarray, float]: ``(residuals, rel_error)`` where
+      tuple[np.ndarray, float]: ``(residuals, rel_error)`` where
       ``rel_error`` is ``residuals.max()`` (or ``0.0`` if empty).
     """
     y_true = np.asarray(y_true, float)

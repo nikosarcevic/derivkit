@@ -18,7 +18,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal, Optional, Tuple
+from typing import Literal, Optional
 
 import numpy as np
 
@@ -54,7 +54,7 @@ def _maybe_accept_at_floor(
     fit_tolerance: float,
     fallback_mode: str,
     floor_accept_multiplier: float,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """Decide whether to accept a fit at the minimum sample count ("floor").
 
     Invoked when pruning cannot further reduce residuals and the algorithm is
@@ -70,7 +70,7 @@ def _maybe_accept_at_floor(
         deciding acceptance under "auto".
 
     Returns:
-      Tuple[bool, str]: ``(accept, tag)`` where ``accept`` indicates
+      tuple[bool, str]: ``(accept, tag)`` where ``accept`` indicates
       acceptance and ``tag`` is the chosen mode label for diagnostics.
     """
     if not at_floor:
@@ -100,7 +100,7 @@ def prune_by_residuals(
     max_remove: int = 2,
     keep_center: bool = True,
     keep_symmetric: bool = True,
-) -> Tuple[np.ndarray, np.ndarray, bool]:
+) -> tuple[np.ndarray, np.ndarray, bool]:
     """Remove worst residuals (and optional mirrors) above tolerance.
 
     Removes up to ``max_remove`` points whose residuals exceed ``fit_tolerance``,
@@ -119,7 +119,7 @@ def prune_by_residuals(
       keep_symmetric: Whether to remove symmetric mirrors when possible.
 
     Returns:
-      Tuple[np.ndarray, np.ndarray, bool]: ``(x_kept, y_kept, removed_any)``,
+      tuple[np.ndarray, np.ndarray, bool]: ``(x_kept, y_kept, removed_any)``,
       where ``removed_any`` indicates whether any point was pruned.
 
     Raises:

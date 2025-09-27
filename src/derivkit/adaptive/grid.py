@@ -12,7 +12,6 @@ This module works with *relative* offsets (around 0). You typically:
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Tuple
 
 import numpy as np
 
@@ -98,7 +97,7 @@ def build_x_offsets(
     min_samples: int,
     min_used_points: int,
     get_adaptive_offsets: Callable[..., np.ndarray] = _default_get_adaptive_offsets,
-) -> Tuple[np.ndarray, int]:
+) -> tuple[np.ndarray, int]:
     """Build the symmetric relative grid and compute ``required_points``.
 
     ``required_points`` is the minimum total samples the fit loop may use:

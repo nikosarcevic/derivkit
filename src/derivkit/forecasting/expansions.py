@@ -325,7 +325,7 @@ class LikelihoodExpansion:
             invcov (np.ndarray): Inverse covariance of observables, shape (N, N).
 
         Returns:
-            Tuple[np.ndarray, np.ndarray]: G with shape (P, P, P) and H with shape (P, P, P, P).
+            tuple[np.ndarray, np.ndarray]: G with shape (P, P, P) and H with shape (P, P, P, P).
         """
         # G_abc = Σ_ij d2[a,b,i] invcov[i,j] d1[c,j]
         g_tensor = np.einsum("abi,ij,cj->abc", d2, invcov, d1)
